@@ -1,0 +1,201 @@
+/* Resume sheet: A4 at 96dpi = 794 x 1123px. Navy + silver across all templates.
+   Designs modelled on the best-selling Canva professional styles:
+   dark sidebar, timeline experience, ruled section headers, clean ATS columns. */
+
+.sheet {
+  width: 794px; min-height: 1123px; background: #fff; color: #232a38;
+  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  font-size: 13px; line-height: 1.52; box-shadow: 0 8px 28px rgba(10, 22, 48, 0.25);
+  display: flex; flex-direction: column; text-align: left; position: relative;
+}
+.sheet * { box-sizing: border-box; }
+.sheet h1, .sheet h2, .sheet h3, .sheet p, .sheet ul { margin: 0; }
+.sheet ul { padding-left: 16px; }
+.sheet li { margin-bottom: 4px; }
+.sheet a { color: inherit; text-decoration: none; }
+
+/* shared bits */
+.s-name { font-size: 26px; font-weight: 800; letter-spacing: .3px; }
+.s-headline { font-size: 13.5px; font-weight: 600; margin-top: 2px; }
+.s-contact { font-size: 11.8px; display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.s-contact span { display: inline-flex; align-items: center; }
+.s-photo {
+  border-radius: 50%; object-fit: cover; flex: 0 0 auto;
+  border: 2px solid #c9d2de; box-shadow: 0 1px 4px rgba(10, 22, 48, 0.18);
+}
+.s-sec-title {
+  font-size: 12px; font-weight: 800; letter-spacing: 1.6px; text-transform: uppercase;
+  margin: 0 0 7px;
+}
+.s-item { margin-bottom: 11px; }
+.s-item-head { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+.s-item-head b { font-size: 13.2px; }
+.s-item-sub { font-size: 12px; color: #55617a; margin-top: 1px; }
+.s-dates { font-size: 11.6px; color: #55617a; white-space: nowrap; }
+.s-skillset { display: flex; flex-wrap: wrap; gap: 5px; }
+.s-skill {
+  border: 1px solid #c9d2de; border-radius: 4px; padding: 2px 9px; font-size: 11.5px;
+  background: #f5f7fa; color: #1c2434;
+}
+
+/* education table — clean aligned columns in every template */
+.s-table { width: 100%; border-collapse: collapse; }
+.s-table td {
+  vertical-align: top; padding: 6px 12px 6px 0;
+  border-bottom: 1px solid #e4e9f0;
+}
+.s-table tr:last-child td { border-bottom: none; }
+.s-table .edu-deg { width: 44%; }
+.s-table .edu-school { width: 38%; color: #3d475c; font-size: 12.6px; }
+.s-table .edu-year { width: 18%; text-align: right; white-space: nowrap; color: #55617a; font-size: 12.2px; }
+
+/* timeline experience (Canva best-seller style) — used by Split & Minimal */
+.tpl-split .sec-experience.tl .s-item,
+.tpl-minimal .sec-experience.tl .s-item {
+  position: relative; padding-left: 16px; border-left: 2px solid #c9d2de; margin-left: 4px;
+}
+.tpl-split .sec-experience.tl .s-item::before,
+.tpl-minimal .sec-experience.tl .s-item::before {
+  content: ''; position: absolute; left: -6px; top: 3px; width: 8px; height: 8px;
+  border-radius: 50%; background: #fff; border: 2.5px solid #0f2148;
+}
+
+/* ============ 1. Modern Split — dark navy sidebar (Canva's #1 style) ============ */
+.tpl-split { flex-direction: row; }
+.tpl-split .side {
+  width: 258px; flex: 0 0 258px;
+  background: linear-gradient(180deg, #0a1630 0%, #0f2148 55%, #16305f 100%);
+  color: #e4e9f0; padding: 26px 20px;
+  border-right: 3px solid #c9d2de;
+}
+.tpl-split .side .s-sec-title {
+  color: #c9d2de; letter-spacing: 2px; border-bottom: 1px solid #33507e; padding-bottom: 4px; margin-bottom: 9px;
+}
+.tpl-split .side .s-skill { background: #16305f; border-color: #33507e; color: #e4e9f0; }
+.tpl-split .main { flex: 1; padding: 26px 26px; }
+.tpl-split .s-name { color: #ffffff; font-size: 23px; }
+.tpl-split .s-headline { color: #c9d2de; margin-bottom: 10px; }
+.tpl-split .main .s-sec-title {
+  color: #0f2148; display: flex; align-items: center; gap: 8px; margin-bottom: 9px;
+}
+.tpl-split .main .s-sec-title::before { content: ''; width: 9px; height: 9px; background: #0f2148; flex: 0 0 auto; }
+.tpl-split .main .s-sec-title::after {
+  content: ''; flex: 1; height: 2px;
+  background: linear-gradient(90deg, #0f2148, #c9d2de 60%, transparent);
+}
+.tpl-split .side .side-block { margin-bottom: 16px; }
+.tpl-split .side .contact-line {
+  font-size: 11.8px; margin-bottom: 6px; word-break: break-word; position: relative; padding-left: 14px;
+}
+.tpl-split .side .contact-line::before {
+  content: ''; position: absolute; left: 0; top: 5px; width: 6px; height: 6px; background: #c9d2de;
+}
+.tpl-split .avatar {
+  width: 88px; height: 88px; border-radius: 50%; background: #16305f;
+  display: grid; place-items: center; font-size: 30px; font-weight: 800; color: #c9d2de;
+  margin-bottom: 16px; font-family: Georgia, serif;
+  box-shadow: 0 0 0 3px #16305f, 0 0 0 5px #c9d2de;
+}
+.tpl-split .avatar-photo { object-fit: cover; margin-bottom: 16px; }
+
+/* ============ 2. Executive Classic — serif, centered, double rules ============ */
+.tpl-classic { font-family: Georgia, "Times New Roman", serif; padding: 34px 40px; }
+.tpl-classic .head {
+  text-align: center; border-bottom: 3px double #0f2148; padding-bottom: 13px; margin-bottom: 18px;
+}
+.tpl-classic .s-photo {
+  margin: 0 auto 10px; display: block;
+  box-shadow: 0 0 0 3px #fff, 0 0 0 5px #0f2148;
+}
+.tpl-classic .s-name { font-size: 28px; color: #0f2148; letter-spacing: 1.5px; font-weight: 700; }
+.tpl-classic .s-headline { color: #55617a; font-weight: 400; font-style: italic; font-size: 14px; }
+.tpl-classic .s-contact { justify-content: center; margin-top: 8px; color: #3d475c; }
+.tpl-classic .s-sec-title {
+  color: #0f2148; letter-spacing: 3px;
+  display: flex; align-items: center; gap: 12px; margin-bottom: 9px;
+}
+.tpl-classic .s-sec-title::before,
+.tpl-classic .s-sec-title::after { content: ''; flex: 1; border-bottom: 1px solid #c9d2de; }
+.tpl-classic .s-skill { border-radius: 2px; }
+.tpl-classic .s-item-head b { font-size: 13.6px; }
+
+/* ============ 3. Sharp Minimal — hairlines, air, quiet confidence ============ */
+.tpl-minimal { padding: 38px 44px; }
+.tpl-minimal .head { margin-bottom: 20px; }
+.tpl-minimal .s-name { font-weight: 700; color: #101828; font-size: 26px; letter-spacing: .5px; }
+.tpl-minimal .s-headline { color: #76839a; font-weight: 500; }
+.tpl-minimal .s-contact { margin-top: 8px; color: #55617a; }
+.tpl-minimal .s-contact span:not(:first-child)::before { content: '·'; margin-right: 14px; color: #c9d2de; }
+.tpl-minimal .s-contact span:not(:first-child) { margin-left: 0; }
+.tpl-minimal .s-sec-title {
+  color: #76839a; font-weight: 700; letter-spacing: 2.8px; margin-bottom: 8px; font-size: 11.5px;
+}
+.tpl-minimal .sec { margin-bottom: 15px; border-top: 1px solid #e4e9f0; padding-top: 11px; }
+.tpl-minimal .sec:first-of-type { border-top: none; padding-top: 0; }
+.tpl-minimal .s-skill { border: none; background: transparent; padding: 0 14px 0 0; color: #3d475c; }
+.tpl-minimal .sec-experience.tl .s-item { border-left-color: #e4e9f0; }
+.tpl-minimal .sec-experience.tl .s-item::before { border-color: #76839a; }
+
+/* ============ 4. Metro Two-Tone — bold band, layered header ============ */
+.tpl-metro .band {
+  background: linear-gradient(120deg, #0f2148 0%, #16305f 70%, #1e4076 100%);
+  color: #fff; padding: 30px 32px 26px;
+  border-bottom: 4px solid #c9d2de;
+  position: relative; overflow: hidden;
+}
+.tpl-metro .band::before {
+  content: ''; position: absolute; left: 0; right: 0; top: 0; height: 6px; background: #c9d2de;
+}
+.tpl-metro .band::after {
+  content: ''; position: absolute; right: -46px; top: -56px; width: 190px; height: 190px;
+  background: rgba(201, 210, 222, 0.09); transform: rotate(18deg);
+}
+.tpl-metro .band-inner { display: flex; justify-content: space-between; align-items: center; gap: 18px; position: relative; }
+.tpl-metro .s-name { font-size: 27px; letter-spacing: .5px; }
+.tpl-metro .s-headline { color: #c9d2de; font-size: 14px; }
+.tpl-metro .s-contact { margin-top: 9px; color: #e4e9f0; }
+.tpl-metro .s-contact span:not(:first-child)::before { content: '·'; margin-right: 14px; color: #7a8da9; }
+.tpl-metro .s-photo { border-color: #e4e9f0; box-shadow: 0 0 0 3px rgba(201, 210, 222, 0.25); }
+.tpl-metro .body { padding: 24px 32px; }
+.tpl-metro .s-sec-title {
+  display: inline-block; background: #f5f7fa; border: 1px solid #c9d2de;
+  border-left: 4px solid #0f2148; padding: 4px 13px; border-radius: 3px; color: #0f2148;
+  box-shadow: 0 1px 2px rgba(10, 22, 48, 0.06);
+}
+.tpl-metro .sec { margin-bottom: 16px; }
+
+/* ============ 5. Compact Pro — dense, ATS-first, ruled header ============ */
+.tpl-compact { padding: 28px 34px; font-size: 12.6px; }
+.tpl-compact .head {
+  display: flex; justify-content: space-between; align-items: center; gap: 16px;
+  border-bottom: 3px solid #0f2148; box-shadow: 0 5px 0 -4px #c9d2de;
+  padding-bottom: 12px; margin-bottom: 14px;
+}
+.tpl-compact .s-name { color: #0f2148; font-size: 24px; }
+.tpl-compact .s-headline { color: #3d475c; }
+.tpl-compact .s-contact { flex-direction: column; gap: 2px; align-items: flex-end; text-align: right; }
+.tpl-compact .s-sec-title {
+  color: #0f2148; background: #f5f7fa; border-left: 4px solid #0f2148;
+  padding: 3px 9px; letter-spacing: 1.4px; font-size: 11.5px;
+}
+.tpl-compact .sec { margin-bottom: 12px; }
+.tpl-compact li { margin-bottom: 2px; }
+.tpl-compact .s-item { margin-bottom: 9px; }
+.tpl-compact .s-table td { padding: 4px 10px 4px 0; }
+
+/* ---------- print ---------- */
+.print-root { display: none; }
+@page { size: A4; margin: 0; }
+@media print {
+  .print-root { display: block !important; }
+  body { background: #fff !important; }
+  body * { visibility: hidden !important; }
+  .print-root, .print-root * { visibility: visible !important; }
+  .print-root {
+    position: absolute !important; left: 0; top: 0; width: 210mm; margin: 0 !important;
+    padding: 0 !important; background: none !important; border: none !important;
+    transform: none !important; box-shadow: none !important;
+  }
+  .print-root .sheet { width: 210mm !important; min-height: 297mm; box-shadow: none !important; }
+  .no-print { display: none !important; }
+}
