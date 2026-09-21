@@ -569,8 +569,9 @@ export function StepDesign({ r, set }: StepProps) {
   return (
     <div>
       <div className="notice">
-        Five templates, tuned for <b>{f.label}</b>. The starred ones fit this field best —
-        section order, emphasis and spacing change per field automatically. Click any to apply it instantly.
+        Fifty templates across five layout families (Sidebar, Classic, Minimal, Statement, Dense), tuned for
+        <b> {f.label}</b>. The starred ones fit this field best — section order, emphasis and spacing change
+        per field automatically. Use the family filters above the grid. Click any to apply it instantly.
       </div>
       <TemplateGallery r={r} onSelect={(templateId) => set({ templateId })} />
       <div className="hint" style={{ marginTop: 10 }}>
