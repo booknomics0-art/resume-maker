@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { login, signup, loginWithGoogle } from '../lib/auth';
 import { GOOGLE_CLIENT_ID } from '../config';
+import Footer from './Footer';
 
 declare global {
   interface Window {
@@ -66,7 +67,8 @@ export default function AuthPage({ onAuth }: { onAuth: () => void }) {
   };
 
   return (
-    <div className="auth-wrap">
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+    <div className="auth-wrap" style={{ flex: 1 }}>
       <div className="auth-side">
         <div className="brand" style={{ padding: '0 0 26px' }}>
           <div className="brand-badge">CV</div>
@@ -141,6 +143,8 @@ export default function AuthPage({ onAuth }: { onAuth: () => void }) {
           </div>
         </form>
       </div>
+    </div>
+    <Footer />
     </div>
   );
 }

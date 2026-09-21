@@ -283,9 +283,104 @@ pre.code .c { color: #8fa3c7; }
   border-radius: 4px; padding: 1px 7px; margin-right: 8px; vertical-align: 1px;
 }
 
+/* ---------- advanced footer ---------- */
+.site-footer {
+  margin-top: 48px; border-top: 1px solid var(--silver-200);
+  background: linear-gradient(180deg, var(--navy-900), var(--navy-950));
+  border-radius: var(--radius) var(--radius) 0 0;
+  padding: 34px 34px 0; color: var(--silver-300);
+}
+.footer-grid {
+  display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 28px;
+  padding-bottom: 26px;
+}
+.footer-brand p { font-size: 13px; line-height: 1.6; color: var(--silver-400); margin: 12px 0 0; max-width: 340px; }
+.footer-col h4 {
+  color: #fff; font-size: 12px; letter-spacing: 1.4px; text-transform: uppercase;
+  margin: 4px 0 12px;
+}
+.footer-col a {
+  display: block; color: var(--silver-300); text-decoration: none;
+  font-size: 13.5px; padding: 4px 0; transition: color .12s ease;
+}
+.footer-col a:hover { color: #fff; text-decoration: underline; }
+.footer-bottom {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  border-top: 1px solid rgba(201, 210, 222, 0.16);
+  padding: 14px 0 18px; font-size: 12.5px; color: var(--silver-500);
+}
+.footer-bottom a { color: var(--silver-400); text-decoration: none; }
+.footer-bottom a:hover { color: #fff; }
+.footer-dot { color: var(--silver-500); }
+
+/* ---------- tablet ---------- */
+@media (max-width: 1180px) {
+  .editor-grid { grid-template-columns: 1fr; }
+  .panel { position: static; }
+}
+@media (max-width: 1000px) {
+  .footer-grid { grid-template-columns: 1fr 1fr; }
+}
+
+/* ---------- mobile nav shell ---------- */
 @media (max-width: 900px) {
   .shell { flex-direction: column; }
-  .sidebar { width: 100%; flex: none; height: auto; position: static; flex-direction: row; align-items: center; flex-wrap: wrap; }
+  .sidebar {
+    width: 100%; flex: none; height: auto; flex-direction: row; align-items: center;
+    position: sticky; top: 0; z-index: 60; padding: 8px 10px; gap: 2px;
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+  }
+  .brand { padding: 0 10px 0 2px; flex: 0 0 auto; }
+  .brand-badge { width: 32px; height: 32px; font-size: 13px; }
+  .brand-name { font-size: 15px; }
+  .brand-sub { display: none; }
+  .nav-item { white-space: nowrap; flex: 0 0 auto; padding: 8px 11px; font-size: 13.5px; }
   .sidebar-foot { display: none; }
-  .main { padding: 18px 16px 40px; }
+  .main { padding: 18px 14px 44px; }
+}
+
+/* ---------- mobile ---------- */
+@media (max-width: 640px) {
+  body { font-size: 14.5px; }
+  .page-title { font-size: 20px; }
+  .page-head { margin-bottom: 14px; }
+  .main { padding: 14px 12px 40px; }
+
+  /* forms: single column, no iOS zoom-on-focus */
+  .form-grid { grid-template-columns: 1fr; }
+  .input, .textarea, .select { font-size: 16px; padding: 11px 12px; }
+  .btn { padding: 11px 15px; }
+  .chip { padding: 8px 13px; }
+
+  /* dashboard */
+  .stats { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat { padding: 13px 14px; }
+  .stat b { font-size: 21px; }
+  .resume-grid { grid-template-columns: 1fr; }
+
+  /* editor */
+  .card.pad { padding: 16px 14px; }
+  .stepper { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 8px; gap: 6px; }
+  .step-pill { flex: 0 0 auto; }
+  .step-foot { flex-direction: column-reverse; align-items: stretch; }
+  .step-foot .btn { justify-content: center; }
+  .preview-pane { padding: 12px; }
+  .entry-card { padding: 12px; }
+
+  /* template gallery & pricing */
+  .tpl-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+  .plans { grid-template-columns: 1fr; }
+  .tbl th, .tbl td { padding: 8px 9px; font-size: 12.5px; }
+
+  /* auth */
+  .auth-side { padding: 26px 18px; }
+  .auth-side h1 { font-size: 22px; }
+  .auth-side ul { display: none; }
+  .auth-card-wrap { padding: 18px 12px; }
+  .auth-card { padding: 20px 16px; }
+
+  /* footer */
+  .site-footer { padding: 26px 18px 0; margin-top: 32px; }
+  .footer-grid { grid-template-columns: 1fr; gap: 20px; padding-bottom: 20px; }
+  .footer-bottom { justify-content: center; text-align: center; }
 }

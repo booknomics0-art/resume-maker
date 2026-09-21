@@ -4,6 +4,10 @@ import Editor from './components/Editor';
 import Pricing from './components/Pricing';
 import Settings from './components/Settings';
 import AuthPage from './components/AuthPage';
+import Footer from './components/Footer';
+import {
+  AboutPage, ContactPage, FaqPage, PrivacyPage, RefundPage, TermsPage,
+} from './components/LegalPages';
 import { currentUser, logout, type User } from './lib/auth';
 
 function useHashRoute() {
@@ -39,6 +43,24 @@ export default function App() {
   } else if (tab === '/settings') {
     page = <Settings />;
     active = '/settings';
+  } else if (tab === '/about') {
+    page = <AboutPage />;
+    active = '/about';
+  } else if (tab === '/contact') {
+    page = <ContactPage />;
+    active = '/contact';
+  } else if (tab === '/privacy') {
+    page = <PrivacyPage />;
+    active = '/privacy';
+  } else if (tab === '/terms') {
+    page = <TermsPage />;
+    active = '/terms';
+  } else if (tab === '/refund') {
+    page = <RefundPage />;
+    active = '/refund';
+  } else if (tab === '/faq') {
+    page = <FaqPage />;
+    active = '/faq';
   } else {
     page = <Dashboard />;
   }
@@ -79,7 +101,10 @@ export default function App() {
           </button>
         </div>
       </aside>
-      <main className={`main ${active === '/editor' ? 'wide' : ''}`}>{page}</main>
+      <main className={`main ${active === '/editor' ? 'wide' : ''}`}>
+        {page}
+        <Footer />
+      </main>
     </div>
   );
 }
