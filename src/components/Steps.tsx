@@ -576,6 +576,12 @@ export function StepDesign({ r, set }: StepProps) {
       <div className="hint" style={{ marginTop: 10 }}>
         Not sure? Keep the starred pick. You can switch any time, even after download.
       </div>
+      <div className="notice" style={{ marginTop: 14 }}>
+        <b>10-second honesty check before download</b> — har number aapka apna ho, har tool jo likha hai
+        wo aapne sach me use kiya ho, koi bana-banaya phrase copy na ho.
+        Companies ko adjectives se zyada concrete facts par bharosa hota hai — isliye ye designs
+        aapke apne content ko aage rakhte hain, decoration ko nahi.
+      </div>
     </div>
   );
 }

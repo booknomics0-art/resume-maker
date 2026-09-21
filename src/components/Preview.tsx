@@ -147,10 +147,10 @@ function SectionBody({ r, id }: { r: Resume; id: SectionId }) {
   }
 }
 
-function Section({ r, id }: { r: Resume; id: SectionId }) {
+function Section({ r, id, timeline }: { r: Resume; id: SectionId; timeline?: boolean }) {
   if (!hasSection(r, id)) return null;
   return (
-    <section className="sec" style={{ marginBottom: 13 }}>
+    <section className={`sec sec-${id}${timeline ? ' tl' : ''}`} style={{ marginBottom: 13 }}>
       <h3 className="s-sec-title">{SECTION_LABELS[id]}</h3>
       <SectionBody r={r} id={id} />
     </section>
@@ -211,7 +211,7 @@ export default function Preview({ r, tpl }: { r: Resume; tpl?: Template }) {
             <div className="s-headline">{headline}</div>
           </div>
           {mainSections.map((s) => (
-            <Section r={r} id={s} key={s} />
+            <Section r={r} id={s} key={s} timeline={s === 'experience'} />
           ))}
         </div>
       </div>
@@ -286,7 +286,7 @@ export default function Preview({ r, tpl }: { r: Resume; tpl?: Template }) {
         <HeaderPhoto r={r} size={70} />
       </div>
       {mainSections.map((s) => (
-        <Section r={r} id={s} key={s} />
+        <Section r={r} id={s} key={s} timeline={s === 'experience'} />
       ))}
     </div>
   );
