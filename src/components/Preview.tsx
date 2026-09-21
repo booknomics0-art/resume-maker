@@ -1,10 +1,26 @@
-// Renders a resume inside one of the 5 template layouts.
+// Renders a resume in one of the 50 templates (5 layout families x 10 variants).
 // Used at full size in the editor, scaled down for thumbnails.
+// The template's palette is applied as CSS custom properties on .sheet;
+// structural variants (mod-invert, mod-serif, mod-band-flat, mod-band-tint)
+// add a modifier class — see templates.css.
 
+import type { CSSProperties } from 'react';
 import type { Resume } from '../lib/types';
 import {
   SECTION_LABELS, hasSection, sectionOrder, templateById, type SectionId, type Template,
 } from '../lib/templates';
+
+function sheetVars(t: Template): CSSProperties {
+  const s: Record<string, string> = { '--p': t.pal.p, '--a': t.pal.a };
+  if (t.pal.p2) s['--p2'] = t.pal.p2;
+  if (t.pal.p3) s['--p3'] = t.pal.p3;
+  if (t.pal.pm) s['--pm'] = t.pal.pm;
+  return s as CSSProperties;
+}
+
+function sheetClass(t: Template): string {
+  return `sheet tpl-${t.layout}${t.mods.length ? ' ' + t.mods.join(' ') : ''}`;
+}
 
 function initials(name: string) {
   return name
@@ -184,7 +200,7 @@ export default function Preview({ r, tpl }: { r: Resume; tpl?: Template }) {
 
   if (t.layout === 'split') {
     return (
-      <div className="sheet tpl-split">
+      <div className={sheetClass(t)} style={sheetVars(t)}>
         <aside className="side">
           {r.personal.photo ? (
             <img className="avatar avatar-photo" src={r.personal.photo} alt="" />
@@ -220,7 +236,7 @@ export default function Preview({ r, tpl }: { r: Resume; tpl?: Template }) {
 
   if (t.layout === 'classic') {
     return (
-      <div className="sheet tpl-classic">
+      <div className={sheetClass(t)} style={sheetVars(t)}>
         <div className="head">
           <HeaderPhoto r={r} size={76} />
           <h1 className="s-name">{name}</h1>
@@ -236,7 +252,7 @@ export default function Preview({ r, tpl }: { r: Resume; tpl?: Template }) {
 
   if (t.layout === 'metro') {
     return (
-      <div className="sheet tpl-metro">
+      <div className={sheetClass(t)} style={sheetVars(t)}>
         <div className="band">
           <div className="band-inner">
             <div>
@@ -258,7 +274,7 @@ export default function Preview({ r, tpl }: { r: Resume; tpl?: Template }) {
 
   if (t.layout === 'compact') {
     return (
-      <div className="sheet tpl-compact">
+      <div className={sheetClass(t)} style={sheetVars(t)}>
         <div className="head">
           <HeaderPhoto r={r} size={62} />
           <div style={{ flex: 1 }}>
@@ -276,7 +292,7 @@ export default function Preview({ r, tpl }: { r: Resume; tpl?: Template }) {
 
   // minimal
   return (
-    <div className="sheet tpl-minimal">
+    <div className={sheetClass(t)} style={sheetVars(t)}>
       <div className="head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
         <div>
           <h1 className="s-name">{name}</h1>

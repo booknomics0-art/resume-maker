@@ -28,7 +28,7 @@ export default function Pricing() {
           <div className="price">₹20 <small>one-time</small></div>
           <ul>
             <li>Unlimited resumes</li>
-            <li>All 5 templates × 10 fields — all 50 combos</li>
+            <li>All 50 templates × 10 fields — 500 combos</li>
             <li>Profile photo support in every template</li>
             <li>Hobbies, best experience — sab sections</li>
             <li>Future templates included</li>

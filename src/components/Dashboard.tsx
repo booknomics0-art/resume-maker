@@ -41,7 +41,7 @@ export default function Dashboard() {
         <div className="stat"><b>{resumes.length}</b><span>Resumes created</span></div>
         <div className="stat"><b>{done}</b><span>Ready to send</span></div>
         <div className="stat silver"><b>{avg}%</b><span>Average completion</span></div>
-        <div className="stat silver"><b>50</b><span>Field × template combos</span></div>
+        <div className="stat silver"><b>500</b><span>Field × template combos</span></div>
       </div>
 
       {resumes.length === 0 ? (
