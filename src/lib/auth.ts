@@ -30,11 +30,11 @@ function saveUsers(u: Record<string, StoredUser>) {
 
 export function signup(name: string, email: string, pass: string): { ok: boolean; error?: string } {
   const key = email.trim().toLowerCase();
-  if (!name.trim()) return { ok: false, error: 'Apna naam likho.' };
-  if (!/^\S+@\S+\.\S+$/.test(key)) return { ok: false, error: 'Sahi email daalo.' };
-  if (pass.length < 6) return { ok: false, error: 'Password kam se kam 6 characters ka ho.' };
+  if (!name.trim()) return { ok: false, error: 'Please enter your name.' };
+  if (!/^\S+@\S+\.\S+$/.test(key)) return { ok: false, error: 'Please enter a valid email address.' };
+  if (pass.length < 6) return { ok: false, error: 'Password must be at least 6 characters.' };
   const users = loadUsers();
-  if (users[key]) return { ok: false, error: 'Ye email pehle se registered hai — login karo.' };
+  if (users[key]) return { ok: false, error: 'This email is already registered — please log in instead.' };
   const user: StoredUser = { name: name.trim(), email: key, provider: 'email', createdAt: Date.now(), pass: btoa(pass) };
   users[key] = user;
   saveUsers(users);
@@ -46,9 +46,9 @@ export function login(email: string, pass: string): { ok: boolean; error?: strin
   const key = email.trim().toLowerCase();
   const users = loadUsers();
   const u = users[key];
-  if (!u) return { ok: false, error: 'Is email se koi account nahi mila — pehle signup karo.' };
-  if (u.provider === 'google') return { ok: false, error: 'Ye account Google se bana hai — Google se login karo.' };
-  if (u.pass !== btoa(pass)) return { ok: false, error: 'Password galat hai.' };
+  if (!u) return { ok: false, error: 'No account found with this email — please sign up first.' };
+  if (u.provider === 'google') return { ok: false, error: 'This account was created with Google — please continue with Google.' };
+  if (u.pass !== btoa(pass)) return { ok: false, error: 'Incorrect password. Please try again.' };
   localStorage.setItem(SESSION_KEY, key);
   return { ok: true };
 }

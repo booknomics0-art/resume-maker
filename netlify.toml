@@ -1,0 +1,5 @@
+# Deploy config for Netlify (drag-and-drop or Git-connected).
+# Hash routing means no rewrite rules are needed.
+[build]
+  command = "npm run build"
+  publish = "dist"

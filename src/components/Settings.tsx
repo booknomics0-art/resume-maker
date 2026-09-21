@@ -26,7 +26,7 @@ export default function Settings() {
 
       <div className="card pad" style={{ marginTop: 18 }}>
         <h3 style={{ color: 'var(--navy-900)' }}>Your data</h3>
-        <p className="hint">Sab kuch is browser me save hota hai (localStorage). Backup kabhi bhi export kar sakte ho.</p>
+        <p className="hint">Everything is saved in this browser (localStorage). You can export a backup at any time.</p>
         <div className="row">
           <button className="btn" onClick={() => {
             const blob = new Blob([localStorage.getItem('craftcv.resumes.v1') || '[]'], { type: 'application/json' });

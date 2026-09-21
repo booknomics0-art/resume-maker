@@ -18,10 +18,10 @@ export default class ErrorBoundary extends React.Component<
           background: 'var(--silver-100)', padding: 24,
         }}>
           <div className="card" style={{ maxWidth: 460, padding: 28, textAlign: 'center' }}>
-            <h2 style={{ color: 'var(--navy-900)' }}>Kuch gadbad ho gayi</h2>
+            <h2 style={{ color: 'var(--navy-900)' }}>Something went wrong</h2>
             <p className="hint" style={{ margin: '10px 0 18px' }}>
-              Page load hote waqt ek error aaya. Reload karke dobara try karo —
-              aapka resume data safe hai (browser me saved).
+              An error occurred while loading the page. Please reload and try again —
+              your resume data is safe (it is stored in your browser).
             </p>
             <button className="btn primary" onClick={() => location.reload()}>Reload page</button>
           </div>

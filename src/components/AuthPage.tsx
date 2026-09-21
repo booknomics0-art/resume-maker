@@ -60,7 +60,7 @@ export default function AuthPage({ onAuth }: { onAuth: () => void }) {
       window.google.accounts.id.prompt();
     } else {
       setGoogleNote(
-        'Google Sign-In on karne ke liye Google Cloud Console se Client ID lo aur src/config.ts me paste karo. Tab tak email/password se continue karo.',
+        'To enable Google Sign-In, paste your Google Cloud Console Client ID into src/config.ts. Until then, please continue with email and password.',
       );
     }
   };
@@ -83,7 +83,7 @@ export default function AuthPage({ onAuth }: { onAuth: () => void }) {
           <li>10 career fields — ready-made templates in every step</li>
           <li>5 navy &amp; silver designs, tuned field-by-field</li>
           <li>Mandatory fields guided, PDF download free</li>
-          <li>Aapka data aapke browser me — koi server nahi</li>
+          <li>Your data stays in your browser — no servers involved</li>
         </ul>
       </div>
 
@@ -136,7 +136,7 @@ export default function AuthPage({ onAuth }: { onAuth: () => void }) {
             {googleNote && <div className="notice warn" style={{ margin: 0, fontSize: 12.5 }}>{googleNote}</div>}
 
             <div className="hint" style={{ textAlign: 'center' }}>
-              Demo mode: account sirf is browser me banta hai. Production me Google OAuth / Supabase se replace hoga.
+              Demo mode: your account is stored in this browser only. In production this connects to Google OAuth / Supabase.
             </div>
           </div>
         </form>
