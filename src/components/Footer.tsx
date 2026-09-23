@@ -14,13 +14,8 @@ export default function Footer() {
             Build a clean, professional resume in under 10 minutes.
             Ten career fields, five hand-tuned designs, one honest document
             you can stand behind in an interview. Advanced upload & edit, 
-            1 free download then ₹20 Pro lifetime. 100% private, secure, Made in India.
+            1 free download then ₹20 Pro lifetime.
           </p>
-          <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 11, background: 'rgba(255,255,255,0.1)', padding: '3px 8px', borderRadius: 99, border: '1px solid rgba(255,255,255,0.15)' }}>🔒 XSS Protected</span>
-            <span style={{ fontSize: 11, background: 'rgba(255,255,255,0.1)', padding: '3px 8px', borderRadius: 99, border: '1px solid rgba(255,255,255,0.15)' }}>🛡️ Encrypted</span>
-            <span style={{ fontSize: 11, background: 'rgba(255,255,255,0.1)', padding: '3px 8px', borderRadius: 99, border: '1px solid rgba(255,255,255,0.15)' }}>⚡ Rate Limited</span>
-          </div>
         </div>
 
         <div className="footer-col">
@@ -55,10 +50,6 @@ export default function Footer() {
 
       <div className="footer-bottom">
         <span>© 2026 CraftCV. All rights reserved.</span>
-        <span className="footer-dot">·</span>
-        <span>Made in India 🇮🇳</span>
-        <span className="footer-dot">·</span>
-        <span>🔒 High-Tech Secured · No Tracking · Local-First</span>
         <span className="footer-dot">·</span>
         <a href="#/contact">support@craftcv.app</a>
         <span className="footer-dot">·</span>

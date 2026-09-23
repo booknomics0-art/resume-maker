@@ -60,7 +60,7 @@ export default function AuthPage({ onAuth }: { onAuth: () => void }) {
       window.google.accounts.id.prompt();
     } else {
       setGoogleNote(
-        'To enable Google Sign-In, paste your Google Cloud Console Client ID into src/config.ts. Until then, please continue with email and password. All logins are now secured with SHA-256 hashing, rate limiting, and audit logging.',
+        'To enable Google Sign-In, paste your Google Cloud Console Client ID into src/config.ts. Until then, please continue with email and password.',
       );
     }
   };
@@ -73,26 +73,19 @@ export default function AuthPage({ onAuth }: { onAuth: () => void }) {
           <div className="brand-badge">CV</div>
           <div>
             <div className="brand-name">CraftCV</div>
-            <div className="brand-sub">Resume Studio · Secured v2</div>
+            <div className="brand-sub">Resume Studio</div>
           </div>
         </div>
         <h1 style={{ color: '#fff', fontSize: 28, lineHeight: 1.25, margin: '0 0 12px' }}>
           Advanced resume maker.<br />
-          <span style={{ color: 'var(--silver-300)' }}>Upload, Edit, Download — Secure.</span>
+          <span style={{ color: 'var(--silver-300)' }}>Upload, Edit, Download — Simply.</span>
         </h1>
         <ul style={{ color: 'var(--silver-300)', fontSize: 14, lineHeight: 1.9, paddingLeft: 18, margin: 0 }}>
           <li>📤 Upload existing resume (PDF, DOCX, TXT, JSON) & advanced edit</li>
           <li>🎨 50 templates, 10 career fields — navy & silver design</li>
           <li>💳 1 free download, then ₹20 one-time Pro lifetime</li>
-          <li>🔒 High-tech security: XSS protection, SHA-256, HMAC, Rate limit, CSRF</li>
-          <li>🏠 Your data stays in browser — no servers, no tracking</li>
           <li>📜 Detailed legal pages — No Refund policy, Privacy, Terms</li>
         </ul>
-        <div style={{ marginTop: 20, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 11, background: 'rgba(255,255,255,0.1)', padding: '4px 10px', borderRadius: 99, border: '1px solid rgba(255,255,255,0.15)', color: 'var(--silver-300)' }}>🔒 XSS Protected</span>
-          <span style={{ fontSize: 11, background: 'rgba(255,255,255,0.1)', padding: '4px 10px', borderRadius: 99, border: '1px solid rgba(255,255,255,0.15)', color: 'var(--silver-300)' }}>🛡️ SHA-256 + Salt</span>
-          <span style={{ fontSize: 11, background: 'rgba(255,255,255,0.1)', padding: '4px 10px', borderRadius: 99, border: '1px solid rgba(255,255,255,0.15)', color: 'var(--silver-300)' }}>⚡ Rate Limited</span>
-        </div>
       </div>
 
       <div className="auth-card-wrap">
@@ -113,7 +106,7 @@ export default function AuthPage({ onAuth }: { onAuth: () => void }) {
               <div>
                 <label className="f">Full name</label>
                 <input className="input" value={name} placeholder="e.g. Priya Verma" onChange={(e) => setName(e.target.value)} />
-                <div className="hint" style={{ fontSize: 11 }}>Only letters, spaces, . ' - allowed (security validation)</div>
+                <div className="hint" style={{ fontSize: 11 }}>Use letters, spaces, . ' and - only</div>
               </div>
             )}
             <div>
@@ -123,13 +116,12 @@ export default function AuthPage({ onAuth }: { onAuth: () => void }) {
             <div>
               <label className="f">Password {mode === 'signup' && <span style={{ fontWeight: 400, color: 'var(--silver-500)', fontSize: 11 }}>(min 8 chars, uppercase, lowercase, number, symbol)</span>}</label>
               <input className="input" type="password" value={pass} placeholder={mode === 'signup' ? 'Strong password required' : '••••••••'} onChange={(e) => setPass(e.target.value)} />
-              {mode === 'signup' && <div className="hint" style={{ fontSize: 11 }}>🔒 Secured with SHA-256 double hash + 16-byte salt. Rate limited: 5 attempts/min.</div>}
             </div>
 
             {error && <div className="notice err" style={{ margin: 0 }}>{error}</div>}
 
             <button className="btn primary" type="submit" style={{ justifyContent: 'center', padding: '11px 16px' }}>
-              {mode === 'login' ? 'Login →' : 'Create secure account →'}
+              {mode === 'login' ? 'Login →' : 'Create account →'}
             </button>
 
             <div className="row" style={{ gap: 12, color: 'var(--silver-400)', fontSize: 12 }}>
@@ -142,8 +134,6 @@ export default function AuthPage({ onAuth }: { onAuth: () => void }) {
             {googleNote && <div className="notice warn" style={{ margin: 0, fontSize: 12.5 }}>{googleNote}</div>}
 
             <div className="hint" style={{ textAlign: 'center', fontSize: 11.5, lineHeight: 1.5 }}>
-              🔒 High-tech security active: XSS sanitization, SHA-256 hashing, rate limiting, CSRF tokens, HMAC integrity, audit logs, CSP headers.<br />
-              Your data stays in browser only. No tracking, no server storage. Made in India 🇮🇳<br />
               By continuing, you agree to <a href="#/terms">Terms</a>, <a href="#/privacy">Privacy</a>, and <a href="#/refund">No Refund Policy</a>.
             </div>
           </div>

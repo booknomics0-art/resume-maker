@@ -1,8 +1,6 @@
 import { currentUser, logout } from '../lib/auth';
 import { navigate } from '../App';
 import { getBillingState, isPro, getTransactions, resetBilling } from '../lib/billing';
-import { getAuditLogs, isSecureContext } from '../lib/security';
-import { useState } from 'react';
 
 export default function Settings() {
   const user = currentUser();
@@ -17,7 +15,7 @@ export default function Settings() {
       <div className="page-head">
         <div>
           <div className="page-title">Settings</div>
-          <div className="page-sub">Account, billing, data & security controls.</div>
+          <div className="page-sub">Account, billing and data controls.</div>
         </div>
       </div>
 
@@ -27,9 +25,6 @@ export default function Settings() {
           <div style={{ minWidth: 0, flex: '1 1 200px' }}>
             <b style={{ color: 'var(--navy-800)', wordBreak: 'break-all' }}>{user?.name}</b>
             <div className="hint" style={{ wordBreak: 'break-all' }}>{user?.email} · signed in with {user?.provider === 'google' ? 'Google' : 'email'}</div>
-            <div className="hint" style={{ marginTop: 6, fontSize: 12 }}>
-              🔒 Password hashed with SHA-256 + salt · Rate limiting active · CSRF protected
-            </div>
           </div>
           <button className="btn" style={{ flex: '0 0 auto' }} onClick={() => { logout(); location.hash = '#/'; location.reload(); }}>Logout</button>
         </div>
@@ -69,48 +64,6 @@ export default function Settings() {
         )}
       </div>
 
-      <div className="card pad" style={{ marginTop: 18 }}>
-        <h3 style={{ color: 'var(--navy-900)' }}>🔒 Security Status — High-Tech Protection Active</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12, marginTop: 12 }}>
-          <div style={{ background: 'var(--navy-50)', padding: 12, borderRadius: 8, border: '1px solid var(--navy-100)' }}>
-            <b style={{ fontSize: 13, color: 'var(--navy-800)' }}>✅ XSS Protection</b>
-            <p className="hint" style={{ fontSize: 12, marginTop: 4 }}>All inputs sanitized, dangerous patterns stripped, HTML escaped</p>
-          </div>
-          <div style={{ background: 'var(--silver-100)', padding: 12, borderRadius: 8, border: '1px solid var(--silver-200)' }}>
-            <b style={{ fontSize: 13, color: 'var(--navy-800)' }}>✅ Password Security</b>
-            <p className="hint" style={{ fontSize: 12, marginTop: 4 }}>SHA-256 double hash with 16-byte salt, secure random</p>
-          </div>
-          <div style={{ background: 'var(--silver-100)', padding: 12, borderRadius: 8, border: '1px solid var(--silver-200)' }}>
-            <b style={{ fontSize: 13, color: 'var(--navy-800)' }}>✅ Rate Limiting</b>
-            <p className="hint" style={{ fontSize: 12, marginTop: 4 }}>Login 5/min, download 10/min, payment 5/min — auto block</p>
-          </div>
-          <div style={{ background: 'var(--silver-100)', padding: 12, borderRadius: 8, border: '1px solid var(--silver-200)' }}>
-            <b style={{ fontSize: 13, color: 'var(--navy-800)' }}>✅ HMAC Integrity</b>
-            <p className="hint" style={{ fontSize: 12, marginTop: 4 }}>Storage tamper detection with SHA-256 HMAC verification</p>
-          </div>
-          <div style={{ background: 'var(--silver-100)', padding: 12, borderRadius: 8, border: '1px solid var(--silver-200)' }}>
-            <b style={{ fontSize: 13, color: 'var(--navy-800)' }}>✅ CSRF Protection</b>
-            <p className="hint" style={{ fontSize: 12, marginTop: 4 }}>64-char secure random token per session, validated</p>
-          </div>
-          <div style={{ background: isSecureContext() ? '#eef6f0' : '#fff8e6', padding: 12, borderRadius: 8, border: `1px solid ${isSecureContext() ? '#c3e6cb' : '#f0ddc0'}` }}>
-            <b style={{ fontSize: 13, color: isSecureContext() ? '#0f6848' : 'var(--warn)' }}>{isSecureContext() ? '✅ Secure Context' : '⚠️ Secure Context'}</b>
-            <p className="hint" style={{ fontSize: 12, marginTop: 4 }}>{isSecureContext() ? 'HTTPS/HSTS active, secure' : 'Localhost — HTTPS in production'} · CSP, X-Frame, HSTS headers</p>
-          </div>
-        </div>
-        <div className="row" style={{ marginTop: 12 }}>
-          <button className="btn small" onClick={() => setShowAudit(!showAudit)}>{showAudit ? 'Hide' : 'Show'} Audit Logs ({auditLogs.length})</button>
-          <button className="btn small ghost" onClick={() => { localStorage.removeItem('craftcv.audit.v2'); alert('Audit logs cleared'); setShowAudit(false); }}>Clear Audit Logs</button>
-        </div>
-        {showAudit && (
-          <div style={{ marginTop: 12, background: 'var(--navy-950)', color: '#dfe6f2', borderRadius: 8, padding: 12, maxHeight: 300, overflow: 'auto', fontSize: 11, fontFamily: 'monospace' }}>
-            {auditLogs.slice(-20).reverse().map((log, i) => (
-              <div key={i} style={{ marginBottom: 6, borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: 4 }}>
-                [{new Date(log.timestamp).toLocaleString()}] {log.action} {log.details ? JSON.stringify(log.details).slice(0, 100) : ''}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
 
       <div className="card pad" style={{ marginTop: 18 }}>
         <h3 style={{ color: 'var(--navy-900)' }}>Your Data — Local-First, Private</h3>
