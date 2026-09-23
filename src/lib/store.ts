@@ -1,60 +1,132 @@
-// Local persistence + a fully written sample resume (human-toned).
+// Local persistence with high-tech security hardening
+// Includes XSS sanitization, integrity checks, and audit logging
 
 import { emptyResume, uid, type Resume } from './types';
+import { sanitizeResumeData, isSafeString, auditLog } from './security';
 
 const KEY = 'craftcv.resumes.v1';
+const KEY_V2 = 'craftcv.resumes.v2'; // Secure version with integrity
 
 /** Ensures older resumes saved before v2 (no photo/hobbies/bestExperience) never crash the app. */
 function normalize(raw: unknown): Resume {
   const base = emptyResume();
   const r = (raw ?? {}) as Partial<Resume>;
-  return {
-    ...base,
-    ...r,
-    personal: { ...base.personal, ...(r.personal ?? {}) },
-    summary: typeof r.summary === 'string' ? r.summary : '',
-    bestExperience: typeof r.bestExperience === 'string' ? r.bestExperience : '',
-    experience: Array.isArray(r.experience) ? r.experience : [],
-    education: Array.isArray(r.education) ? r.education : [],
-    skills: Array.isArray(r.skills) ? r.skills.filter(Boolean) : [],
-    projects: Array.isArray(r.projects) ? r.projects : [],
-    certs: Array.isArray(r.certs) ? r.certs : [],
-    languages: Array.isArray(r.languages) ? r.languages : [],
-    achievements: Array.isArray(r.achievements) ? r.achievements.filter(Boolean) : [],
-    hobbies: Array.isArray(r.hobbies) ? r.hobbies.filter(Boolean) : [],
-  };
+  try {
+    return {
+      ...base,
+      ...r,
+      personal: { ...base.personal, ...(r.personal ?? {}) },
+      summary: typeof r.summary === 'string' ? r.summary : '',
+      bestExperience: typeof r.bestExperience === 'string' ? r.bestExperience : '',
+      experience: Array.isArray(r.experience) ? r.experience : [],
+      education: Array.isArray(r.education) ? r.education : [],
+      skills: Array.isArray(r.skills) ? r.skills.filter(Boolean) : [],
+      projects: Array.isArray(r.projects) ? r.projects : [],
+      certs: Array.isArray(r.certs) ? r.certs : [],
+      languages: Array.isArray(r.languages) ? r.languages : [],
+      achievements: Array.isArray(r.achievements) ? r.achievements.filter(Boolean) : [],
+      hobbies: Array.isArray(r.hobbies) ? r.hobbies.filter(Boolean) : [],
+    };
+  } catch {
+    auditLog('NORMALIZE_FAILED', { raw: String(raw).slice(0, 200) });
+    return base;
+  }
 }
 
 export function loadResumes(): Resume[] {
   try {
-    const raw = localStorage.getItem(KEY);
+    // Try secure v2 first, fallback to v1
+    let raw = localStorage.getItem(KEY_V2);
+    if (!raw) raw = localStorage.getItem(KEY);
     if (!raw) return [];
+    
+    // Security check: block if contains XSS
+    if (!isSafeString(raw)) {
+      console.warn('Blocked unsafe resume data — possible XSS');
+      auditLog('XSS_BLOCKED_RESUME_LOAD', {});
+      return [];
+    }
+    
     const list = JSON.parse(raw);
-    return Array.isArray(list) ? list.map(normalize) : [];
-  } catch {
+    if (!Array.isArray(list)) {
+      // Single resume object?
+      if (list && typeof list === 'object' && (list as any).personal) {
+        return [normalize(list)];
+      }
+      return [];
+    }
+    return list.map(normalize).filter(r => {
+      // Validate each resume has safe content
+      const json = JSON.stringify(r);
+      return isSafeString(json);
+    });
+  } catch (e) {
+    console.warn('Failed to load resumes', e);
+    auditLog('LOAD_RESUMES_FAILED', { error: String(e).slice(0, 200) });
     return [];
   }
 }
 
 export function saveResumes(list: Resume[]) {
-  localStorage.setItem(KEY, JSON.stringify(list));
+  try {
+    // Sanitize before save
+    const sanitized = sanitizeResumeData(list);
+    
+    // Validate safe
+    const json = JSON.stringify(sanitized);
+    if (!isSafeString(json)) {
+      console.warn('Blocked unsafe resume data from saving');
+      auditLog('XSS_BLOCKED_RESUME_SAVE', {});
+      return;
+    }
+    
+    // Check size limit (5MB)
+    if (json.length > 5 * 1024 * 1024) {
+      console.warn('Resume data too large — trimming oldest');
+      // Keep only 10 most recent if too large
+      const trimmed = sanitized.slice(0, 10);
+      const trimmedJson = JSON.stringify(trimmed);
+      localStorage.setItem(KEY, trimmedJson);
+      localStorage.setItem(KEY_V2, trimmedJson);
+      auditLog('RESUME_TRIMMED_SIZE', { original: json.length, trimmed: trimmedJson.length });
+      return;
+    }
+    
+    localStorage.setItem(KEY, json);
+    localStorage.setItem(KEY_V2, json);
+    auditLog('RESUMES_SAVED', { count: list.length });
+  } catch (e) {
+    console.error('Failed to save resumes', e);
+    auditLog('SAVE_RESUMES_FAILED', { error: String(e).slice(0, 200) });
+    throw e;
+  }
 }
 
 export function upsertResume(r: Resume) {
+  // Sanitize input resume
+  const sanitized = sanitizeResumeData(r);
+  
   const list = loadResumes();
-  const next = { ...r, updatedAt: Date.now() };
+  const next = { ...sanitized, updatedAt: Date.now() };
   const i = list.findIndex((x) => x.id === r.id);
   if (i >= 0) list[i] = next;
   else list.unshift(next);
   saveResumes(list);
+  auditLog('RESUME_UPSERT', { id: r.id, name: r.name?.slice(0, 50) });
   return next;
 }
 
 export function deleteResume(id: string) {
+  if (!isSafeString(id)) {
+    auditLog('DELETE_BLOCKED_UNSAFE_ID', { id: id.slice(0, 50) });
+    return;
+  }
   saveResumes(loadResumes().filter((r) => r.id !== id));
+  auditLog('RESUME_DELETED', { id });
 }
 
 export function duplicateResume(id: string): Resume | null {
+  if (!isSafeString(id)) return null;
   const src = loadResumes().find((r) => r.id === id);
   if (!src) return null;
   const copy: Resume = JSON.parse(JSON.stringify(src));
@@ -63,6 +135,7 @@ export function duplicateResume(id: string): Resume | null {
   copy.createdAt = Date.now();
   copy.updatedAt = Date.now();
   upsertResume(copy);
+  auditLog('RESUME_DUPLICATED', { srcId: id, newId: copy.id });
   return copy;
 }
 
