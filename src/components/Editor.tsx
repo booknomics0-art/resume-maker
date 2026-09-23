@@ -7,6 +7,8 @@ import Preview from './Preview';
 import {
   StepBasics, StepDesign, StepEducation, StepExperience, StepExtras, StepSkills, StepSummary,
 } from './Steps';
+import { getBillingState, incrementDownload, canDownloadFree, getRemainingFreeDownloads, isPro } from '../lib/billing';
+import PaymentModal from './PaymentModal';
 
 function useContainerScale(baseWidth = 794) {
   const ref = useRef<HTMLDivElement>(null);
@@ -17,8 +19,6 @@ function useContainerScale(baseWidth = 794) {
     const compute = () => {
       const w = el.clientWidth;
       if (w === 0) return;
-      // On mobile we allow a bit of padding: container width includes padding,
-      // so use min(1, (w-1)/baseWidth) to avoid overflow by 1px
       setScale(Math.min(1, (w - 2) / baseWidth));
     };
     compute();
@@ -73,6 +73,8 @@ export default function Editor({ id }: { id: string }) {
   const [maxVisited, setMaxVisited] = useState(Math.min(initial.step, STEPS.length - 1));
   const [touched, setTouched] = useState(false);
   const [mobileTab, setMobileTab] = useState<'form' | 'preview'>('form');
+  const [showPayment, setShowPayment] = useState(false);
+  const [billing, setBilling] = useState(getBillingState());
   const dirtyRef = useRef(false);
   const { ref: scaleRef, scale } = useContainerScale();
 
@@ -93,15 +95,36 @@ export default function Editor({ id }: { id: string }) {
   const pct = completeness(r);
   const remainingMin = STEPS.slice(step).reduce((a, s) => a + s.minutes, 0);
   const f = fieldById(r.fieldId);
+  const pro = isPro();
+  const remainingFree = getRemainingFreeDownloads();
 
   const go = (i: number) => {
     if (i > step && !canNext) { setTouched(true); return; }
     setTouched(false);
     setStep(i);
     setMaxVisited((m) => Math.max(m, i));
-    // on mobile, switch to form tab when navigating steps
     setMobileTab('form');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleDownload = () => {
+    // Save name first
+    setR((prev) => ({ ...prev, name: prev.name.startsWith('Untitled') && prev.personal.fullName ? `${prev.personal.fullName} — ${prev.personal.headline}` : prev.name }));
+    
+    // Check billing
+    if (!canDownloadFree()) {
+      setShowPayment(true);
+      return;
+    }
+
+    const result = incrementDownload();
+    if (!result.success && result.requiresPayment) {
+      setShowPayment(true);
+      return;
+    }
+
+    setBilling(getBillingState());
+    setTimeout(() => window.print(), 100);
   };
 
   const stepBody = [
@@ -114,7 +137,6 @@ export default function Editor({ id }: { id: string }) {
     <StepDesign key="d" r={r} set={set} />,
   ][step];
 
-  // Height for scaled sheet wrapper to avoid collapse/overlap
   const scaledHeight = Math.ceil(1123 * scale);
 
   return (
@@ -125,7 +147,7 @@ export default function Editor({ id }: { id: string }) {
             {r.personal.fullName ? `${r.personal.fullName} — ${r.personal.headline || f.label}` : 'New resume'}
           </div>
           <div className="page-sub">
-            {f.icon} {f.label} · <b>{pct}%</b> complete · about <b>{Math.ceil(remainingMin)} min</b> left
+            {f.icon} {f.label} · <b>{pct}%</b> complete · about <b>{Math.ceil(remainingMin)} min</b> left · {pro ? 'PRO ✓' : `${remainingFree} free left`}
           </div>
         </div>
         <div className="row editor-head-actions">
@@ -133,16 +155,30 @@ export default function Editor({ id }: { id: string }) {
           <button
             className="btn primary"
             disabled={pct < 100}
-            title={pct < 100 ? 'Finish the mandatory fields first' : 'Download as PDF'}
-            onClick={() => {
-              setR((prev) => ({ ...prev, name: prev.name.startsWith('Untitled') && prev.personal.fullName ? `${prev.personal.fullName} — ${prev.personal.headline}` : prev.name }));
-              setTimeout(() => window.print(), 100);
-            }}
+            title={pct < 100 ? 'Finish mandatory fields first' : pro ? 'Download PDF (Pro unlimited)' : remainingFree > 0 ? `Download PDF (${remainingFree} free left)` : 'Free limit reached — needs Pro'}
+            onClick={handleDownload}
           >
-            ⬇ Download PDF
+            {pro ? '⬇ Download PDF (Pro)' : remainingFree > 0 ? `⬇ Download PDF (Free ${remainingFree} left)` : '🔒 Unlock Pro — ₹20'}
           </button>
         </div>
       </div>
+
+      {!pro && (
+        <div className="card pad no-print" style={{ marginBottom: 16, background: billing.freeDownloadsUsed >= 1 ? '#fff8e6' : 'var(--navy-50)', borderColor: billing.freeDownloadsUsed >= 1 ? '#f0ddc0' : 'var(--navy-100)', padding: '12px 16px' }}>
+          <div className="spread">
+            <div style={{ fontSize: 13 }}>
+              {billing.freeDownloadsUsed >= 1 ? (
+                <>⚠️ <b>Free limit reached:</b> You used {billing.freeDownloadsUsed}/1 free downloads. Second download needs Pro — ₹20 one-time, lifetime unlimited.</>
+              ) : (
+                <>🎁 <b>Free download available:</b> {remainingFree} free download left. After that, ₹20 one-time for unlimited. Try quality first!</>
+              )}
+            </div>
+            {billing.freeDownloadsUsed >= 1 && (
+              <button className="btn small primary" onClick={() => setShowPayment(true)}>Unlock Pro — ₹20</button>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="stepper no-print" style={{ marginBottom: 16 }}>
         {STEPS.map((s, i) => (
@@ -162,37 +198,18 @@ export default function Editor({ id }: { id: string }) {
         </div>
       </div>
 
-      {/* Mobile-only toggle between Form and Preview */}
       <div className="editor-mobile-tabs no-print" role="tablist" aria-label="Editor view">
-        <button
-          role="tab"
-          aria-selected={mobileTab === 'form'}
-          className={mobileTab === 'form' ? 'active' : ''}
-          onClick={() => setMobileTab('form')}
-        >
-          ✎ Edit
-        </button>
-        <button
-          role="tab"
-          aria-selected={mobileTab === 'preview'}
-          className={mobileTab === 'preview' ? 'active' : ''}
-          onClick={() => setMobileTab('preview')}
-        >
-          👁 Preview
-        </button>
+        <button role="tab" aria-selected={mobileTab === 'form'} className={mobileTab === 'form' ? 'active' : ''} onClick={() => setMobileTab('form')}>✎ Edit</button>
+        <button role="tab" aria-selected={mobileTab === 'preview'} className={mobileTab === 'preview' ? 'active' : ''} onClick={() => setMobileTab('preview')}>👁 Preview</button>
       </div>
 
       <div className="editor-grid">
         <div className={`card pad no-print editor-form ${mobileTab === 'preview' ? 'editor-pane-hidden' : ''}`}>
           <h3 style={{ color: 'var(--navy-900)', marginBottom: 4, fontSize: 16 }}>{STEPS[step].title}</h3>
-          <div className="hint" style={{ marginBottom: 14 }}>
-            Step {step + 1} of {STEPS.length} · ~{STEPS[step].minutes} min
-          </div>
+          <div className="hint" style={{ marginBottom: 14 }}>Step {step + 1} of {STEPS.length} · ~{STEPS[step].minutes} min</div>
 
           {errs.length > 0 && (
-            <div className="notice err">
-              {errs.map((e) => <div key={e}>• {e}</div>)}
-            </div>
+            <div className="notice err">{errs.map((e) => <div key={e}>• {e}</div>)}</div>
           )}
 
           {stepBody}
@@ -201,12 +218,8 @@ export default function Editor({ id }: { id: string }) {
             <button className="btn" disabled={step === 0} onClick={() => go(step - 1)}>← Back</button>
             <div className="row" style={{ flex: '1 1 auto', justifyContent: 'flex-end' }}>
               {step === STEPS.length - 1 ? (
-                <button
-                  className="btn primary"
-                  disabled={pct < 100}
-                  onClick={() => setTimeout(() => window.print(), 100)}
-                >
-                  ⬇ Finish &amp; download PDF
+                <button className="btn primary" disabled={pct < 100} onClick={handleDownload}>
+                  {pro ? '⬇ Finish & download PDF (Pro)' : remainingFree > 0 ? `⬇ Finish & download PDF (${remainingFree} free)` : '🔒 Unlock Pro — ₹20'}
                 </button>
               ) : (
                 <button className="btn primary" onClick={() => { setTouched(true); if (canNext) go(step + 1); }}>
@@ -216,15 +229,13 @@ export default function Editor({ id }: { id: string }) {
             </div>
           </div>
           {!canNext && touched && (
-            <div className="hint" style={{ marginTop: 8 }}>
-              Fill the required items above to continue — they are the fields recruiters always look for.
-            </div>
+            <div className="hint" style={{ marginTop: 8 }}>Fill required items above to continue — they are fields recruiters always look for.</div>
           )}
         </div>
 
         <div className={`preview-pane panel no-print editor-preview ${mobileTab === 'form' ? 'editor-pane-hidden' : ''}`}>
           <div className="preview-toolbar">
-            <b style={{ color: 'var(--navy-900)', fontSize: 13 }}>Live preview</b>
+            <b style={{ color: 'var(--navy-900)', fontSize: 13 }}>Live preview {pro ? '· PRO' : `· ${remainingFree} free left`}</b>
             <span className="hint" style={{ fontSize: 12 }}>updates as you type · A4</span>
           </div>
           <div className="sheet-holder" ref={scaleRef} style={{ width: '100%', height: scaledHeight || undefined }}>
@@ -233,21 +244,27 @@ export default function Editor({ id }: { id: string }) {
             </div>
           </div>
           <div className="row" style={{ justifyContent: 'center', marginTop: 6 }}>
-            <button className="btn small" onClick={() => setMobileTab('form') } style={{ display: 'none' }} data-mobile-only>
-              ✎ Back to edit
-            </button>
-            <button className="btn small primary" disabled={pct < 100} onClick={() => setTimeout(()=>window.print(), 100)} style={{ flex: '0 0 auto' }}>
-              ⬇ Download PDF
+            <button className="btn small primary" disabled={pct < 100} onClick={handleDownload} style={{ flex: '0 0 auto' }}>
+              {pro ? '⬇ Download PDF' : remainingFree > 0 ? `⬇ Download (${remainingFree} free)` : '🔒 Pro ₹20'}
             </button>
           </div>
-          <div className="hint" style={{ textAlign: 'center', fontSize: 11.5 }}>Pinch to zoom • Tap Download when ready</div>
+          <div className="hint" style={{ textAlign: 'center', fontSize: 11.5 }}>Pinch to zoom • {pro ? 'Unlimited downloads' : `${remainingFree} free left, then ₹20 Pro`}</div>
         </div>
       </div>
 
-      {/* hidden full-size copy used only for printing / PDF export */}
-      <div className="print-root" aria-hidden="true">
-        <Preview r={r} />
-      </div>
+      <div className="print-root" aria-hidden="true"><Preview r={r} /></div>
+
+      {showPayment && (
+        <PaymentModal
+          remainingFree={remainingFree}
+          onClose={() => setShowPayment(false)}
+          onSuccess={() => {
+            setShowPayment(false);
+            setBilling(getBillingState());
+            setTimeout(() => window.print(), 500);
+          }}
+        />
+      )}
     </div>
   );
 }
