@@ -59,7 +59,7 @@ export default function TemplateGallery({
             >
               {recommended && <div className="badge">★ Best for {f.label}</div>}
               <div className="thumb">
-                <Thumb r={{ ...r, templateId: t.id }} width={170} tpl={t} />
+                <Thumb r={{ ...r, templateId: t.id }} tpl={t} />
               </div>
               <div className="tpl-body">
                 <h4>{t.name} {r.templateId === t.id && '✓'}</h4>

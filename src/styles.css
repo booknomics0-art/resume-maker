@@ -242,7 +242,7 @@ label.f .req { color: var(--err); margin-left: 2px; }
 .tpl-card { cursor: pointer; overflow: hidden; transition: transform .12s ease, box-shadow .12s ease; position: relative; border-radius: var(--radius); }
 .tpl-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
 .tpl-card.selected { outline: 3px solid var(--navy-600); outline-offset: -1px; }
-.tpl-card .thumb { padding: 12px; background: linear-gradient(160deg, var(--silver-200), var(--silver-100)); display: flex; justify-content: center; min-height: 240px; align-items: flex-start; overflow: hidden; }
+.tpl-card .thumb { padding: 12px; background: linear-gradient(160deg, var(--silver-200), var(--silver-100)); display: flex; justify-content: center; align-items: flex-start; overflow: hidden; }
 .tpl-body { padding: 12px 14px 14px; }
 .tpl-body h4 { margin: 0 0 3px; font-size: 14.5px; color: var(--navy-900); }
 .tpl-body p { margin: 0; font-size: 12.5px; color: var(--silver-500); line-height: 1.4; }
@@ -256,8 +256,31 @@ label.f .req { color: var(--err); margin-left: 2px; }
 /* ---------- preview pane ---------- */
 .preview-pane { background: var(--silver-200); border-radius: var(--radius); padding: 18px; min-height: 420px; display: flex; flex-direction: column; gap: 12px; }
 .preview-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
-.sheet-holder { overflow: auto; display: flex; justify-content: center; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
-.sheet-scale { transform-origin: top center; flex: 0 0 auto; }
+.sheet-holder { overflow: auto; display: flex; justify-content: center; align-items: flex-start; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+/* Exact-size scaled box: the sheet is laid out at true A4 px (794 wide), then
+   scaled from the top-left corner inside a frame of exactly w×h scaled px.
+   This is what keeps the full A4 sheet visible (never half-cut) at any width. */
+.sheet-frame {
+  position: relative; flex: 0 0 auto; overflow: hidden; background: var(--paper);
+  box-shadow: 0 8px 28px rgba(10, 22, 48, 0.25); border-radius: 2px;
+}
+.sheet-scale { transform-origin: top left; position: absolute; top: 0; left: 0; }
+/* Responsive A4 thumbnail — the whole first page, paper look, any container width */
+.thumb-fit {
+  position: relative; width: 100%; overflow: hidden;
+  background: var(--paper); border: 1px solid var(--silver-200); border-radius: 3px;
+  box-shadow: 0 3px 14px rgba(10, 22, 48, 0.16);
+}
+.resume-card .thumb-wrap { width: min(200px, 72%); }
+/* On-screen only: marks where the A4 page actually ends (hidden in print) */
+.page-break {
+  position: absolute; left: 0; right: 0; height: 0; z-index: 5; pointer-events: none;
+  border-top: 1.5px dashed rgba(178, 59, 59, 0.5);
+}
+.page-break::after {
+  content: 'A4 page break'; position: absolute; right: 8px; top: 3px;
+  font-family: var(--font-ui); font-size: 11px; letter-spacing: .3px; color: rgba(178, 59, 59, 0.75);
+}
 
 /* ---------- pricing ---------- */
 .plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; margin: 22px 0; }
@@ -469,7 +492,6 @@ pre.code .c { color: #8fa3c7; }
   .stats { grid-template-columns: 1fr 1fr; }
   .resume-grid { grid-template-columns: 1fr; }
   .tpl-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-  .tpl-card .thumb { min-height: 180px; }
   .auth-wrap { flex-direction: column; }
   .auth-side { padding: 28px 20px; }
   .auth-card-wrap { padding: 20px 14px; }
@@ -516,7 +538,7 @@ pre.code .c { color: #8fa3c7; }
   .editor-grid { gap: 16px; }
   .preview-pane { padding: 12px; min-height: 360px; }
   .preview-toolbar { font-size: 12.5px; }
-  .sheet-holder { margin: 0 -4px; justify-content: flex-start; }
+  .sheet-holder { margin: 0; }
   .step-foot { flex-direction: column-reverse; align-items: stretch; }
   .step-foot .btn { justify-content: center; width: 100%; }
   .spread { gap: 8px; }
@@ -538,7 +560,7 @@ pre.code .c { color: #8fa3c7; }
 
   /* template gallery & pricing */
   .tpl-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-  .tpl-card .thumb { min-height: 160px; padding: 8px; }
+  .tpl-card .thumb { padding: 8px; }
   .tpl-body { padding: 10px 11px 12px; }
   .tpl-body h4 { font-size: 13px; }
   .tpl-body p { font-size: 11.8px; }
@@ -580,7 +602,6 @@ pre.code .c { color: #8fa3c7; }
   .stat { padding: 11px 12px; }
   .stat b { font-size: 19px; }
   .tpl-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
-  .tpl-card .thumb { min-height: 150px; }
   .page-title { font-size: 18px; }
   .btn { font-size: 14px; padding: 10px 12px; }
   .resume-grid { gap: 14px; }
