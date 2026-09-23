@@ -4,11 +4,30 @@
 // structural variants (mod-invert, mod-serif, mod-band-flat, mod-band-tint)
 // add a modifier class — see templates.css.
 
-import type { CSSProperties } from 'react';
+import { useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import type { Resume } from '../lib/types';
 import {
   SECTION_LABELS, hasSection, sectionOrder, templateById, type SectionId, type Template,
 } from '../lib/templates';
+
+/** A4 at 96dpi — the canonical sheet size used by preview, thumbs and print. */
+export const A4 = { w: 794, h: 1123 };
+
+/** Measures the element's own width so an A4 sheet can scale to any container. */
+function useFillWidth<T extends HTMLElement>() {
+  const ref = useRef<T>(null);
+  const [w, setW] = useState(0);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const compute = () => setW(el.clientWidth);
+    compute();
+    const ro = new ResizeObserver(compute);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  return { ref, w };
+}
 
 function sheetVars(t: Template): CSSProperties {
   const s: Record<string, string> = { '--p': t.pal.p, '--a': t.pal.a };
@@ -308,14 +327,25 @@ export default function Preview({ r, tpl }: { r: Resume; tpl?: Template }) {
   );
 }
 
-/** Scaled-down preview used for thumbnails and dashboard cards. */
-export function Thumb({ r, width, tpl }: { r: Resume; width: number; tpl?: Template }) {
-  const scale = width / 794;
+/**
+ * Responsive A4 thumbnail — shows the entire first page (794×1123) fitted to the
+ * container width. Stays uncropped and correctly proportioned at every
+ * mobile/desktop card size (scaling is top-left anchored on an exact-size box).
+ */
+export function Thumb({ r, tpl }: { r: Resume; tpl?: Template }) {
+  const { ref, w } = useFillWidth<HTMLDivElement>();
+  const scale = w > 0 ? w / A4.w : 0;
   return (
-    <div style={{ width, height: Math.ceil(1123 * scale), overflow: 'hidden', position: 'relative' }}>
-      <div className="sheet-scale" style={{ transform: `scale(${scale})` }}>
-        <Preview r={r} tpl={tpl} />
-      </div>
+    <div
+      className="thumb-fit"
+      ref={ref}
+      style={w > 0 ? { height: Math.round(A4.h * scale) } : undefined}
+    >
+      {scale > 0 && (
+        <div className="sheet-scale" style={{ width: A4.w, height: A4.h, transform: `scale(${scale})` }}>
+          <Preview r={r} tpl={tpl} />
+        </div>
+      )}
     </div>
   );
 }

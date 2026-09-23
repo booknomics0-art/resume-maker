@@ -12,7 +12,7 @@ import {
 } from './components/LegalPages';
 import { currentUser, logout, type User } from './lib/auth';
 import { initSecurity } from './lib/security';
-import { getBillingState, isPro } from './lib/billing';
+import { isPro } from './lib/billing';
 
 function useHashRoute() {
   const [hash, setHash] = useState(window.location.hash || '#/');
@@ -108,7 +108,6 @@ export default function App() {
     page = <Dashboard />;
   }
 
-  const billing = getBillingState();
   const pro = isPro();
 
   const NavLink = ({ to, id, children }: { to: string; id: string; children: React.ReactNode }) => (
@@ -153,14 +152,6 @@ export default function App() {
             <div className="brand-sub">Resume Studio {pro ? '· PRO' : ''}</div>
           </div>
         </div>
-
-        {!pro && (
-          <div style={{ margin: '8px 8px 12px', padding: '12px', borderRadius: 10, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)' }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: '#fff', marginBottom: 4 }}>💎 Free: {billing.freeDownloadsUsed}/{billing.freeDownloadsLimit} used</div>
-            <div className="progress" style={{ height: 5, background: 'rgba(255,255,255,0.15)' }}><div style={{ width: `${(billing.freeDownloadsUsed/billing.freeDownloadsLimit)*100}%`, background: '#fff' }} /></div>
-            <button className="btn small primary" style={{ width: '100%', marginTop: 10, justifyContent: 'center', fontSize: 12 }} onClick={() => navigate('/pricing')}>Unlock Pro — ₹20</button>
-          </div>
-        )}
 
         <nav className="sidebar-nav">
           <NavLink to="/" id="/"><span className="nav-icon">▦</span> Dashboard</NavLink>

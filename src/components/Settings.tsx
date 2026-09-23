@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { currentUser, logout } from '../lib/auth';
 import { navigate } from '../App';
 import { getBillingState, isPro, getTransactions, resetBilling } from '../lib/billing';
+import { getAuditLogs } from '../lib/security';
 
 export default function Settings() {
   const user = currentUser();

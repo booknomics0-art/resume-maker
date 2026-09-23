@@ -3,14 +3,14 @@ import { STEPS, completeness, emptyResume, type Resume } from '../lib/types';
 import { loadResumes, sampleResume, upsertResume } from '../lib/store';
 import { fieldById } from '../lib/fields';
 import { navigate } from '../App';
-import Preview from './Preview';
+import Preview, { A4 } from './Preview';
 import {
   StepBasics, StepDesign, StepEducation, StepExperience, StepExtras, StepSkills, StepSummary,
 } from './Steps';
-import { getBillingState, incrementDownload, canDownloadFree, getRemainingFreeDownloads, isPro } from '../lib/billing';
+import { incrementDownload, canDownloadFree, getRemainingFreeDownloads, isPro } from '../lib/billing';
 import PaymentModal from './PaymentModal';
 
-function useContainerScale(baseWidth = 794) {
+function useContainerScale(baseWidth = A4.w) {
   const ref = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
   useEffect(() => {
@@ -74,9 +74,44 @@ export default function Editor({ id }: { id: string }) {
   const [touched, setTouched] = useState(false);
   const [mobileTab, setMobileTab] = useState<'form' | 'preview'>('form');
   const [showPayment, setShowPayment] = useState(false);
-  const [billing, setBilling] = useState(getBillingState());
   const dirtyRef = useRef(false);
-  const { ref: scaleRef, scale } = useContainerScale();
+  const { ref: scaleRef, scale: fitScale } = useContainerScale();
+
+  // ---- A4 preview scaling -------------------------------------------------
+  // The sheet is laid out at true A4 px (794 wide), then scaled from the top-left
+  // inside an exact-size frame — so the full sheet is always visible, on any
+  // mobile/desktop viewport and in portrait or landscape.
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const [contentH, setContentH] = useState(A4.h);
+  const [fitMode, setFitMode] = useState<'width' | 'page'>(() =>
+    typeof window !== 'undefined' && window.innerWidth > window.innerHeight + 40 ? 'page' : 'width',
+  );
+  const [vh, setVh] = useState(typeof window !== 'undefined' ? window.innerHeight : 900);
+
+  // Measure the real (unscaled) sheet height so content longer than one A4 page
+  // is never cut off.
+  useEffect(() => {
+    const el = sheetRef.current;
+    if (!el) return;
+    const compute = () => setContentH(Math.max(A4.h, el.offsetHeight));
+    compute();
+    const ro = new ResizeObserver(compute);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [step, mobileTab]);
+
+  useEffect(() => {
+    const onResize = () => setVh(window.innerHeight);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  // Fit width: sheet fills the pane width (max 100%). Whole page: the entire
+  // A4 page fits on screen at once — ideal for landscape phones and short windows.
+  const scale = fitMode === 'page'
+    ? Math.max(0.12, Math.min(fitScale, (vh - 300) / A4.h))
+    : fitScale;
+  // -------------------------------------------------------------------------
 
   // autosave (debounced) — never persists a brand-new resume the user hasn't touched
   useEffect(() => {
@@ -97,6 +132,7 @@ export default function Editor({ id }: { id: string }) {
   const f = fieldById(r.fieldId);
   const pro = isPro();
   const remainingFree = getRemainingFreeDownloads();
+  const locked = !pro && remainingFree <= 0;
 
   const go = (i: number) => {
     if (i > step && !canNext) { setTouched(true); return; }
@@ -110,8 +146,7 @@ export default function Editor({ id }: { id: string }) {
   const handleDownload = () => {
     // Save name first
     setR((prev) => ({ ...prev, name: prev.name.startsWith('Untitled') && prev.personal.fullName ? `${prev.personal.fullName} — ${prev.personal.headline}` : prev.name }));
-    
-    // Check billing
+
     if (!canDownloadFree()) {
       setShowPayment(true);
       return;
@@ -123,7 +158,6 @@ export default function Editor({ id }: { id: string }) {
       return;
     }
 
-    setBilling(getBillingState());
     setTimeout(() => window.print(), 100);
   };
 
@@ -137,8 +171,6 @@ export default function Editor({ id }: { id: string }) {
     <StepDesign key="d" r={r} set={set} />,
   ][step];
 
-  const scaledHeight = Math.ceil(1123 * scale);
-
   return (
     <div className="editor-root">
       <div className="page-head no-print">
@@ -147,7 +179,7 @@ export default function Editor({ id }: { id: string }) {
             {r.personal.fullName ? `${r.personal.fullName} — ${r.personal.headline || f.label}` : 'New resume'}
           </div>
           <div className="page-sub">
-            {f.icon} {f.label} · <b>{pct}%</b> complete · about <b>{Math.ceil(remainingMin)} min</b> left · {pro ? 'PRO ✓' : `${remainingFree} free left`}
+            {f.icon} {f.label} · <b>{pct}%</b> complete · about <b>{Math.ceil(remainingMin)} min</b> left
           </div>
         </div>
         <div className="row editor-head-actions">
@@ -158,27 +190,10 @@ export default function Editor({ id }: { id: string }) {
             title={pct < 100 ? 'Finish mandatory fields first' : pro ? 'Download PDF (Pro unlimited)' : remainingFree > 0 ? `Download PDF (${remainingFree} free left)` : 'Free limit reached — needs Pro'}
             onClick={handleDownload}
           >
-            {pro ? '⬇ Download PDF (Pro)' : remainingFree > 0 ? `⬇ Download PDF (Free ${remainingFree} left)` : '🔒 Unlock Pro — ₹20'}
+            {locked ? '🔒 Unlock Pro — ₹20' : '⬇ Download PDF'}
           </button>
         </div>
       </div>
-
-      {!pro && (
-        <div className="card pad no-print" style={{ marginBottom: 16, background: billing.freeDownloadsUsed >= 1 ? '#fff8e6' : 'var(--navy-50)', borderColor: billing.freeDownloadsUsed >= 1 ? '#f0ddc0' : 'var(--navy-100)', padding: '12px 16px' }}>
-          <div className="spread">
-            <div style={{ fontSize: 13 }}>
-              {billing.freeDownloadsUsed >= 1 ? (
-                <>⚠️ <b>Free limit reached:</b> You used {billing.freeDownloadsUsed}/1 free downloads. Second download needs Pro — ₹20 one-time, lifetime unlimited.</>
-              ) : (
-                <>🎁 <b>Free download available:</b> {remainingFree} free download left. After that, ₹20 one-time for unlimited. Try quality first!</>
-              )}
-            </div>
-            {billing.freeDownloadsUsed >= 1 && (
-              <button className="btn small primary" onClick={() => setShowPayment(true)}>Unlock Pro — ₹20</button>
-            )}
-          </div>
-        </div>
-      )}
 
       <div className="stepper no-print" style={{ marginBottom: 16 }}>
         {STEPS.map((s, i) => (
@@ -219,7 +234,7 @@ export default function Editor({ id }: { id: string }) {
             <div className="row" style={{ flex: '1 1 auto', justifyContent: 'flex-end' }}>
               {step === STEPS.length - 1 ? (
                 <button className="btn primary" disabled={pct < 100} onClick={handleDownload}>
-                  {pro ? '⬇ Finish & download PDF (Pro)' : remainingFree > 0 ? `⬇ Finish & download PDF (${remainingFree} free)` : '🔒 Unlock Pro — ₹20'}
+                  {locked ? '🔒 Unlock Pro — ₹20' : '⬇ Finish & download PDF'}
                 </button>
               ) : (
                 <button className="btn primary" onClick={() => { setTouched(true); if (canNext) go(step + 1); }}>
@@ -235,20 +250,42 @@ export default function Editor({ id }: { id: string }) {
 
         <div className={`preview-pane panel no-print editor-preview ${mobileTab === 'form' ? 'editor-pane-hidden' : ''}`}>
           <div className="preview-toolbar">
-            <b style={{ color: 'var(--navy-900)', fontSize: 13 }}>Live preview {pro ? '· PRO' : `· ${remainingFree} free left`}</b>
-            <span className="hint" style={{ fontSize: 12 }}>updates as you type · A4</span>
+            <b style={{ color: 'var(--navy-900)', fontSize: 13 }}>Live preview</b>
+            <div className="row" style={{ gap: 8 }}>
+              <div className="chips" style={{ gap: 4 }}>
+                <button
+                  className={`chip ${fitMode === 'width' ? 'on' : ''}`}
+                  style={{ padding: '5px 11px', minHeight: 30, fontSize: 12 }}
+                  onClick={() => setFitMode('width')}
+                >Fit width</button>
+                <button
+                  className={`chip ${fitMode === 'page' ? 'on' : ''}`}
+                  style={{ padding: '5px 11px', minHeight: 30, fontSize: 12 }}
+                  onClick={() => setFitMode('page')}
+                >Whole page</button>
+              </div>
+              <span className="hint" style={{ fontSize: 12 }}>A4 · updates as you type</span>
+            </div>
           </div>
-          <div className="sheet-holder" ref={scaleRef} style={{ width: '100%', height: scaledHeight || undefined }}>
-            <div className="sheet-scale" style={{ transform: `scale(${scale})`, width: 794, height: 1123 }}>
-              <Preview r={r} />
+          <div className="sheet-holder" ref={scaleRef} style={{ width: '100%' }}>
+            <div className="sheet-frame" style={{ width: A4.w * scale, height: contentH * scale }}>
+              <div ref={sheetRef} className="sheet-scale" style={{ width: A4.w, transform: `scale(${scale})` }}>
+                <Preview r={r} />
+                {/* on-screen guides only — where the printed A4 page ends */}
+                {Array.from({ length: Math.floor((contentH - 4) / A4.h) }).map((_, i) => (
+                  <div className="page-break" key={i} style={{ top: (i + 1) * A4.h }} />
+                ))}
+              </div>
             </div>
           </div>
           <div className="row" style={{ justifyContent: 'center', marginTop: 6 }}>
             <button className="btn small primary" disabled={pct < 100} onClick={handleDownload} style={{ flex: '0 0 auto' }}>
-              {pro ? '⬇ Download PDF' : remainingFree > 0 ? `⬇ Download (${remainingFree} free)` : '🔒 Pro ₹20'}
+              {locked ? '🔒 Unlock Pro — ₹20' : '⬇ Download PDF'}
             </button>
           </div>
-          <div className="hint" style={{ textAlign: 'center', fontSize: 11.5 }}>Pinch to zoom • {pro ? 'Unlimited downloads' : `${remainingFree} free left, then ₹20 Pro`}</div>
+          <div className="hint" style={{ textAlign: 'center', fontSize: 11.5 }}>
+            Exact A4 page — what you see here is what prints{contentH > A4.h + 4 ? ` · ${Math.ceil(contentH / A4.h)} pages` : ''}
+          </div>
         </div>
       </div>
 
@@ -260,7 +297,6 @@ export default function Editor({ id }: { id: string }) {
           onClose={() => setShowPayment(false)}
           onSuccess={() => {
             setShowPayment(false);
-            setBilling(getBillingState());
             setTimeout(() => window.print(), 500);
           }}
         />
