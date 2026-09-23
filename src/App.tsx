@@ -33,7 +33,7 @@ export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const tab = useHashRoute();
 
-  // Initialize high-tech security on mount
+  // Initialize application protections on mount
   useEffect(() => {
     initSecurity();
   }, []);
@@ -178,8 +178,6 @@ export default function App() {
           <a className="drawer-link" href="#/contact" onClick={(e)=>{e.preventDefault();navigate('/contact');}}>Contact</a>
           <a className="drawer-link" href="#/privacy" onClick={(e)=>{e.preventDefault();navigate('/privacy');}}>Privacy</a>
           <a className="drawer-link" href="#/refund" onClick={(e)=>{e.preventDefault();navigate('/refund');}}>Refund (No Refund)</a>
-          <div className="drawer-label" style={{ marginTop: 14 }}>Security</div>
-          <div className="hint" style={{ fontSize: 11, color: 'var(--silver-400)', padding: '4px 8px' }}>🔒 XSS Protected · Encrypted · Rate Limited · HMAC Verified</div>
         </div>
 
         <div className="sidebar-foot">
@@ -205,9 +203,6 @@ export default function App() {
           >
             ⎋ &nbsp;Logout
           </button>
-          <div style={{ fontSize: 10, color: 'var(--silver-500)', textAlign: 'center', marginTop: 8, lineHeight: 1.4 }}>
-            🔒 Secured · v2.0 · No tracking<br />Made in India 🇮🇳
-          </div>
         </div>
       </aside>
 

@@ -49,7 +49,7 @@ export default function Dashboard() {
           <div style={{ flex: '1 1 300px' }}>
             <b style={{ color: 'var(--navy-900)', fontSize: 16 }}>New: Upload Existing Resume & Advanced Edit</b>
             <p className="hint" style={{ margin: '4px 0 0', fontSize: 13.5, lineHeight: 1.5 }}>
-              Already have a resume? Upload PDF, DOCX, TXT, or JSON — we parse with advanced heuristics (90%+ accuracy), then let you edit everything: add photo, change template, rewrite bullets, advanced-level editing. 100% private, stays in browser, XSS sanitized.
+              Already have a resume? Upload PDF, DOCX, TXT, or JSON — we parse with advanced heuristics (90%+ accuracy), then let you edit everything: add photo, change template, rewrite bullets, advanced-level editing.
             </p>
           </div>
           <div style={{ flex: '0 0 auto', display: 'flex', gap: 8 }}>
@@ -57,7 +57,7 @@ export default function Dashboard() {
           </div>
         </div>
         <div style={{ background: 'var(--navy-900)', color: 'var(--silver-300)', padding: '8px 20px', fontSize: 12, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-          <span>✅ PDF, DOCX, TXT, JSON</span><span>🔒 No server upload</span><span>⚡ 90%+ parsing accuracy</span><span>✏️ Full advanced edit</span><span>🛡️ XSS protected</span>
+          <span>✅ PDF, DOCX, TXT, JSON</span><span>⚡ Easy import</span><span>⚡ 90%+ parsing accuracy</span><span>✏️ Full advanced edit</span>
         </div>
       </div>
 
@@ -143,17 +143,6 @@ export default function Dashboard() {
         </div>
       )}
 
-      <div className="card pad" style={{ marginTop: 20 }}>
-        <h4 style={{ margin: '0 0 8px', color: 'var(--navy-900)' }}>🔒 High-Tech Security Features Active</h4>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10 }}>
-          <div className="hint" style={{ fontSize: 12.5 }}>✅ XSS Sanitization — all inputs stripped of scripts</div>
-          <div className="hint" style={{ fontSize: 12.5 }}>✅ SHA-256 Password Hashing with Salt</div>
-          <div className="hint" style={{ fontSize: 12.5 }}>✅ Rate Limiting — brute force blocked</div>
-          <div className="hint" style={{ fontSize: 12.5 }}>✅ HMAC Integrity — storage tamper detection</div>
-          <div className="hint" style={{ fontSize: 12.5 }}>✅ CSRF Tokens — 64-char secure random</div>
-          <div className="hint" style={{ fontSize: 12.5 }}>✅ CSP Headers — no inline scripts</div>
-        </div>
-      </div>
     </div>
   );
 }
