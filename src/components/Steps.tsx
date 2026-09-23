@@ -407,10 +407,10 @@ export function StepSkills({ r, set }: StepProps) {
           ))}
         </div>
         <div className="row">
-          <input className="input" style={{ maxWidth: 260 }} value={custom} placeholder="Type a skill and press Add"
+          <input className="input" style={{ flex: '1 1 180px', minWidth: 0 }} value={custom} placeholder="Type a skill and press Add"
             onChange={(e) => setCustom(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addCustom(); } }} />
-          <button type="button" className="btn small" onClick={addCustom}>Add</button>
+          <button type="button" className="btn small" onClick={addCustom} style={{ flex: '0 0 auto' }}>Add</button>
         </div>
       </F>
       <div style={{ marginTop: 14 }}>
@@ -471,10 +471,10 @@ export function StepExtras({ r, set }: StepProps) {
             ))}
           </div>
           <div className="row">
-            <input className="input" style={{ maxWidth: 240 }} value={hobby} placeholder="e.g. Cricket, Photography"
+            <input className="input" style={{ flex: '1 1 180px', minWidth: 0 }} value={hobby} placeholder="e.g. Cricket, Photography"
               onChange={(e) => setHobby(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addHobby(); } }} />
-            <button type="button" className="btn small" onClick={addHobby}>Add</button>
+            <button type="button" className="btn small" onClick={addHobby} style={{ flex: '0 0 auto' }}>Add</button>
           </div>
         </F>
       </div>
@@ -536,10 +536,10 @@ export function StepExtras({ r, set }: StepProps) {
       <div className="form-grid" style={{ marginTop: 18 }}>
         <F label="Languages">
           {r.languages.map((l) => (
-            <div className="row" key={l.id} style={{ marginBottom: 6 }}>
-              <input className="input" style={{ width: 150 }} value={l.name} placeholder="Language"
+            <div className="row" key={l.id} style={{ marginBottom: 6, flexWrap: 'nowrap', gap: 6 }}>
+              <input className="input" style={{ flex: '1 1 90px', minWidth: 0 }} value={l.name} placeholder="Language"
                 onChange={(e) => set({ languages: r.languages.map((x) => x.id === l.id ? { ...x, name: e.target.value } : x) })} />
-              <select className="select" style={{ width: 170 }} value={l.level}
+              <select className="select" style={{ flex: '1 1 110px', minWidth: 0 }} value={l.level}
                 onChange={(e) => set({ languages: r.languages.map((x) => x.id === l.id ? { ...x, level: e.target.value } : x) })}>
                 {['Native', 'Professional', 'Conversational', 'Basic'].map((lv) => <option key={lv}>{lv}</option>)}
               </select>
