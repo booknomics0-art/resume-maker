@@ -8,7 +8,7 @@ export default function Pricing() {
         </div>
       </div>
 
-      <div className="plans" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))' }}>
+      <div className="plans">
         <div className="card plan">
           <b style={{ color: 'var(--navy-800)', fontSize: 17 }}>Free</b>
           <div className="price">₹0 <small>forever</small></div>

@@ -26,7 +26,23 @@ export const navigate = (to: string) => {
 
 export default function App() {
   const [user, setUser] = useState<User | null>(() => currentUser());
+  const [menuOpen, setMenuOpen] = useState(false);
   const tab = useHashRoute();
+
+  // close drawer on route change
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [tab]);
+
+  // lock body scroll when drawer open on mobile
+  useEffect(() => {
+    if (menuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [menuOpen]);
 
   if (!user) {
     return <AuthPage onAuth={() => setUser(currentUser())} />;
@@ -65,9 +81,41 @@ export default function App() {
     page = <Dashboard />;
   }
 
+  const NavLink = ({ to, id, children }: { to: string; id: string; children: React.ReactNode }) => (
+    <a
+      className={`nav-item ${active === id ? 'active' : ''}`}
+      href={`#${to}`}
+      onClick={(e) => { e.preventDefault(); navigate(to); }}
+    >
+      {children}
+    </a>
+  );
+
   return (
     <div className="shell">
-      <aside className="sidebar no-print">
+      {/* Mobile top bar — visible only on small screens */}
+      <header className="mobile-topbar no-print">
+        <button
+          className="menu-btn"
+          aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={menuOpen}
+          onClick={() => setMenuOpen(o => !o)}
+        >
+          <span className="hamburger" aria-hidden>
+            <span></span><span></span><span></span>
+          </span>
+        </button>
+        <a href="#/" onClick={(e)=>{e.preventDefault(); navigate('/');}} className="mobile-brand">
+          <div className="brand-badge">CV</div>
+          <span className="mobile-brand-name">CraftCV</span>
+        </a>
+        <div className="mobile-top-actions">
+          <button className="btn small primary" onClick={() => navigate('/editor/new')} style={{ padding: '7px 12px', fontSize: 13 }}>+ New</button>
+        </div>
+      </header>
+
+      {/* Sidebar / Drawer */}
+      <aside className={`sidebar no-print ${menuOpen ? 'open' : ''}`}>
         <div className="brand">
           <div className="brand-badge">CV</div>
           <div>
@@ -75,36 +123,72 @@ export default function App() {
             <div className="brand-sub">Resume Studio</div>
           </div>
         </div>
-        <a className={`nav-item ${active === '/' ? 'active' : ''}`} href="#/" onClick={() => navigate('/')}>
-          ▦ &nbsp;Dashboard
-        </a>
-        <a className={`nav-item ${active === '/editor' ? 'active' : ''}`} href="#/editor/new" onClick={() => navigate('/editor/new')}>
-          ✎ &nbsp;New resume
-        </a>
-        <a className={`nav-item ${active === '/pricing' ? 'active' : ''}`} href="#/pricing" onClick={() => navigate('/pricing')}>
-          ◈ &nbsp;Pricing
-        </a>
-        <a className={`nav-item ${active === '/settings' ? 'active' : ''}`} href="#/settings" onClick={() => navigate('/settings')}>
-          ⚙ &nbsp;Settings
-        </a>
+
+        <nav className="sidebar-nav">
+          <NavLink to="/" id="/"><span className="nav-icon">▦</span> Dashboard</NavLink>
+          <NavLink to="/editor/new" id="/editor"><span className="nav-icon">✎</span> New resume</NavLink>
+          <NavLink to="/pricing" id="/pricing"><span className="nav-icon">◈</span> Pricing</NavLink>
+          <NavLink to="/settings" id="/settings"><span className="nav-icon">⚙</span> Settings</NavLink>
+        </nav>
+
+        {/* Mobile-only quick links section inside drawer */}
+        <div className="drawer-extra">
+          <div className="drawer-label">Help & Legal</div>
+          <a className="drawer-link" href="#/about" onClick={(e)=>{e.preventDefault();navigate('/about');}}>About us</a>
+          <a className="drawer-link" href="#/faq" onClick={(e)=>{e.preventDefault();navigate('/faq');}}>FAQ</a>
+          <a className="drawer-link" href="#/contact" onClick={(e)=>{e.preventDefault();navigate('/contact');}}>Contact</a>
+          <a className="drawer-link" href="#/privacy" onClick={(e)=>{e.preventDefault();navigate('/privacy');}}>Privacy</a>
+        </div>
+
         <div className="sidebar-foot">
-          <div style={{ color: 'var(--silver-300)', fontWeight: 600, marginBottom: 2 }}>
-            {user.name.split(' ')[0]}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+            <div style={{
+              width: 36, height: 36, borderRadius: '50%', background: 'var(--navy-700)',
+              display: 'grid', placeItems: 'center', color: '#fff', fontWeight: 800, fontSize: 14,
+              border: '1px solid rgba(255,255,255,.15)', flex: '0 0 auto'
+            }}>
+              {user.name.charAt(0).toUpperCase()}
+            </div>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div style={{ color: '#fff', fontWeight: 700, fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {user.name}
+              </div>
+              <div style={{ fontSize: 11.5, color: 'var(--silver-400)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.email}</div>
+            </div>
           </div>
-          {user.email}<br />
           <button
-            className="nav-item"
-            style={{ padding: '6px 0', marginTop: 6, color: 'var(--silver-400)' }}
+            className="btn small"
+            style={{ width: '100%', justifyContent: 'center', background: 'rgba(255,255,255,.08)', borderColor: 'rgba(255,255,255,.15)', color: 'var(--silver-200)' }}
             onClick={() => { logout(); setUser(null); navigate('/'); }}
           >
             ⎋ &nbsp;Logout
           </button>
         </div>
       </aside>
+
+      {/* Overlay */}
+      <div className={`sidebar-overlay ${menuOpen ? 'open' : ''}`} onClick={() => setMenuOpen(false)} aria-hidden />
+
       <main className={`main ${active === '/editor' ? 'wide' : ''}`}>
         {page}
         <Footer />
       </main>
+
+      {/* Mobile bottom nav — quick access on very small screens */}
+      <nav className="bottom-nav no-print" aria-label="Primary">
+        <a className={`bottom-nav-item ${active==='/'?'active':''}`} href="#/" onClick={(e)=>{e.preventDefault();navigate('/');}}>
+          <span className="bn-icon">▦</span><span>Home</span>
+        </a>
+        <a className={`bottom-nav-item ${active==='/editor'?'active':''}`} href="#/editor/new" onClick={(e)=>{e.preventDefault();navigate('/editor/new');}}>
+          <span className="bn-icon">✎</span><span>Create</span>
+        </a>
+        <a className={`bottom-nav-item ${active==='/pricing'?'active':''}`} href="#/pricing" onClick={(e)=>{e.preventDefault();navigate('/pricing');}}>
+          <span className="bn-icon">◈</span><span>Pricing</span>
+        </a>
+        <a className={`bottom-nav-item ${active==='/settings'?'active':''}`} href="#/settings" onClick={(e)=>{e.preventDefault();navigate('/settings');}}>
+          <span className="bn-icon">⚙</span><span>Settings</span>
+        </a>
+      </nav>
     </div>
   );
 }

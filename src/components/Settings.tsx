@@ -16,11 +16,11 @@ export default function Settings() {
       <div className="card pad">
         <h3 style={{ color: 'var(--navy-900)' }}>Account</h3>
         <div className="spread" style={{ marginTop: 8 }}>
-          <div>
-            <b style={{ color: 'var(--navy-800)' }}>{user?.name}</b>
-            <div className="hint">{user?.email} · signed in with {user?.provider === 'google' ? 'Google' : 'email'}</div>
+          <div style={{ minWidth: 0, flex: '1 1 200px' }}>
+            <b style={{ color: 'var(--navy-800)', wordBreak: 'break-all' }}>{user?.name}</b>
+            <div className="hint" style={{ wordBreak: 'break-all' }}>{user?.email} · signed in with {user?.provider === 'google' ? 'Google' : 'email'}</div>
           </div>
-          <button className="btn" onClick={() => { logout(); location.hash = '#/'; location.reload(); }}>Logout</button>
+          <button className="btn" style={{ flex: '0 0 auto' }} onClick={() => { logout(); location.hash = '#/'; location.reload(); }}>Logout</button>
         </div>
       </div>
 

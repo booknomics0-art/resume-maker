@@ -53,14 +53,16 @@ export function ContactPage() {
         Questions, feedback, or a problem with a payment — write to us and we will
         respond within 2 working days.
       </p>
-      <table className="tbl" style={{ marginTop: 12 }}>
+      <div className="tbl-wrap" style={{ marginTop: 12 }}>
+      <table className="tbl">
         <tbody>
-          <tr><td style={{ width: 180 }}><b>Support email</b></td><td>support@craftcv.app</td></tr>
-          <tr><td><b>Payments &amp; refunds</b></td><td>billing@craftcv.app</td></tr>
+          <tr><td style={{ width: 160, minWidth: 120 }}><b>Support email</b></td><td style={{ wordBreak: 'break-all' }}>support@craftcv.app</td></tr>
+          <tr><td><b>Payments &amp; refunds</b></td><td style={{ wordBreak: 'break-all' }}>billing@craftcv.app</td></tr>
           <tr><td><b>Response time</b></td><td>Within 2 working days (Mon–Sat)</td></tr>
           <tr><td><b>Location</b></td><td>New Delhi, India</td></tr>
         </tbody>
       </table>
+      </div>
       <div className="notice" style={{ marginTop: 16 }}>
         For payment issues, please include your registered email and the transaction
         reference from your UPI app or bank statement — it helps us resolve things faster.

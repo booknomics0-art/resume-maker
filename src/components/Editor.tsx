@@ -10,15 +10,22 @@ import {
 
 function useContainerScale(baseWidth = 794) {
   const ref = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(0.7);
+  const [scale, setScale] = useState(1);
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const compute = () => setScale(Math.min(1, el.clientWidth / baseWidth));
+    const compute = () => {
+      const w = el.clientWidth;
+      if (w === 0) return;
+      // On mobile we allow a bit of padding: container width includes padding,
+      // so use min(1, (w-1)/baseWidth) to avoid overflow by 1px
+      setScale(Math.min(1, (w - 2) / baseWidth));
+    };
     compute();
     const ro = new ResizeObserver(compute);
     ro.observe(el);
-    return () => ro.disconnect();
+    window.addEventListener('resize', compute);
+    return () => { ro.disconnect(); window.removeEventListener('resize', compute); };
   }, [baseWidth]);
   return { ref, scale };
 }
@@ -65,6 +72,7 @@ export default function Editor({ id }: { id: string }) {
   const [step, setStep] = useState(Math.min(initial.step, STEPS.length - 1));
   const [maxVisited, setMaxVisited] = useState(Math.min(initial.step, STEPS.length - 1));
   const [touched, setTouched] = useState(false);
+  const [mobileTab, setMobileTab] = useState<'form' | 'preview'>('form');
   const dirtyRef = useRef(false);
   const { ref: scaleRef, scale } = useContainerScale();
 
@@ -91,6 +99,8 @@ export default function Editor({ id }: { id: string }) {
     setTouched(false);
     setStep(i);
     setMaxVisited((m) => Math.max(m, i));
+    // on mobile, switch to form tab when navigating steps
+    setMobileTab('form');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -104,18 +114,21 @@ export default function Editor({ id }: { id: string }) {
     <StepDesign key="d" r={r} set={set} />,
   ][step];
 
+  // Height for scaled sheet wrapper to avoid collapse/overlap
+  const scaledHeight = Math.ceil(1123 * scale);
+
   return (
-    <div>
+    <div className="editor-root">
       <div className="page-head no-print">
-        <div>
-          <div className="page-title" style={{ fontSize: 20 }}>
+        <div style={{ minWidth: 0, flex: '1 1 260px' }}>
+          <div className="page-title" style={{ fontSize: 20, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {r.personal.fullName ? `${r.personal.fullName} — ${r.personal.headline || f.label}` : 'New resume'}
           </div>
           <div className="page-sub">
             {f.icon} {f.label} · <b>{pct}%</b> complete · about <b>{Math.ceil(remainingMin)} min</b> left
           </div>
         </div>
-        <div className="row">
+        <div className="row editor-head-actions">
           <button className="btn" onClick={() => navigate('/')}>← Dashboard</button>
           <button
             className="btn primary"
@@ -131,7 +144,7 @@ export default function Editor({ id }: { id: string }) {
         </div>
       </div>
 
-      <div className="stepper no-print" style={{ marginBottom: 18 }}>
+      <div className="stepper no-print" style={{ marginBottom: 16 }}>
         {STEPS.map((s, i) => (
           <button
             key={s.id}
@@ -143,15 +156,35 @@ export default function Editor({ id }: { id: string }) {
             {s.short}
           </button>
         ))}
-        <div style={{ flex: 1 }} />
-        <div className="progress" style={{ width: 160, alignSelf: 'center' }}>
+        <div style={{ flex: 1, minWidth: 12 }} />
+        <div className="progress" style={{ width: 140, alignSelf: 'center', flex: '0 0 140px' }}>
           <div style={{ width: `${pct}%` }} />
         </div>
       </div>
 
+      {/* Mobile-only toggle between Form and Preview */}
+      <div className="editor-mobile-tabs no-print" role="tablist" aria-label="Editor view">
+        <button
+          role="tab"
+          aria-selected={mobileTab === 'form'}
+          className={mobileTab === 'form' ? 'active' : ''}
+          onClick={() => setMobileTab('form')}
+        >
+          ✎ Edit
+        </button>
+        <button
+          role="tab"
+          aria-selected={mobileTab === 'preview'}
+          className={mobileTab === 'preview' ? 'active' : ''}
+          onClick={() => setMobileTab('preview')}
+        >
+          👁 Preview
+        </button>
+      </div>
+
       <div className="editor-grid">
-        <div className="card pad no-print">
-          <h3 style={{ color: 'var(--navy-900)', marginBottom: 4 }}>{STEPS[step].title}</h3>
+        <div className={`card pad no-print editor-form ${mobileTab === 'preview' ? 'editor-pane-hidden' : ''}`}>
+          <h3 style={{ color: 'var(--navy-900)', marginBottom: 4, fontSize: 16 }}>{STEPS[step].title}</h3>
           <div className="hint" style={{ marginBottom: 14 }}>
             Step {step + 1} of {STEPS.length} · ~{STEPS[step].minutes} min
           </div>
@@ -166,7 +199,7 @@ export default function Editor({ id }: { id: string }) {
 
           <div className="step-foot">
             <button className="btn" disabled={step === 0} onClick={() => go(step - 1)}>← Back</button>
-            <div className="row">
+            <div className="row" style={{ flex: '1 1 auto', justifyContent: 'flex-end' }}>
               {step === STEPS.length - 1 ? (
                 <button
                   className="btn primary"
@@ -189,16 +222,25 @@ export default function Editor({ id }: { id: string }) {
           )}
         </div>
 
-        <div className="preview-pane panel no-print">
+        <div className={`preview-pane panel no-print editor-preview ${mobileTab === 'form' ? 'editor-pane-hidden' : ''}`}>
           <div className="preview-toolbar">
             <b style={{ color: 'var(--navy-900)', fontSize: 13 }}>Live preview</b>
-            <span className="hint">updates as you type · A4</span>
+            <span className="hint" style={{ fontSize: 12 }}>updates as you type · A4</span>
           </div>
-          <div className="sheet-holder" ref={scaleRef} style={{ width: '100%' }}>
-            <div className="sheet-scale" style={{ transform: `scale(${scale})`, width: 794 }}>
+          <div className="sheet-holder" ref={scaleRef} style={{ width: '100%', height: scaledHeight || undefined }}>
+            <div className="sheet-scale" style={{ transform: `scale(${scale})`, width: 794, height: 1123 }}>
               <Preview r={r} />
             </div>
           </div>
+          <div className="row" style={{ justifyContent: 'center', marginTop: 6 }}>
+            <button className="btn small" onClick={() => setMobileTab('form') } style={{ display: 'none' }} data-mobile-only>
+              ✎ Back to edit
+            </button>
+            <button className="btn small primary" disabled={pct < 100} onClick={() => setTimeout(()=>window.print(), 100)} style={{ flex: '0 0 auto' }}>
+              ⬇ Download PDF
+            </button>
+          </div>
+          <div className="hint" style={{ textAlign: 'center', fontSize: 11.5 }}>Pinch to zoom • Tap Download when ready</div>
         </div>
       </div>
 
