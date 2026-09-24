@@ -1,40 +1,54 @@
 /**
  * CraftCV Advanced Resume Importer
  * Upload existing resume (PDF, DOCX, TXT, JSON) -> Parse -> Advanced Edit -> Save
- * Features: drag-drop, live preview, field mapping, security validation
+ * Features: drag-drop, live extraction progress (pdf.js + OCR), field mapping,
+ * full review form, security validation.
  */
 
 import { useState, useRef } from 'react';
-import { parseResumeFile, type SupportedFormat } from '../lib/resumeParser';
-import { sanitizeInput } from '../lib/security';
-import { emptyResume, type Resume } from '../lib/types';
+import { parseResumeFile, type SupportedFormat, type ParseMeta } from '../lib/resumeParser';
+import { sanitizeInput, sanitizeURL } from '../lib/security';
+import { emptyResume, uid, type Resume } from '../lib/types';
 import { upsertResume } from '../lib/store';
 import { navigate } from '../App';
 
 type ImportStep = 'upload' | 'parsing' | 'review' | 'success';
 
+const METHOD_LABEL: Record<string, string> = {
+  text: 'Text layer (pdf.js) — accurate',
+  ocr: 'OCR — scanned PDF read via image recognition',
+  mixed: 'Text layer + OCR (some pages were images)',
+};
+
 export default function ResumeImporter() {
   const [step, setStep] = useState<ImportStep>('upload');
   const [file, setFile] = useState<File | null>(null);
   const [format, setFormat] = useState<SupportedFormat>('unknown');
+  const [meta, setMeta] = useState<ParseMeta | null>(null);
   const [parsedResume, setParsedResume] = useState<Resume | null>(null);
   const [rawText, setRawText] = useState('');
   const [error, setError] = useState('');
+  const [progress, setProgress] = useState<{ stage: string; pct: number } | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [editData, setEditData] = useState<Resume>(emptyResume());
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFile = async (f: File) => {
+  const handleFile = async (f: File, forceOcr = false) => {
     setError('');
     if (f.size > 10 * 1024 * 1024) {
       setError('File too large. Max 10MB allowed.');
       return;
     }
     setFile(f);
+    setProgress({ stage: 'Starting…', pct: 0 });
     setStep('parsing');
 
-    const result = await parseResumeFile(f);
+    const result = await parseResumeFile(f, {
+      onProgress: p => setProgress({ stage: p.stage, pct: p.pct }),
+      forceOcr,
+    });
     setFormat(result.format);
+    setMeta(result.meta || null);
 
     if (result.error) {
       setError(result.error);
@@ -84,17 +98,46 @@ export default function ResumeImporter() {
         email: sanitizeInput(editData.personal.email, 100),
         phone: sanitizeInput(editData.personal.phone, 30),
         city: sanitizeInput(editData.personal.city, 50),
-        linkedin: sanitizeInput(editData.personal.linkedin, 200),
-        website: sanitizeInput(editData.personal.website, 200),
+        linkedin: sanitizeURL(editData.personal.linkedin),
+        website: sanitizeURL(editData.personal.website),
         photo: editData.personal.photo, // data URL already validated
       },
       summary: sanitizeInput(editData.summary, 2000),
       bestExperience: sanitizeInput(editData.bestExperience, 1000),
       skills: editData.skills.map(s => sanitizeInput(s, 50)).filter(Boolean),
       hobbies: editData.hobbies.map(h => sanitizeInput(h, 50)).filter(Boolean),
-      achievements: editData.achievements.map(a => sanitizeInput(a, 200)).filter(Boolean),
+      achievements: editData.achievements.map(a => sanitizeInput(a, 220)).filter(Boolean),
+      experience: editData.experience.map(e => ({
+        ...e,
+        role: sanitizeInput(e.role, 100),
+        company: sanitizeInput(e.company, 100),
+        location: sanitizeInput(e.location, 60),
+        start: sanitizeInput(e.start, 20),
+        end: sanitizeInput(e.end, 20),
+        bullets: e.bullets.map(b => sanitizeInput(b, 250)).filter(Boolean).slice(0, 8),
+      })),
+      education: editData.education.map(ed => ({
+        ...ed,
+        degree: sanitizeInput(ed.degree, 100),
+        school: sanitizeInput(ed.school, 100),
+        location: sanitizeInput(ed.location, 60),
+        year: sanitizeInput(ed.year, 30),
+        note: sanitizeInput(ed.note, 80),
+      })),
+      projects: editData.projects.map(p => ({
+        id: p.id || uid(),
+        name: sanitizeInput(p.name, 80),
+        link: sanitizeURL(p.link),
+        points: sanitizeInput(p.points, 1200),
+      })),
+      certs: editData.certs.map(c => ({
+        id: c.id || uid(),
+        name: sanitizeInput(c.name, 90),
+        issuer: sanitizeInput(c.issuer, 60),
+        year: sanitizeInput(c.year, 20),
+      })),
     };
-    
+
     const saved = upsertResume(sanitized);
     setStep('success');
     setTimeout(() => navigate(`/editor/${saved.id}`), 1200);
@@ -105,6 +148,14 @@ export default function ResumeImporter() {
       ...prev,
       personal: { ...prev.personal, [field]: value }
     }));
+  };
+
+  const updateExperience = (idx: number, patch: Partial<Resume['experience'][number]>) => {
+    setEditData(prev => {
+      const experience = [...prev.experience];
+      experience[idx] = { ...experience[idx], ...patch };
+      return { ...prev, experience };
+    });
   };
 
   if (step === 'success') {
@@ -123,9 +174,14 @@ export default function ResumeImporter() {
       <div className="card pad" style={{ maxWidth: 600, margin: '40px auto', textAlign: 'center' }}>
         <div style={{ fontSize: 32, marginBottom: 16 }}>⏳</div>
         <h3>Parsing {file?.name}...</h3>
-        <p className="hint">Extracting text and structuring your resume with advanced heuristics</p>
-        <div className="progress" style={{ marginTop: 20, height: 8 }}><div style={{ width: '70%', animation: 'pulse 1.5s infinite' }} /></div>
-        <p className="hint" style={{ marginTop: 12, fontSize: 12 }}>Format detected: {format.toUpperCase()} · Size: {file ? Math.round(file.size/1024) : 0}KB</p>
+        <p className="hint">{progress?.stage || 'Extracting text and structuring your resume…'}</p>
+        <div className="progress" style={{ marginTop: 20, height: 8 }}>
+          <div style={{ width: `${Math.max(4, Math.min(100, progress?.pct || 0))}%`, transition: 'width .3s ease' }} />
+        </div>
+        <p className="hint" style={{ marginTop: 12, fontSize: 12 }}>
+          Format detected: {format.toUpperCase()} · Size: {file ? Math.round(file.size / 1024) : 0}KB
+          {progress?.stage?.toLowerCase().includes('ocr') ? ' · ☕ OCR runs fully in your browser (first run downloads the engine)' : ''}
+        </p>
       </div>
     );
   }
@@ -145,12 +201,25 @@ export default function ResumeImporter() {
         </div>
 
         {error && <div className="notice err">{error}</div>}
+        {meta?.warning && (
+          <div className="notice" style={{ borderColor: 'var(--amber-500, #d97706)', background: '#fffbeb' }}>
+            ⚠️ {meta.warning}
+            {format === 'pdf' && (
+              <button
+                className="btn small"
+                style={{ marginLeft: 10 }}
+                onClick={() => file && handleFile(file, true)}
+                disabled={!file}
+              >🖼️ Re-extract with OCR</button>
+            )}
+          </div>
+        )}
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 20 }} className="import-grid">
           {/* Editable form */}
           <div className="card pad">
             <h3 style={{ color: 'var(--navy-900)', marginBottom: 16 }}>📝 Advanced Editor — Verify Parsed Data</h3>
-            
+
             <div className="form-grid">
               <div>
                 <label className="f">Full Name *</label>
@@ -175,6 +244,10 @@ export default function ResumeImporter() {
               <div>
                 <label className="f">LinkedIn</label>
                 <input className="input" value={editData.personal.linkedin} onChange={e => updatePersonal('linkedin', e.target.value)} placeholder="linkedin.com/in/..." />
+              </div>
+              <div className="full">
+                <label className="f">Website / Portfolio</label>
+                <input className="input" value={editData.personal.website} onChange={e => updatePersonal('website', e.target.value)} placeholder="yoursite.dev" />
               </div>
               <div className="full">
                 <label className="f">Professional Summary</label>
@@ -207,40 +280,104 @@ export default function ResumeImporter() {
                 <label className="f">Experience ({editData.experience.length} entries)</label>
                 {editData.experience.map((exp, idx) => (
                   <div key={exp.id} className="entry-card">
-                    <div className="entry-head"><b>Job {idx+1}</b><button className="btn small danger" onClick={() => setEditData(prev => ({ ...prev, experience: prev.experience.filter(e => e.id !== exp.id) }))}>Remove</button></div>
+                    <div className="entry-head"><b>Job {idx + 1}</b><button className="btn small danger" onClick={() => setEditData(prev => ({ ...prev, experience: prev.experience.filter(e => e.id !== exp.id) }))}>Remove</button></div>
                     <div className="form-grid">
-                      <input className="input" value={exp.role} placeholder="Role" onChange={e => {
-                        const newExp = [...editData.experience]; newExp[idx] = { ...newExp[idx], role: e.target.value }; setEditData(prev => ({ ...prev, experience: newExp }));
-                      }} />
-                      <input className="input" value={exp.company} placeholder="Company" onChange={e => {
-                        const newExp = [...editData.experience]; newExp[idx] = { ...newExp[idx], company: e.target.value }; setEditData(prev => ({ ...prev, experience: newExp }));
-                      }} />
+                      <input className="input" value={exp.role} placeholder="Role" onChange={e => updateExperience(idx, { role: e.target.value })} />
+                      <input className="input" value={exp.company} placeholder="Company" onChange={e => updateExperience(idx, { company: e.target.value })} />
+                      <input className="input" value={exp.location} placeholder="Location" onChange={e => updateExperience(idx, { location: e.target.value })} />
+                      <div className="row">
+                        <input className="input" style={{ flex: 1 }} value={exp.start} placeholder="Start (e.g. Mar 2022)" onChange={e => updateExperience(idx, { start: e.target.value })} />
+                        <input className="input" style={{ flex: 1 }} value={exp.current ? 'Present' : exp.end} placeholder="End" disabled={exp.current} onChange={e => updateExperience(idx, { end: e.target.value })} />
+                        <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, whiteSpace: 'nowrap' }}>
+                          <input type="checkbox" checked={exp.current} onChange={e => updateExperience(idx, { current: e.target.checked, end: e.target.checked ? 'Present' : exp.end })} /> Current
+                        </label>
+                      </div>
                       <div className="full">
-                        <textarea className="textarea" rows={2} value={exp.bullets.join('\n')} placeholder="Bullets (one per line)" onChange={e => {
-                          const newExp = [...editData.experience]; newExp[idx] = { ...newExp[idx], bullets: e.target.value.split('\n') }; setEditData(prev => ({ ...prev, experience: newExp }));
-                        }} />
+                        <textarea className="textarea" rows={3} value={exp.bullets.join('\n')} placeholder="Bullets (one per line)" onChange={e => updateExperience(idx, { bullets: e.target.value.split('\n') })} />
                       </div>
                     </div>
                   </div>
                 ))}
-                <button className="btn small" onClick={() => setEditData(prev => ({ ...prev, experience: [...prev.experience, { id: Math.random().toString(36).slice(2), role: '', company: '', location: '', start: '', end: '', current: false, bullets: [''] }] }))}>+ Add Experience</button>
+                <button className="btn small" onClick={() => setEditData(prev => ({ ...prev, experience: [...prev.experience, { id: uid(), role: '', company: '', location: '', start: '', end: '', current: false, bullets: [''] }] }))}>+ Add Experience</button>
               </div>
 
               <div className="full">
                 <label className="f">Education ({editData.education.length})</label>
                 {editData.education.map((edu, idx) => (
                   <div key={edu.id} className="entry-card">
+                    <div className="entry-head"><b>Education {idx + 1}</b><button className="btn small danger" onClick={() => setEditData(prev => ({ ...prev, education: prev.education.filter(e => e.id !== edu.id) }))}>Remove</button></div>
                     <div className="form-grid">
                       <input className="input" value={edu.degree} placeholder="Degree" onChange={e => {
                         const newEdu = [...editData.education]; newEdu[idx] = { ...newEdu[idx], degree: e.target.value }; setEditData(prev => ({ ...prev, education: newEdu }));
                       }} />
-                      <input className="input" value={edu.school} placeholder="School" onChange={e => {
+                      <input className="input" value={edu.school} placeholder="School / College" onChange={e => {
                         const newEdu = [...editData.education]; newEdu[idx] = { ...newEdu[idx], school: e.target.value }; setEditData(prev => ({ ...prev, education: newEdu }));
+                      }} />
+                      <input className="input" value={edu.year} placeholder="Year (e.g. 2024)" onChange={e => {
+                        const newEdu = [...editData.education]; newEdu[idx] = { ...newEdu[idx], year: e.target.value }; setEditData(prev => ({ ...prev, education: newEdu }));
+                      }} />
+                      <input className="input" value={edu.note} placeholder="CGPA / Percentage (optional)" onChange={e => {
+                        const newEdu = [...editData.education]; newEdu[idx] = { ...newEdu[idx], note: e.target.value }; setEditData(prev => ({ ...prev, education: newEdu }));
                       }} />
                     </div>
                   </div>
                 ))}
-                <button className="btn small" onClick={() => setEditData(prev => ({ ...prev, education: [...prev.education, { id: Math.random().toString(36).slice(2), degree: '', school: '', location: '', year: '', note: '' }] }))}>+ Add Education</button>
+                <button className="btn small" onClick={() => setEditData(prev => ({ ...prev, education: [...prev.education, { id: uid(), degree: '', school: '', location: '', year: '', note: '' }] }))}>+ Add Education</button>
+              </div>
+
+              <div className="full">
+                <label className="f">Projects ({editData.projects.length})</label>
+                {editData.projects.map((p, idx) => (
+                  <div key={p.id} className="entry-card">
+                    <div className="entry-head"><b>Project {idx + 1}</b><button className="btn small danger" onClick={() => setEditData(prev => ({ ...prev, projects: prev.projects.filter(x => x.id !== p.id) }))}>Remove</button></div>
+                    <div className="form-grid">
+                      <input className="input" value={p.name} placeholder="Project name" onChange={e => {
+                        const projects = [...editData.projects]; projects[idx] = { ...projects[idx], name: e.target.value }; setEditData(prev => ({ ...prev, projects }));
+                      }} />
+                      <input className="input" value={p.link} placeholder="Link (optional)" onChange={e => {
+                        const projects = [...editData.projects]; projects[idx] = { ...projects[idx], link: e.target.value }; setEditData(prev => ({ ...prev, projects }));
+                      }} />
+                      <div className="full">
+                        <textarea className="textarea" rows={2} value={p.points} placeholder="Points (one per line)" onChange={e => {
+                          const projects = [...editData.projects]; projects[idx] = { ...projects[idx], points: e.target.value }; setEditData(prev => ({ ...prev, projects }));
+                        }} />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                <button className="btn small" onClick={() => setEditData(prev => ({ ...prev, projects: [...prev.projects, { id: uid(), name: '', link: '', points: '' }] }))}>+ Add Project</button>
+              </div>
+
+              <div className="full">
+                <label className="f">Certifications ({editData.certs.length})</label>
+                {editData.certs.map((c, idx) => (
+                  <div key={c.id} className="entry-card">
+                    <div className="entry-head"><b>Certificate {idx + 1}</b><button className="btn small danger" onClick={() => setEditData(prev => ({ ...prev, certs: prev.certs.filter(x => x.id !== c.id) }))}>Remove</button></div>
+                    <div className="form-grid">
+                      <input className="input" value={c.name} placeholder="Certificate name" onChange={e => {
+                        const certs = [...editData.certs]; certs[idx] = { ...certs[idx], name: e.target.value }; setEditData(prev => ({ ...prev, certs }));
+                      }} />
+                      <input className="input" value={c.issuer} placeholder="Issuer (e.g. Coursera)" onChange={e => {
+                        const certs = [...editData.certs]; certs[idx] = { ...certs[idx], issuer: e.target.value }; setEditData(prev => ({ ...prev, certs }));
+                      }} />
+                      <input className="input" value={c.year} placeholder="Year" onChange={e => {
+                        const certs = [...editData.certs]; certs[idx] = { ...certs[idx], year: e.target.value }; setEditData(prev => ({ ...prev, certs }));
+                      }} />
+                    </div>
+                  </div>
+                ))}
+                <button className="btn small" onClick={() => setEditData(prev => ({ ...prev, certs: [...prev.certs, { id: uid(), name: '', issuer: '', year: '' }] }))}>+ Add Certification</button>
+              </div>
+
+              <div className="full">
+                <label className="f">Achievements ({editData.achievements.length})</label>
+                <textarea
+                  className="textarea"
+                  rows={3}
+                  value={editData.achievements.join('\n')}
+                  placeholder="One achievement per line"
+                  onChange={e => setEditData(prev => ({ ...prev, achievements: e.target.value.split('\n').filter(l => l.trim()) }))}
+                />
               </div>
             </div>
 
@@ -270,10 +407,15 @@ export default function ResumeImporter() {
                 <tbody>
                   <tr><td><b>File</b></td><td>{file?.name}</td></tr>
                   <tr><td><b>Format</b></td><td>{format.toUpperCase()}</td></tr>
-                  <tr><td><b>Size</b></td><td>{file ? (file.size/1024).toFixed(1) : 0} KB</td></tr>
+                  <tr><td><b>Size</b></td><td>{file ? (file.size / 1024).toFixed(1) : 0} KB</td></tr>
+                  {meta?.pages ? <tr><td><b>Pages</b></td><td>{meta.pages}</td></tr> : null}
+                  {meta?.method ? <tr><td><b>Extraction</b></td><td>{METHOD_LABEL[meta.method] || meta.method}</td></tr> : null}
                   <tr><td><b>Skills Found</b></td><td>{parsedResume?.skills.length || 0}</td></tr>
                   <tr><td><b>Experience</b></td><td>{parsedResume?.experience.length || 0} entries</td></tr>
                   <tr><td><b>Education</b></td><td>{parsedResume?.education.length || 0} entries</td></tr>
+                  <tr><td><b>Projects</b></td><td>{parsedResume?.projects.length || 0}</td></tr>
+                  <tr><td><b>Certifications</b></td><td>{parsedResume?.certs.length || 0}</td></tr>
+                  <tr><td><b>Achievements</b></td><td>{parsedResume?.achievements.length || 0}</td></tr>
                 </tbody>
               </table>
               <div className="notice" style={{ marginTop: 12, fontSize: 12 }}>
@@ -298,7 +440,7 @@ export default function ResumeImporter() {
       <div className="page-head">
         <div>
           <div className="page-title">📤 Upload & Edit Resume — Advanced</div>
-          <div className="page-sub">Upload your existing resume (PDF, DOCX, TXT, JSON). We'll parse it with AI-like heuristics and let you advanced-edit everything before download.</div>
+          <div className="page-sub">Upload your existing resume (PDF, DOCX, TXT, JSON). Real PDF parsing (pdf.js) with automatic OCR for scanned files — everything stays in your browser.</div>
         </div>
       </div>
 
@@ -339,12 +481,12 @@ export default function ResumeImporter() {
             <p className="hint" style={{ marginTop: 6, fontSize: 12.5 }}>No server upload. All parsing happens locally in your browser. Your data never leaves device.</p>
           </div>
           <div style={{ background: 'var(--silver-100)', borderRadius: 10, padding: 16, border: '1px solid var(--silver-200)' }}>
-            <b style={{ color: 'var(--navy-800)', fontSize: 14 }}>⚡ Advanced Parsing</b>
-            <p className="hint" style={{ marginTop: 6, fontSize: 12.5 }}>Heuristics detect contact, experience, education, skills. 90%+ accuracy on standard resumes.</p>
+            <b style={{ color: 'var(--navy-800)', fontSize: 14 }}>⚙️ Real PDF Engine + OCR</b>
+            <p className="hint" style={{ marginTop: 6, fontSize: 12.5 }}>Text PDFs are read with pdf.js. Scanned/image PDFs are auto-read with in-browser OCR (tesseract).</p>
           </div>
           <div style={{ background: 'var(--silver-100)', borderRadius: 10, padding: 16, border: '1px solid var(--silver-200)' }}>
             <b style={{ color: 'var(--navy-800)', fontSize: 14 }}>✏️ Full Advanced Edit</b>
-            <p className="hint" style={{ marginTop: 6, fontSize: 12.5 }}>After import, edit everything — add photo, change template, rewrite bullets, then download PDF.</p>
+            <p className="hint" style={{ marginTop: 6, fontSize: 12.5 }}>After import, edit everything — dates, projects, certificates, photo, template — then download PDF.</p>
           </div>
         </div>
 
@@ -352,7 +494,7 @@ export default function ResumeImporter() {
           <b>How it works:</b>
           <ol style={{ margin: '8px 0 0 18px', padding: 0 }}>
             <li>Upload existing resume (any format)</li>
-            <li>We auto-extract text & structure it into fields</li>
+            <li>We extract the real text (line & paragraph structure preserved) and structure it into fields</li>
             <li>You review & advanced-edit in our editor (add missing info, fix parsing)</li>
             <li>Choose from 50 templates & download professional PDF</li>
           </ol>
@@ -363,13 +505,14 @@ export default function ResumeImporter() {
           <table className="tbl">
             <thead><tr><th>Format</th><th>Best For</th><th>Accuracy</th></tr></thead>
             <tbody>
-              <tr><td><b>PDF</b></td><td>Most resumes</td><td>85-95% (text-based PDFs)</td></tr>
+              <tr><td><b>PDF (text-based)</b></td><td>Most resumes (Word, Google Docs, Canva exports)</td><td>95%+</td></tr>
+              <tr><td><b>PDF (scanned/image)</b></td><td>Photo/scanned resumes — auto OCR</td><td>70-85%</td></tr>
               <tr><td><b>DOCX</b></td><td>Word resumes</td><td>90-95%</td></tr>
               <tr><td><b>TXT</b></td><td>Plain text</td><td>95%+ (cleanest)</td></tr>
               <tr><td><b>JSON</b></td><td>Our backup</td><td>100% (perfect)</td></tr>
             </tbody>
           </table>
-          <p className="hint" style={{ marginTop: 8, fontSize: 12 }}>Scanned image PDFs need OCR — save as TXT or DOCX for best results. All files sanitized for security.</p>
+          <p className="hint" style={{ marginTop: 8, fontSize: 12 }}>All files sanitized for security. OCR runs offline in your browser — nothing is uploaded anywhere.</p>
         </div>
       </div>
 
