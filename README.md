@@ -55,6 +55,11 @@ npm run build        # static build in dist/
 npm run check:auth   # is Google login ready on the Supabase project?
 ```
 
+`predev`/`prebuild` run `scripts/predev.mjs`, which best-effort regenerates the two
+things that are not in git — the offline OCR engine (`public/ocr/`) and
+`public/template-preview.html` (every template rendered through `Preview.tsx`).
+If either fails the dev server still starts.
+
 ## Importer tests
 
 End-to-end tests for the upload pipeline. They run the **real** extraction and
