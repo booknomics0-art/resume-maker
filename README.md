@@ -9,6 +9,7 @@ human-written-looking PDF.
 
 - **Login / Signup** — email + password and a Google button (demo mode runs fully in-browser; `src/config.ts` holds the Google Client ID slot for real OAuth).
 - **Dashboard** — resumes with live thumbnails, completion %, duplicate/delete, sample resume.
+- **Import existing resume (PDF / DOCX / TXT / JSON)** — real PDF text extraction with **pdf.js** (compressed streams, correct line & paragraph reconstruction), automatic **in-browser OCR fallback (tesseract.js)** for scanned/image PDFs, then a line-aware parser that pulls out contact info, summary, experience (role / company / dates / bullets), education, skills, projects, certifications and achievements into an editable review screen. Everything runs locally in the browser — no server upload. Pipeline: `src/lib/pdfExtract.ts` → `src/lib/resumeParser.ts` → `src/components/ResumeImporter.tsx`.
 - **7-step wizard** — Basics → Summary → Experience → Education → Skills → Extras → Design, autosave + live A4 preview.
 - **Profile photo upload** — shown on all 50 templates (auto-resized in-browser).
 - **Mandatory fields enforced** — name, title, email, phone, city, summary, 1 job (or fresher toggle), 1 education entry, 3+ skills. Download unlocks at 100%.
@@ -30,6 +31,20 @@ npm install
 npm run dev      # http://localhost:5173
 npm run build    # static build in dist/
 ```
+
+## Importer tests
+
+End-to-end tests for the upload pipeline (build a compressed PDF → extract with
+pdf.js → parse; OCR a scanned-image resume → parse; DOCX parse):
+
+```bash
+npx esbuild tests/test-pdf-parse.mjs --bundle --platform=node --format=esm \
+  --outfile=.tmptest/run.mjs --external:pdfjs-dist --external:tesseract.js && node .tmptest/run.mjs
+node tests/test-ocr.mjs tests/scan-resume.jpg   # needs `npm i -D @tesseract.js-data/eng` in sandboxes without CDN access
+```
+
+Browsers load the OCR engine from the jsDelivr CDN at runtime (first OCR only);
+no data ever leaves the device — only the engine files are downloaded.
 
 ## Docs (internal)
 
