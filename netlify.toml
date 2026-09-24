@@ -5,6 +5,10 @@
   command = "npm run build"
   publish = "dist"
 
+[build.environment]
+  # Pin Node 22 so the toolchain (and its npm) stays stable on every deploy.
+  NODE_VERSION = "22"
+
 # Security headers for all pages — high-tech hardening
 [[headers]]
   for = "/*"

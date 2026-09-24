@@ -145,7 +145,7 @@ console.log(`format=${textRes.format} method=${textRes.meta?.method} ocrPages=${
 const aChecks = [
   ['no error', !textRes.error],
   ['read from the text layer, without OCR', textRes.meta?.method === 'text' && (textRes.meta?.ocrPages || 0) === 0],
-  ['name', tr?.personal.fullName === 'AARAV SHARMA'],
+  ['name', tr?.personal.fullName === 'Aarav Sharma'],
   ['headline', /frontend developer/i.test(tr?.personal.headline || '')],
   ['email', tr?.personal.email === 'aarav.sharma@gmail.com'],
   ['phone', String(tr?.personal.phone).replace(/\D/g, '').endsWith('9876543210')],

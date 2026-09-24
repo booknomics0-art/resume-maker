@@ -1162,6 +1162,4 @@ export async function parseResumeFile(
   } catch (e: any) {
     return { resume: null, parsed: null, text: '', format, meta, error: e?.message || 'Failed to parse resume' };
   }
-}rsed: null, text: '', format, meta, error: e?.message || 'Failed to parse resume' };
-  }
 }
