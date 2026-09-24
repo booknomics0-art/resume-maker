@@ -174,9 +174,35 @@ function memoryStorage() {
   };
 }
 
-/** Fresh module instance per scenario (the redirect snapshot is import-time state). */
+/**
+ * Fresh module instance per scenario (the redirect snapshot is import-time state).
+ *
+ * `env` lets a scenario describe the *browser* it runs in, because two of the
+ * reasons Google sign-in fails are environmental:
+ *   · `embedded`   – the page is inside an iframe (preview panel) and Google
+ *                    refuses to render its sign-in screen in a frame.
+ *   · `noCrypto`   – an insecure (http) address where `crypto.subtle` does not
+ *                    exist, so the PKCE challenge cannot be built.
+ * `popup` decides whether `window.open()` is allowed to open the new tab.
+ */
 let bundleSeq = 0;
-async function loadCloud(href, fetchImpl) {
+
+// `crypto` is lazily available in Node (getter on globalThis) — a scenario that
+// pretends to be an insecure http:// page has to hide it, and the next scenario
+// must get the real one back.
+let savedCrypto;
+function restoreCrypto() {
+  if (!savedCrypto) return;
+  Object.defineProperty(globalThis, 'crypto', savedCrypto);
+  savedCrypto = undefined;
+}
+
+async function loadCloud(href, fetchImpl, env = {}) {
+  restoreCrypto();
+  if (env.noCrypto) {
+    savedCrypto = Object.getOwnPropertyDescriptor(globalThis, 'crypto');
+    Object.defineProperty(globalThis, 'crypto', { value: {}, configurable: true, writable: true });
+  }
   const file = join(tmpDir, `googleflow-${++bundleSeq}.js`);
   await esbuild.build({
     stdin: {
@@ -218,6 +244,16 @@ async function loadCloud(href, fetchImpl) {
     localStorage: storage,
     sessionStorage: memoryStorage(),
   };
+  const opened = [];
+  win.open = (url) => {
+    opened.push(url);
+    if (env.popup === false) return null;
+    return { opener: 'kept' };
+  };
+  // `window.self === window.top` means the page is top-level. A preview iframe
+  // is a page whose parent is a *different* window.
+  win.self = env.embedded ? { parent: 'other' } : win;
+  win.top = env.embedded ? { different: 'window' } : win;
   win.window = win;
   globalThis.window = win;
   globalThis.localStorage = storage;
@@ -234,7 +270,7 @@ async function loadCloud(href, fetchImpl) {
   globalThis.fetch = fetchImpl;
 
   const mod = await import(pathToFileURL(file).href);
-  return { mod, navigations, win };
+  return { mod, navigations, opened, win };
 }
 
 /** Fake Supabase gateway: settings probe + /authorize. */
@@ -312,6 +348,36 @@ const failedResult = await failedRun.mod.cloudCompleteRedirectSignIn();
 const plainRun = await loadCloud('https://app.example/#/dashboard', fakeGateway({ googleEnabled: true }));
 const plainResult = await plainRun.mod.cloudCompleteRedirectSignIn();
 
+// ── 4b. the remaining real-world failures, each with its own fix ─────────────
+// (all of these used to collapse into “Google sign-in was cancelled”, which sent
+// people looking for a mistake they had not made.)
+const consentBlocked = C('access_denied Access blocked: CraftCV has not completed the Google verification process');
+const consentOrg = C('{"error":"access_denied","error_description":"org_internal"}');
+const consentPolicy = C('admin_policy_enforced');
+const consentRedirect = google.issueFromRedirect(redirect.parseRedirectParams(
+  'https://app.example/?error=access_denied&error_code=access_denied&error_description=Access+blocked%3A+has+not+completed+the+Google+verification+process#/',
+));
+const bareDenied = google.issueFromRedirect(redirect.parseRedirectParams('https://app.example/?error=access_denied#/'));
+const insecure = C('insecure_context crypto.subtle unavailable');
+const framed = C('embedded_preview');
+const invalidTarget = C('{"code":400,"error_code":"validation_failed","msg":"Invalid redirect URL: https://other.example/"}');
+const unauthorized = C('unauthorized_client');
+const redirectToRejected = C('{"error_code":"bad_request","msg":"redirect_to is not allowed"}');
+
+const gChecks = [
+  ['blocked app → consent screen still in “Testing”', consentBlocked.code === 'consent_testing'],
+  ['blocked app → names the fix (publish the consent screen)', /publish/i.test(consentBlocked.hint || '') && consentBlocked.showSetup === true],
+  ['Google Workspace org_internal → same cause, not “cancelled”', consentOrg.code === 'consent_testing'],
+  ['Google admin policy → same cause, not “cancelled”', consentPolicy.code === 'consent_testing'],
+  ['callback with a blocked-app description keeps the real cause', consentRedirect.code === 'consent_testing'],
+  ['bare access_denied (user closed the sheet) stays friendly', bareDenied.code === 'cancelled' && bareDenied.showSetup === false],
+  ['insecure address → “not on HTTPS”, not a crypto crash', insecure.code === 'insecure_context' && /https/i.test(insecure.hint || '')],
+  ['preview iframe → explains Google cannot be framed', framed.code === 'embedded_preview' && /frame/i.test(framed.message)],
+  ['bad redirect target → URL configuration problem', invalidTarget.code === 'redirect_not_allowed'],
+  ['unauthorized_client → URL configuration problem', unauthorized.code === 'redirect_not_allowed'],
+  ['redirect_to not allowed by the project → URL configuration problem', redirectToRejected.code === 'redirect_not_allowed'],
+];
+
 const eChecks = [
   ['disabled provider: sign-in blocked before leaving the page', startDisabled.ok === false && startDisabled.issue?.code === 'provider_disabled'],
   ['disabled provider: nothing was navigated', disabledRun.navigations.length === 0],
@@ -331,5 +397,72 @@ const eChecks = [
   ['normal page load: no callback handling', plainResult.attempted === false && plainResult.ok === false],
 ];
 
-const ok = checks([...aChecks, ...bChecks, ...cChecks, ...dChecks, ...eChecks]);
+// 5h — the app runs inside an iframe (preview panel): a new tab is opened,
+//      because Google's sign-in page can never be framed.
+const framedRun = await loadCloud('https://preview.example/', fakeGateway({ googleEnabled: true }), { embedded: true });
+const startFramed = await framedRun.mod.cloudStartGoogleSignIn();
+
+// 5i — same, but popups are blocked: stop with an explanation instead of
+//      navigating the frame into a “refused to connect” page.
+const framedBlockedRun = await loadCloud('https://preview.example/', fakeGateway({ googleEnabled: true }), { embedded: true, popup: false });
+const startFramedBlocked = await framedBlockedRun.mod.cloudStartGoogleSignIn();
+
+// 5j — plain http:// address: no crypto.subtle, so PKCE cannot even be built.
+const insecureRun = await loadCloud('http://192.168.1.20:5173/', fakeGateway({ googleEnabled: true }), { noCrypto: true });
+const startInsecure = await insecureRun.mod.cloudStartGoogleSignIn();
+restoreCrypto();
+
+// 5k — “Test the connection” diagnostics: a healthy project.
+const diagOkRun = await loadCloud('https://app.example/', fakeGateway({ googleEnabled: true }));
+diagOkRun.mod.supabase().auth.signInWithOAuth = async () => ({
+  data: { provider: 'google', url: 'https://fake.supabase.co/auth/v1/authorize?provider=google', flowId: 'f-d' },
+  error: null,
+});
+const diagOk = await diagOkRun.mod.cloudGoogleDiagnostics();
+
+// 5l — diagnostics against a project that refuses the handshake.
+const diagBadRun = await loadCloud('https://app.example/', fakeGateway({ googleEnabled: true, authorizeStatus: 400 }));
+diagBadRun.mod.supabase().auth.signInWithOAuth = async () => ({
+  data: { provider: 'google', url: 'https://fake.supabase.co/auth/v1/authorize?provider=google', flowId: 'f-d' },
+  error: null,
+});
+const diagBad = await diagBadRun.mod.cloudGoogleDiagnostics();
+
+// 5m — “left for Google, came back with nothing” (Google blocked the app and
+//      never redirected back): the browser records that it left, so the login
+//      screen can explain the silence instead of doing nothing.
+//      The last module instance in the file keeps the mounted browser, so all
+//      reads happen here.
+const pendingRun = await loadCloud('https://app.example/', fakeGateway({ googleEnabled: true }));
+const marker = JSON.parse(framedRun.win.localStorage.getItem('craftcv.google.pending') || 'null');
+const pendingNone = pendingRun.mod.pendingFlowInterrupted();
+const staleKey = 'craftcv.google.pending';
+pendingRun.win.localStorage.setItem(staleKey, JSON.stringify({ at: Date.now() - 60 * 60 * 1000, redirectTo: 'https://app.example/' }));
+const pendingStale = pendingRun.mod.pendingFlowInterrupted();
+pendingRun.win.localStorage.setItem(staleKey, JSON.stringify({ at: Date.now(), redirectTo: 'https://app.example/' }));
+const pendingFirst = pendingRun.mod.pendingFlowInterrupted();
+const pendingSecond = pendingRun.mod.pendingFlowInterrupted();
+
+const fChecks = [
+  ['leaving for Google is recorded (with the return address)', marker?.redirectTo === 'https://app.example/' && typeof marker?.at === 'number'],
+  ['unfinished Google round-trip is detected', pendingFirst.interrupted === true && pendingFirst.redirectTo === 'https://app.example/'],
+  ['the notice is one-shot (no repeat nagging)', pendingSecond.interrupted === false],
+  ['no notice when no flow was started', pendingNone.interrupted === false],
+  ['stale marker (an hour old) is ignored', pendingStale.interrupted === false],
+  ['preview iframe: flow continues in a real tab (Google cannot be framed)', startFramed.ok === true && startFramed.openedInNewTab === true],
+  ['preview iframe: the tab points at the Supabase authorize URL', /\/auth\/v1\/authorize\?provider=google/.test(framedRun.opened[0] || '')],
+  ['preview iframe: the frame itself is never navigated', framedRun.navigations.length === 0],
+  ['preview iframe: popup blocked → explained, not silently navigated', startFramedBlocked.ok === false && startFramedBlocked.issue?.code === 'embedded_preview'],
+  ['preview iframe: popup blocked → no navigation', framedBlockedRun.navigations.length === 0],
+  ['http:// address: refused up front (PKCE needs crypto.subtle)', startInsecure.ok === false && startInsecure.issue?.code === 'insecure_context'],
+  ['http:// address: nothing navigated', insecureRun.navigations.length === 0],
+  ['diagnostics (healthy project): provider enabled', diagOk.provider.state === 'enabled'],
+  ['diagnostics (healthy project): handshake accepted', diagOk.authorize.checked === true && diagOk.authorize.ok === true],
+  ['diagnostics (healthy project): shows the return address', /^https:\/\/app\.example\//.test(diagOk.authorize.redirectTo)],
+  ['diagnostics (broken project): handshake refused', diagBad.authorize.checked === true && diagBad.authorize.ok === false],
+  ['diagnostics (broken project): shows the server’s own words', /Unsupported provider|not enabled/i.test(diagBad.authorize.serverText)],
+  ['diagnostics (broken project): explains what to do', diagBad.authorize.issue?.code === 'provider_disabled'],
+];
+
+const ok = checks([...aChecks, ...bChecks, ...cChecks, ...dChecks, ...gChecks, ...eChecks, ...fChecks]);
 process.exit(ok ? 0 : 1);

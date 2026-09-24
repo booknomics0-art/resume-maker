@@ -24,6 +24,51 @@ import {
 export const RESUMES_CHANGED_EVENT = 'craftcv:resumes-changed';
 export const CLOUD_STATUS_EVENT = 'craftcv:cloud-status';
 
+// ---------------------------------------------------------------------------
+// “Left for Google and never came back” marker
+// ---------------------------------------------------------------------------
+//
+// When Google itself refuses to show the sign-in screen — the classic case is
+// the OAuth consent screen still being in “Testing” — the user never returns to
+// this app: they see Google's error page, press Back and land on the login
+// screen with no callback parameters and no explanation. Recording that the
+// browser left for Google lets the login screen say what most likely happened
+// instead of silently doing nothing.
+
+const PENDING_FLOW_KEY = 'craftcv.google.pending';
+const PENDING_FLOW_TTL_MS = 20 * 60 * 1000;
+
+function markPendingFlow(redirectTo: string): void {
+  try {
+    localStorage.setItem(PENDING_FLOW_KEY, JSON.stringify({ at: Date.now(), redirectTo }));
+  } catch { /* private mode / storage full — the marker is a nicety, not a requirement */ }
+}
+
+/** Called as soon as a callback (code or error) actually arrives. */
+export function clearPendingFlow(): void {
+  try { localStorage.removeItem(PENDING_FLOW_KEY); } catch { /* ignore */ }
+}
+
+/**
+ * One-shot check, meant to run once when the login screen appears: did this
+ * browser leave for Google recently and come back with nothing? The marker is
+ * consumed either way so the notice never repeats.
+ */
+export function pendingFlowInterrupted(): { interrupted: boolean; redirectTo: string } {
+  const nothing = { interrupted: false, redirectTo: '' };
+  try {
+    const raw = localStorage.getItem(PENDING_FLOW_KEY);
+    if (!raw) return nothing;
+    clearPendingFlow();
+    const parsed = JSON.parse(raw) as { at?: number; redirectTo?: string };
+    const age = Date.now() - (parsed.at ?? 0);
+    if (!Number.isFinite(age) || age < 0 || age > PENDING_FLOW_TTL_MS) return nothing;
+    return { interrupted: true, redirectTo: parsed.redirectTo ?? '' };
+  } catch {
+    return nothing;
+  }
+}
+
 export type CloudStatus = 'off' | 'signed-out' | 'syncing' | 'synced' | 'error';
 let status: CloudStatus = cloudEnabled() ? 'signed-out' : 'off';
 let lastError = '';
@@ -153,7 +198,7 @@ export async function cloudGoogleProviderState(): Promise<ProviderProbe> {
  * opaque redirect); a readable error body means the browser would have rendered
  * raw JSON on supabase.co, so we surface it in-app instead.
  */
-async function guardAuthorizeUrl(authorizeUrl: string): Promise<{ ok: boolean; issue?: GoogleAuthIssue }> {
+async function guardAuthorizeUrl(authorizeUrl: string): Promise<{ ok: boolean; issue?: GoogleAuthIssue; serverText?: string; status?: number }> {
   if (typeof fetch !== 'function') return { ok: true };
   try {
     const res = await fetch(authorizeUrl, {
@@ -170,7 +215,7 @@ async function guardAuthorizeUrl(authorizeUrl: string): Promise<{ ok: boolean; i
       serverText = String(body.msg ?? body.error_description ?? body.error ?? body.message ?? serverText);
     } catch { /* not JSON — keep the status text */ }
     auditLog('CLOUD_GOOGLE_BLOCKED', { status: res.status, serverText: serverText.slice(0, 160) });
-    return { ok: false, issue: providerIssueFrom(serverText, '', res.status) };
+    return { ok: false, issue: providerIssueFrom(serverText, '', res.status), serverText, status: res.status };
   } catch {
     // Offline / CORS hiccup — let the real navigation decide.
     return { ok: true };
@@ -178,13 +223,51 @@ async function guardAuthorizeUrl(authorizeUrl: string): Promise<{ ok: boolean; i
 }
 
 /**
- * Starts the Google sign-in redirect. Resolves only when something went wrong
- * *before* leaving the page (on success the browser navigates away), so the
- * caller can always show a specific, fixable message.
+ * True when the page is rendered inside another page (the Arena preview panel,
+ * a dashboard iframe, a docs embed…). Google's sign-in pages are sent with
+ * `X-Frame-Options: DENY`, so navigating *this frame* to Google produces a blank
+ * “refused to connect” area and the flow looks broken although it is fine. In
+ * that case the flow is started in a real top-level tab instead.
  */
-export async function cloudStartGoogleSignIn(): Promise<{ ok: boolean; issue?: GoogleAuthIssue }> {
+function isEmbedded(): boolean {
+  try {
+    return typeof window !== 'undefined' && window.self !== window.top;
+  } catch {
+    // Reading window.top throws for a cross-origin parent — that *is* an embed.
+    return true;
+  }
+}
+
+/**
+ * PKCE (the flow Supabase uses here) needs `crypto.subtle`, which browsers only
+ * expose in a secure context: https:// — or http://localhost. On a plain
+ * http://LAN address the challenge cannot be built at all, so say so up front
+ * instead of failing later mid-handshake.
+ */
+function pkceAvailable(): boolean {
+  try {
+    return typeof crypto !== 'undefined' && typeof crypto.subtle?.digest === 'function';
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Starts the Google sign-in redirect. Resolves only when something went wrong
+ * *before* leaving the page (on success the browser navigates away) — so the
+ * caller can always show a specific, fixable message. `openedInNewTab` is set
+ * when the flow had to leave an embedded preview.
+ */
+export async function cloudStartGoogleSignIn(): Promise<{ ok: boolean; issue?: GoogleAuthIssue; openedInNewTab?: boolean }> {
   const sb = supabase();
   if (!sb) return { ok: false, issue: classifyAuthError('cloud not configured', { cloudMissing: true }) };
+
+  // 0. Environment checks first — both of these make the handshake impossible
+  //    regardless of how well the Supabase project is configured.
+  if (!pkceAvailable()) {
+    auditLog('CLOUD_GOOGLE_BLOCKED', { reason: 'no crypto.subtle (insecure context)' });
+    return { ok: false, issue: providerIssueFrom('insecure_context crypto.subtle unavailable') };
+  }
 
   // 1. Cheapest, friendliest check: is the provider enabled at all?
   const probe = await cloudGoogleProviderState();
@@ -216,9 +299,108 @@ export async function cloudStartGoogleSignIn(): Promise<{ ok: boolean; issue?: G
   // 3. Validate, then hand the browser over to Supabase/Google.
   const guard = await guardAuthorizeUrl(authorizeUrl);
   if (!guard.ok) return { ok: false, issue: guard.issue };
-  auditLog('CLOUD_GOOGLE_START', { redirectTo: authRedirectUrl() });
+  auditLog('CLOUD_GOOGLE_START', { redirectTo: authRedirectUrl(), embedded: isEmbedded() });
+
+  // Embedded preview: Google refuses to render inside a frame, so open the flow
+  // in a real top-level tab. This runs inside the click handler, so the popup is
+  // allowed by the browser; if a blocker refuses anyway there is no other way to
+  // reach Google from inside a frame, and the caller explains that instead.
+  if (isEmbedded()) {
+    let tab: Window | null = null;
+    try { tab = window.open(authorizeUrl, '_blank'); } catch { tab = null; }
+    if (tab) {
+      try { tab.opener = null; } catch { /* cross-origin: nothing to do */ }
+      markPendingFlow(authRedirectUrl());
+      return { ok: true, openedInNewTab: true };
+    }
+    // Popup blocked and a frame can never show Google's sign-in page: stop here
+    // with an explanation instead of navigating into a blank “refused to
+    // connect” area.
+    auditLog('CLOUD_GOOGLE_BLOCKED', { reason: 'embedded preview, popup blocked' });
+    return { ok: false, issue: providerIssueFrom('embedded_preview') };
+  }
+
+  markPendingFlow(authRedirectUrl());
   window.location.assign(authorizeUrl);
   return { ok: true };
+}
+
+/**
+ * Raw answers from the two Supabase endpoints the flow depends on. Used by the
+ * “Test the connection” button so the owner sees *exactly* what the server said
+ * instead of guessing (this is the browser twin of `npm run check:auth`).
+ */
+export interface GoogleDiagnostics {
+  provider: ProviderProbe;
+  authorize: {
+    /** False when the request never left the browser (offline / blocked). */
+    checked: boolean;
+    /** True when Supabase answered with a redirect towards Google. */
+    ok: boolean;
+    /** Verbatim server text / status, when Supabase answered with an error. */
+    serverText: string;
+    status?: number;
+    /** The address Supabase was asked to send the user back to. */
+    redirectTo: string;
+    /** Message the app would show for this answer. */
+    issue?: GoogleAuthIssue;
+  };
+}
+
+export async function cloudGoogleDiagnostics(): Promise<GoogleDiagnostics> {
+  const provider = await cloudGoogleProviderState();
+  const empty = { checked: false, ok: false, serverText: '', redirectTo: authRedirectUrl() };
+  const sb = supabase();
+  if (!sb) return { provider, authorize: empty };
+
+  // Build a real authorize URL (PKCE challenge included) without navigating.
+  try {
+    const { data, error } = await sb.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: authRedirectUrl(), skipBrowserRedirect: true, queryParams: { prompt: 'select_account' } },
+    });
+    if (error) {
+      return {
+        provider,
+        authorize: { ...empty, checked: true, serverText: error.message, status: error.status, issue: providerIssueFrom(error.message, error.code ?? '', error.status) },
+      };
+    }
+    const url = data?.url ?? '';
+    if (!url) return { provider, authorize: { ...empty, checked: true, serverText: 'Supabase returned no sign-in URL' } };
+    const guard = await guardAuthorizeUrl(url);
+    if (guard.ok) return { provider, authorize: { ...empty, checked: true, ok: true } };
+    return {
+      provider,
+      authorize: {
+        ...empty, checked: true, ok: false,
+        serverText: guard.serverText ?? '', status: guard.status, issue: guard.issue,
+      },
+    };
+  } catch (err) {
+    return { provider, authorize: { ...empty, checked: true, serverText: errorText(err) } };
+  }
+}
+
+/**
+ * Fires when a Supabase session appears — including one created in *another*
+ * tab (Supabase auth-js syncs sign-ins across tabs). The login screen uses it
+ * after sending the user to Google in a new tab, so the original tab follows
+ * along by itself. Returns an unsubscribe function.
+ */
+export function cloudOnAuthChange(cb: (user: CloudUser) => void): () => void {
+  const sb = supabase();
+  if (!sb) return () => { /* nothing to watch */ };
+  const { data } = sb.auth.onAuthStateChange((event, session) => {
+    if (!session?.user) return;
+    if (event !== 'SIGNED_IN' && event !== 'INITIAL_SESSION' && event !== 'TOKEN_REFRESHED') return;
+    const user = toCloudUser(session.user);
+    if (user) cb(user);
+  });
+  void sb.auth.getSession().then(({ data: current }) => {
+    const user = toCloudUser(current.session?.user ?? null);
+    if (user) cb(user);
+  });
+  return () => { try { data?.subscription?.unsubscribe(); } catch { /* already gone */ } };
 }
 
 export interface RedirectSignInResult {
@@ -239,6 +421,7 @@ export async function cloudCompleteRedirectSignIn(): Promise<RedirectSignInResul
 
   // One-time codes and tokens must not stay in the URL / history.
   clearRedirectParams();
+  clearPendingFlow();
 
   if (params.isError) {
     const issue = issueFromRedirect(params);
