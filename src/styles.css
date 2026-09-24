@@ -336,6 +336,35 @@ pre.code .c { color: #8fa3c7; }
 }
 .auth-card { width: 100%; max-width: 400px; padding: 28px; }
 
+/* ---------- auth: Google provider setup walkthrough ---------- */
+.setup-panel {
+  border: 1px solid var(--navy-100); background: var(--navy-50);
+  border-radius: 10px; padding: 14px; margin-top: 4px; text-align: left;
+}
+.setup-head { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+.setup-head > div { min-width: 0; }
+.setup-steps { margin: 12px 0 0; padding-left: 18px; display: flex; flex-direction: column; gap: 14px; }
+.setup-steps > li { font-size: 13px; color: var(--navy-800); line-height: 1.5; }
+.setup-steps > li > b { display: block; margin-bottom: 3px; }
+.setup-steps .hint { margin: 3px 0 8px; font-size: 12px; }
+.copy-row { margin: 6px 0 8px; }
+.copy-row-label {
+  font-size: 10.5px; text-transform: uppercase; letter-spacing: .05em;
+  color: var(--silver-500); margin-bottom: 3px;
+}
+.copy-row-value {
+  display: flex; align-items: center; gap: 8px; justify-content: space-between;
+  background: #fff; border: 1px solid var(--silver-200); border-radius: 8px; padding: 5px 6px 5px 10px;
+}
+.copy-row-value > span { font-size: 12.5px; word-break: break-all; color: var(--navy-800); }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.setup-panel .btn.small { min-height: 30px; padding: 5px 10px; font-size: 12px; flex: 0 0 auto; }
+.setup-panel a.btn.small { display: inline-flex; }
+@media (max-width: 640px) {
+  .setup-panel { padding: 12px; }
+  .copy-row-value > span { font-size: 12px; }
+}
+
 /* template picker rows (summary & bullet templates) */
 .tpl-pick {
   text-align: left; font-family: inherit; font-size: 13px; line-height: 1.5; color: var(--ink);

@@ -50,7 +50,8 @@ HTTPS certificate is automatic and free.
 
 ## What works after deploy, as-is
 
-- Login/signup (demo mode — accounts stored in the visitor's browser)
+- Login/signup (email + password; Google once the provider is enabled in Supabase — offline demo
+  mode stores accounts in the visitor's browser only)
 - Full resume builder, all templates, PDF download
 - Settings, backup export/import, cloud sync status
 
@@ -60,8 +61,13 @@ HTTPS certificate is automatic and free.
    `supabase/migrations/0001_init.sql` + `supabase/seed/template_catalog.sql`,
    then set `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` as Netlify env vars.
    Full guide: `docs/SUPABASE.md`.
-2. **Google login** — create OAuth Client ID in Google Cloud Console, paste in
-   `src/config.ts` (`GOOGLE_CLIENT_ID`) and enable the Google provider in Supabase Auth.
+2. **Google login** — enable the Google provider in Supabase Auth and paste a Google Cloud
+   OAuth *Web application* client ID + secret (Google redirect URI:
+   `https://<project-ref>.supabase.co/auth/v1/callback`); add the site to Supabase →
+   Authentication → URL Configuration. The app no longer needs a client ID in the repo
+   (`src/config.ts` is gone) and it detects + explains a missing/incorrect setup instead of
+   dead-ending. Verify with `npm run check:auth -- --app-url=https://your-site`.
+   Full guide: `docs/GOOGLE-LOGIN.md`.
 3. **AI assist (optional)** — set up the n8n workflow from `docs/N8N-INTEGRATION.md`
    and paste the webhook in Settings.
 

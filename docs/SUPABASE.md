@@ -9,11 +9,18 @@ offline copy, but the database is the source of truth, and you (as admin) can se
    Region: `ap-south-1 (Mumbai)` for Indian users. Save the database password somewhere safe.
 2. **Authentication → Providers → Email**: keep enabled.
    *Confirm email* — turn **off** for the smoothest sign-up, or keep on if you want verified emails.
-3. (Optional) **Authentication → Providers → Google**: enable, paste the same Google Client ID
-   that is in `src/config.ts` and its secret. Also add your Supabase callback URL in the
-   Google Cloud Console (shown on that page).
+3. **Authentication → Providers → Google** (needed for “Continue with Google”): toggle Google on
+   and paste the *Client ID* + *Client secret* of a Google Cloud OAuth client of type
+   *Web application*. In Google Cloud Console add exactly this Authorized redirect URI:
+   `https://<project-ref>.supabase.co/auth/v1/callback`.
+   Skipping this step is the reason users see
+   *“Provider (issuer "https://accounts.google.com") is not enabled”* — Supabase keeps the
+   client secret on the server, so the app cannot enable it. Full guide:
+   [`docs/GOOGLE-LOGIN.md`](GOOGLE-LOGIN.md), and `npm run check:auth` verifies it.
 4. **Authentication → URL configuration**: set *Site URL* to your Netlify URL
-   (e.g. `https://craftcv.netlify.app`) and add `http://localhost:5173` to *Redirect URLs*.
+   (e.g. `https://craftcv.netlify.app`) and add the redirect URLs your app uses —
+   `https://craftcv.netlify.app/**` and `http://localhost:5173/**`.
+   Google returns to `<origin>/` (PKCE code in the **query string**, so the hash router keeps working).
 
 ## 2. Create the tables
 
@@ -69,6 +76,15 @@ select data from resumes where user_id = (select id from profiles where email = 
 -- all resumes in a given field/template
 select count(*) from resumes where field_id = 'it' and template_id like 'portrait%';
 ```
+
+## Google login (troubleshooting)
+
+`npm run check:auth -- --app-url=https://your-site` reports the provider state from the public
+`GET /auth/v1/settings` endpoint, starts (without following) the Google handshake to confirm the
+Google client + callback URI, and prints the exact values to paste into Google Cloud Console and
+Supabase (exit codes: 0 enabled · 1 disabled or broken handshake · 2 could not check). The in-app equivalents are the
+walkthrough behind “Continue with Google” and the **Settings → Google login** card, both with a
+“Check again” button. Error-by-error mapping: [`docs/GOOGLE-LOGIN.md`](GOOGLE-LOGIN.md).
 
 ## Security model
 

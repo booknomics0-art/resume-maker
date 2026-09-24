@@ -1,3 +1,6 @@
+// MUST come first: snapshots the OAuth/email-link parameters from the address bar
+// while they are still there (see src/lib/authRedirect.ts).
+import './lib/authRedirect';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';

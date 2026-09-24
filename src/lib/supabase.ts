@@ -20,15 +20,26 @@ const url = ((import.meta.env.VITE_SUPABASE_URL as string | undefined)?.trim() |
 const anon = ((import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined)?.trim() || DEFAULT_ANON);
 
 export const SUPABASE_URL = url ?? '';
+/** Public anon key — needed by the Google provider probe (same header supabase-js sends). */
+export const SUPABASE_ANON_KEY = anon ?? '';
 
 let client: SupabaseClient | null = null;
 
-if (url && anon && /^https:\/\/.+\.supabase\.co$/.test(url)) {
+if (url && anon && /^https:\/\/.+\.supabase\.(co|in)$/.test(url)) {
   client = createClient(url, anon, {
     auth: {
       persistSession: true,
       autoRefreshToken: true,
-      detectSessionInUrl: true,
+      // OAuth: Google sign-in is a full-page redirect back to this app. We use the
+      // PKCE flow so the payload arrives as `?code=…` in the query string — never in
+      // the fragment, which this app uses for hash routing (`#/dashboard`).
+      flowType: 'pkce',
+      // `detectSessionInUrl` is OFF on purpose: supabase-js would swallow a failed
+      // code exchange (Google provider disabled, wrong redirect URI, expired code)
+      // into a debug log and silently drop the user back on the login screen.
+      // `cloudCompleteRedirectSignIn()` in lib/cloud.ts handles the callback instead
+      // and turns every failure into a message with the exact fix.
+      detectSessionInUrl: false,
       storageKey: 'craftcv.sb.auth',
     },
     global: { headers: { 'x-client-info': 'craftcv-web/1.0' } },

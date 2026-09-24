@@ -1,16 +1,30 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { currentUser, logout } from '../lib/auth';
 import { getAuditLogs } from '../lib/security';
 import { cloudEnabled } from '../lib/supabase';
-import { cloudDeleteAccount } from '../lib/cloud';
+import { cloudDeleteAccount, cloudGoogleProviderState } from '../lib/cloud';
+import type { GoogleProviderState } from '../lib/googleAuth';
 import { loadResumes, syncWithCloud, upsertResume } from '../lib/store';
 import CloudBadge from './CloudBadge';
+import GoogleSetupPanel from './GoogleSetupPanel';
 
 export default function Settings() {
   const user = currentUser();
   const [showAudit, setShowAudit] = useState(false);
   const [busy, setBusy] = useState('');
   const [msg, setMsg] = useState('');
+  const [googleState, setGoogleState] = useState<GoogleProviderState>('unknown');
+  const [googleChecking, setGoogleChecking] = useState(false);
+  const [showGoogleSetup, setShowGoogleSetup] = useState(false);
+
+  const checkGoogle = useCallback(async () => {
+    if (!cloudEnabled()) return;
+    setGoogleChecking(true);
+    try { setGoogleState((await cloudGoogleProviderState()).state); }
+    finally { setGoogleChecking(false); }
+  }, []);
+
+  useEffect(() => { void checkGoogle(); }, [checkGoogle]);
   const auditLogs = getAuditLogs();
   const resumes = loadResumes();
 
@@ -87,6 +101,42 @@ export default function Settings() {
           <div className="notice warn" style={{ fontSize: 12.5 }}>
             Cloud sync is <b>not configured</b> on this deployment — resumes are stored only in this browser.
             Add <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_ANON_KEY</code> (see <code>docs/SUPABASE.md</code>) to enable accounts that work across devices.
+          </div>
+        )}
+      </div>
+
+      <div className="card pad" style={{ marginTop: 18 }}>
+        <h3 style={{ color: 'var(--navy-900)' }}>🔵 Google login</h3>
+        <p className="hint">
+          You are signed in with <b>{user?.provider === 'google' ? 'Google' : 'email + password'}</b>. Google sign-in goes
+          through your Supabase project, which must have the Google provider enabled — check the state below and fix it here
+          if needed (email + password keeps working either way).
+        </p>
+        <div className="spread" style={{ marginTop: 8, gap: 10, flexWrap: 'wrap' }}>
+          <span className={googleState === 'enabled' ? 'notice' : 'notice warn'} style={{ margin: 0, fontSize: 12.5 }}>
+            {googleState === 'enabled'
+              ? '✅ Google provider: enabled'
+              : googleState === 'disabled'
+                ? '⚠️ Google provider: not enabled in Supabase'
+                : '… Google provider: unknown (could not read the setting)'}
+          </span>
+          <div className="row" style={{ gap: 8 }}>
+            <button className="btn small" onClick={() => void checkGoogle()} disabled={googleChecking}>
+              {googleChecking ? 'Checking…' : '↻ Re-check'}
+            </button>
+            <button className="btn small" onClick={() => setShowGoogleSetup((v) => !v)}>
+              {showGoogleSetup ? 'Hide setup' : 'Setup / fix Google login'}
+            </button>
+          </div>
+        </div>
+        {showGoogleSetup && (
+          <div style={{ marginTop: 12 }}>
+            <GoogleSetupPanel
+              state={googleState}
+              rechecking={googleChecking}
+              onRecheck={() => void checkGoogle()}
+              onClose={() => setShowGoogleSetup(false)}
+            />
           </div>
         )}
       </div>

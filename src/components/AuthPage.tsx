@@ -1,16 +1,11 @@
-import { useEffect, useState } from 'react';
-import { login, signup, loginWithGoogle, setLocalSession } from '../lib/auth';
+import { useCallback, useEffect, useState } from 'react';
+import { login, signup, setLocalSession } from '../lib/auth';
 import { cloudEnabled } from '../lib/supabase';
-import { cloudSignIn, cloudSignUp, cloudSignInWithGoogle, touchProfile } from '../lib/cloud';
+import { cloudSignIn, cloudSignUp, cloudStartGoogleSignIn, cloudGoogleProviderState, touchProfile } from '../lib/cloud';
+import { providerStateNote, type GoogleAuthIssue, type GoogleProviderState } from '../lib/googleAuth';
 import { syncWithCloud } from '../lib/store';
-import { GOOGLE_CLIENT_ID } from '../config';
+import GoogleSetupPanel from './GoogleSetupPanel';
 import Footer from './Footer';
-
-declare global {
-  interface Window {
-    google?: any;
-  }
-}
 
 function GoogleIcon() {
   return (
@@ -23,42 +18,43 @@ function GoogleIcon() {
   );
 }
 
-export default function AuthPage({ onAuth }: { onAuth: () => void }) {
+export default function AuthPage({ onAuth, notice }: { onAuth: () => void; notice?: GoogleAuthIssue | null }) {
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [pass, setPass] = useState('');
   const [error, setError] = useState('');
-  const [googleNote, setGoogleNote] = useState('');
   const [busy, setBusy] = useState(false);
   const [info, setInfo] = useState('');
 
+  // Google sign-in state
+  const [googleState, setGoogleState] = useState<GoogleProviderState>('unknown');
+  const [googleChecking, setGoogleChecking] = useState(false);
+  const [googleBusy, setGoogleBusy] = useState(false);
+  const [googleIssue, setGoogleIssue] = useState<GoogleAuthIssue | null>(notice ?? null);
+  const [showSetup, setShowSetup] = useState(false);
+
+  // A failed Google round-trip arrives as a prop from App.
   useEffect(() => {
-    if (!GOOGLE_CLIENT_ID) return;
-    const s = document.createElement('script');
-    s.src = 'https://accounts.google.com/gsi/client';
-    s.async = true;
-    s.onload = () => {
-      window.google?.accounts?.id?.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        callback: async (resp: any) => {
-          const data = JSON.parse(atob(resp.credential.split('.')[1]));
-          if (cloudEnabled()) {
-            const res = await cloudSignInWithGoogle(resp.credential);
-            if (!res.ok) { setError(res.error || 'Google sign-in failed.'); return; }
-            setLocalSession(res.user?.name || data.name || data.email, res.user?.email || data.email, 'google');
-            void touchProfile();
-            void syncWithCloud();
-          } else {
-            loginWithGoogle(data.name || data.email, data.email);
-          }
-          onAuth();
-        },
-      });
-    };
-    document.body.appendChild(s);
-    return () => { document.body.removeChild(s); };
-  }, [onAuth]);
+    if (!notice) return;
+    setGoogleIssue(notice);
+    if (notice.showSetup) setShowSetup(true);
+  }, [notice]);
+
+  const refreshGoogleState = useCallback(async () => {
+    if (!cloudEnabled()) { setGoogleState('unknown'); return; }
+    setGoogleChecking(true);
+    try {
+      const probe = await cloudGoogleProviderState();
+      setGoogleState(probe.state);
+      return probe.state;
+    } finally {
+      setGoogleChecking(false);
+    }
+  }, []);
+
+  // Label the button correctly on load instead of failing on click.
+  useEffect(() => { void refreshGoogleState(); }, [refreshGoogleState]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,13 +94,50 @@ export default function AuthPage({ onAuth }: { onAuth: () => void }) {
     else setError(res.error || 'Something went wrong.');
   };
 
-  const googleClick = () => {
-    if (GOOGLE_CLIENT_ID && window.google?.accounts?.id) {
-      window.google.accounts.id.prompt();
-    } else {
-      setGoogleNote(
-        'To enable Google Sign-In, paste your Google Cloud Console Client ID into src/config.ts. Until then, please continue with email and password.',
-      );
+  /**
+   * Google sign-in = full-page redirect through Supabase (`…supabase.co/auth/v1/authorize`).
+   * Nothing is decided here: `cloudStartGoogleSignIn` checks the project setting
+   * first, so a disabled provider produces an explanation instead of a raw JSON
+   * error page on supabase.co.
+   */
+  const googleClick = async () => {
+    setError('');
+    if (!cloudEnabled()) {
+      setGoogleIssue({
+        code: 'cloud_missing', title: 'Google login needs the cloud account',
+        message: 'Google sign-in runs through Supabase, and this build has no Supabase project configured.',
+        hint: 'Please use email + password, or set VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY.',
+        showSetup: false, raw: '',
+      });
+      return;
+    }
+    if (googleState === 'disabled') {
+      // Known-bad: skip the network round-trip and show the fix.
+      setGoogleIssue((prev) => prev ?? {
+        code: 'provider_disabled',
+        title: 'Google login is switched off for this Supabase project',
+        message: 'Supabase refused the sign-in because the Google provider is not enabled in your project settings.',
+        hint: 'One-time switch inside Supabase (it stores your Google client secret): enable Google under Authentication → Providers. Steps below.',
+        showSetup: true, raw: 'Provider (issuer "https://accounts.google.com") is not enabled',
+      });
+      setShowSetup(true);
+      void refreshGoogleState();
+      return;
+    }
+
+    setGoogleBusy(true);
+    setGoogleIssue(null);
+    try {
+      const res = await cloudStartGoogleSignIn();
+      if (!res.ok) {
+        setGoogleIssue(res.issue ?? null);
+        if (res.issue?.showSetup) setShowSetup(true);
+        // The setting may have changed (or our probe was stale) — re-read it.
+        void refreshGoogleState();
+      }
+      // On success the browser is already navigating to Google.
+    } finally {
+      setGoogleBusy(false);
     }
   };
 
@@ -177,10 +210,53 @@ export default function AuthPage({ onAuth }: { onAuth: () => void }) {
               <div style={{ flex: 1, height: 1, background: 'var(--silver-200)' }} /> or <div style={{ flex: 1, height: 1, background: 'var(--silver-200)' }} />
             </div>
 
-            <button type="button" className="btn" onClick={googleClick} style={{ justifyContent: 'center', padding: '10px 16px' }}>
-              <GoogleIcon /> Continue with Google
+            <button
+              type="button"
+              className="btn"
+              onClick={googleClick}
+              disabled={googleBusy}
+              style={{ justifyContent: 'center', padding: '10px 16px' }}
+            >
+              <GoogleIcon /> {googleBusy ? 'Opening Google…' : 'Continue with Google'}
             </button>
-            {googleNote && <div className="notice warn" style={{ margin: 0, fontSize: 12.5 }}>{googleNote}</div>}
+
+            {googleState === 'disabled' && !showSetup && (
+              <div
+                className="notice warn"
+                style={{ margin: 0, fontSize: 12.5, cursor: 'pointer' }}
+                onClick={() => setShowSetup(true)}
+              >
+                ⚠️ {providerStateNote('disabled')}
+              </div>
+            )}
+
+            {googleIssue && !showSetup && (
+              <div className="notice err" style={{ margin: 0, fontSize: 12.5 }}>
+                <b>{googleIssue.title}</b>
+                <div style={{ marginTop: 2 }}>{googleIssue.message}</div>
+                {googleIssue.hint && <div style={{ marginTop: 4, opacity: 0.85 }}>{googleIssue.hint}</div>}
+                <button type="button" className="btn small" style={{ marginTop: 8 }} onClick={() => setShowSetup(true)}>
+                  Show me the fix
+                </button>
+              </div>
+            )}
+
+            {showSetup && (
+              <GoogleSetupPanel
+                issue={googleIssue}
+                state={googleState}
+                rechecking={googleChecking}
+                onRecheck={async () => {
+                  const state = await refreshGoogleState();
+                  if (state === 'enabled') {
+                    setGoogleIssue(null);
+                    setShowSetup(false);
+                    setInfo('Google sign-in is enabled — press “Continue with Google”.');
+                  }
+                }}
+                onClose={() => setShowSetup(false)}
+              />
+            )}
 
             <div className="hint" style={{ textAlign: 'center', fontSize: 11.5, lineHeight: 1.5 }}>
               By continuing, you agree to our <a href="#/terms">Terms</a> and <a href="#/privacy">Privacy Policy</a>.

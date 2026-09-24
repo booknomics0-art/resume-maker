@@ -8,7 +8,7 @@ Resumes are stored in your own **Supabase** database (see `docs/SUPABASE.md`).
 
 ## Features
 
-- **Login / Signup** — Supabase Auth (email + password, Google). Without Supabase env vars the app falls back to a browser-only demo account.
+- **Login / Signup** — Supabase Auth (email + password, and Google via the standard redirect/PKCE flow). Google needs the provider enabled once in the Supabase project; the app probes it, explains exactly what to fix (deep links + copy-paste values) and never dead-ends on Supabase's raw JSON error — see [`docs/GOOGLE-LOGIN.md`](docs/GOOGLE-LOGIN.md) and `npm run check:auth`. Without Supabase env vars the app falls back to a browser-only demo account.
 - **Cloud database** — every resume is saved to `public.resumes` in Supabase with row-level security; two-way sync with the offline copy, admin views for template usage & all resumes.
 - **Dashboard** — resumes with live thumbnails, completion %, duplicate/delete, sample resume.
 - **Import an existing resume — PDF, DOCX, TXT, JSON, and photos (JPG/PNG)** — real PDF text extraction with **pdf.js** (compressed streams, correct line & paragraph reconstruction). Pages without a text layer (scans, photos, image-only PDFs) are detected automatically and read by a **bundled, fully offline OCR engine** (Tesseract worker + wasm core + English model served from `/ocr/`, so no CDN and no CSP problems). Photos get desk-cropped, contrast-stretched and thresholded before recognition. A line-aware parser then pulls out contact info, headline, summary, experience (role / company / location / dates / bullets), education, skills, projects, certifications, achievements, languages and hobbies — and **fills every one of them straight into the form**, with the A4 resume rendered live beside it: type in the form, the resume changes with you. Nothing is uploaded — the file never leaves the tab. Pipeline: `src/lib/pdfExtract.ts` + `src/lib/ocr.ts` → `src/lib/resumeParser.ts` → `src/components/ResumeImporter.tsx` (draft bridge: `src/lib/importDraft.ts`).
@@ -35,8 +35,9 @@ None. CraftCV is completely free — there is no billing code in the app.
 
 ```bash
 npm install
-npm run dev      # http://localhost:5173
-npm run build    # static build in dist/
+npm run dev          # http://localhost:5173
+npm run build        # static build in dist/
+npm run check:auth   # is Google login ready on the Supabase project?
 ```
 
 ## Importer tests
@@ -46,10 +47,11 @@ parsing code in Node (esbuild bundles `src/lib/*.ts`; `@napi-rs/canvas` stands i
 for the browser canvas, and the tests skip politely if it is missing):
 
 ```bash
-npm test              # all three suites
+npm test              # all four suites (Google auth, OCR, PDF, autofill)
 npm run test:ocr      # photo of a resume → OCR → fields   (tests/scan-resume.jpg)
 npm run test:pdf      # text PDF (no OCR) + image-only PDF (the reported bug)
 npm run test:autofill # extracted data → form → live resume → editor hand-over
+npm run test:auth     # Google callback parsing, error mapping, provider probe, redirect flow
 node tests/test-image-ocr.mjs path/to/your-scan.jpg   # try any file
 ```
 
@@ -76,6 +78,7 @@ origin instead.
 
 ## Docs (internal)
 
+- [Google login — setup & troubleshooting](docs/GOOGLE-LOGIN.md)
 - [Frontend & UI/UX plan](docs/FRONTEND-PLAN.md)
 - [n8n integration blueprint](docs/N8N-INTEGRATION.md)
 - [Pricing research](docs/PRICING.md)
