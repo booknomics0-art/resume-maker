@@ -23,9 +23,11 @@
  */
 
 import type { GrayImage } from './imaging';
-import { toGray } from './imaging';
+import { enhanceFaintInk, isMostlyBlank, toGray } from './imaging';
+import { itemsToText, type PositionedItem } from './layoutText';
 import { ocrAssetMode, ocrGrayPage, OcrUnavailableError, type OcrRunOptions } from './ocr';
-import { ocrQuality } from './ocrText';
+import { ocrQuality, unionText } from './ocrText';
+import { classifyImages, collectPdfImages } from './pdfImages';
 
 export interface PdfProgress {
   stage: string;
@@ -43,6 +45,8 @@ export interface PdfExtractResult {
   ocrConfidence?: number; // average Tesseract confidence for OCR pages
   ocrPages: number;
   warning?: string;
+  /** Headshot lifted out of the PDF, if one was embedded (not the page scan). */
+  photoDataUrl?: string;
 }
 
 /** Renders one PDF page for OCR — injectable so tests can run headless. */
@@ -158,17 +162,98 @@ function insertParagraphBreaks(lines: Array<{ y: number; text: string }>): strin
 
 async function extractPageText(page: any): Promise<string> {
   const tc = await page.getTextContent();
-  const chunks: Chunk[] = [];
+  const viewport = page.getViewport({ scale: 1 });
+  const items: PositionedItem[] = [];
   for (const it of tc.items as any[]) {
-    if (!it.str || !it.str.trim()) continue;
-    chunks.push({
+    if (!it.str || !String(it.str).trim()) continue;
+    items.push({
       str: it.str,
-      x: it.transform[4],
-      y: it.transform[5],
+      x: it.transform?.[4] ?? 0,
+      y: it.transform?.[5] ?? 0,
       w: typeof it.width === 'number' ? it.width : 0,
+      h: typeof it.height === 'number' ? it.height : Math.abs(it.transform?.[3] ?? 0) || 11,
     });
   }
-  return chunksToText(chunks);
+  let text = itemsToText(items, viewport?.width || 0);
+  // Designed resumes hide the email / LinkedIn behind a link annotation.
+  // The visible word is just "Email" — the address only exists as the URL.
+  try {
+    const annots = await page.getAnnotations();
+    const extras: string[] = [];
+    const have = text.toLowerCase();
+    for (const a of annots as any[]) {
+      const url = String(a?.url || a?.unsafeUrl || '').trim();
+      if (!url || url.length > 300) continue;
+      const bare = url.replace(/^mailto:/i, '').replace(/^tel:/i, '');
+      const key = bare.toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '');
+      if (key.length < 5 || have.includes(key.slice(0, 24))) continue;
+      extras.push(bare);
+    }
+    if (extras.length) text = `${text}\n${extras.join('\n')}`;
+  } catch {
+    /* annotations are optional */
+  }
+  return text;
+}
+
+/**
+ * Image to OCR for one page.
+ * Tests inject `renderPage` and that path is preserved exactly.
+ * In the app, a scanned page is read from its embedded image first — painting
+ * it often returns a blank white canvas, which is why "white paper" uploads
+ * used to extract nothing at all.
+ */
+async function pageImageForOcr(
+  page: any,
+  pageNo: number,
+  opts: PdfExtractOptions,
+): Promise<{ gray: GrayImage | null; photo?: string; via: string }> {
+  if (opts.renderPage) {
+    return { gray: await opts.renderPage(page, pageNo), via: 'render-hook' };
+  }
+
+  const readEmbedded = () => {
+    try {
+      return classifyImages(collectPdfImages(page));
+    } catch {
+      return { scans: [] as GrayImage[] };
+    }
+  };
+
+  let assets: { scans: GrayImage[]; photoDataUrl?: string } = { scans: [] };
+  try {
+    await page.getOperatorList();
+    assets = readEmbedded();
+  } catch {
+    /* operator list is a bonus, not a requirement */
+  }
+
+  const embedded = assets.scans.find((s) => !isMostlyBlank(s)) || null;
+  if (embedded) return { gray: embedded, photo: assets.photoDataUrl, via: 'embedded' };
+
+  if (typeof document !== 'undefined') {
+    try {
+      const rendered = await renderPageGray(page);
+      if (!isMostlyBlank(rendered)) return { gray: rendered, photo: assets.photoDataUrl, via: 'render' };
+    } catch {
+      /* paint failed — the decoded image may still be sitting in page.objs */
+    }
+    assets = readEmbedded();
+  }
+
+  const faint = assets.scans[0];
+  if (faint) return { gray: enhanceFaintInk(faint), photo: assets.photoDataUrl, via: 'embedded-faint' };
+  return { gray: null, photo: assets.photoDataUrl, via: 'none' };
+}
+
+function personFromMeta(info: any): string {
+  const author = String(info?.Author || info?.author || '').replace(/\s+/g, ' ').trim();
+  if (!author || author.length < 3 || author.length > 48) return '';
+  if (/department|resume|template|microsoft|word|adobe|canva|google|untitled|document|office|admin|user|www\.|@|acrobat|nitro|wps/i.test(author)) return '';
+  const words = author.split(' ');
+  if (words.length > 4) return '';
+  if (!words.every((w) => /^[A-Za-z][A-Za-z.'-]*$/.test(w))) return '';
+  return author;
 }
 
 /**
@@ -245,10 +330,19 @@ export async function extractPdfSmart(
   }
 
   const numPages: number = doc.numPages;
+  let authorHint = '';
+  try {
+    const meta = await doc.getMetadata();
+    authorHint = personFromMeta(meta?.info);
+  } catch {
+    /* metadata is optional */
+  }
 
   // ── Stage 1 — text layer ───────────────────────────────────────────────────
   const textPages: string[] = [];
   const needsOcr: boolean[] = [];
+  /** Pages with some text that may still hide a scanned column in an image. */
+  const imageMerge: boolean[] = [];
   let textChars = 0;
 
   for (let i = 1; i <= numPages; i++) {
@@ -262,7 +356,9 @@ export async function extractPdfSmart(
     const chars = countChars(t);
     textChars += chars;
     textPages.push(t);
-    needsOcr.push(opts.forceOcr === true || chars < THIN_PAGE_CHARS || looksLikeGarbage(t));
+    const thin = opts.forceOcr === true || chars < THIN_PAGE_CHARS || looksLikeGarbage(t);
+    needsOcr.push(thin);
+    imageMerge.push(!thin && chars < 900);
     page.cleanup?.();
     onProgress?.({ stage: `Reading text layer — page ${i}/${numPages}`, pct: 4 + (i / numPages) * 40 });
   }
@@ -275,16 +371,18 @@ export async function extractPdfSmart(
   let ocrPages = 0;
   let confidenceSum = 0;
   let assetMode: string | null = null;
+  let photoDataUrl: string | undefined;
+  let usedEmbedded = false;
 
   // ── Stage 2 — OCR the pages that need it ───────────────────────────────────
   const pagesToOcr = Math.min(numPages, OCR_MAX_PAGES);
   const ocrTargets = needsOcr.slice(0, pagesToOcr).filter(Boolean).length;
+  const mergeTargets = imageMerge.slice(0, pagesToOcr).filter(Boolean).length;
   let ocrDone = 0;
 
-  if (ocrTargets > 0) {
+  if (ocrTargets > 0 || mergeTargets > 0) {
     try {
       if (looksScanned) onProgress?.({ stage: 'Scanned PDF detected — starting OCR…', pct: 46 });
-      const renderer = opts.renderPage || renderPageGray;
       let mode: string | null = null;
       try {
         mode = await ocrAssetMode(opts.ocr);
@@ -292,40 +390,71 @@ export async function extractPdfSmart(
         /* probe failure is not fatal — the engine reports its own errors */
       }
       assetMode = mode;
+      const slots = Math.max(1, ocrTargets + mergeTargets);
 
       for (let i = 1; i <= numPages && ocrDone < OCR_MAX_PAGES; i++) {
-        if (!needsOcr[i - 1]) continue;
+        const must = needsOcr[i - 1] === true;
+        const maybe = imageMerge[i - 1] === true;
+        if (!must && !maybe) continue;
         const page = await doc.getPage(i);
-        const slot = ocrDone; // how many OCR pages are already finished
-        const out = await ocrGrayPage(await renderer(page, i), {
+
+        let gray: GrayImage | null = null;
+        let via = 'none';
+        if (!must) {
+          // Don't paint a page we already have text for. Only recover a real
+          // embedded scan (the other column of a designed resume).
+          try { await page.getOperatorList(); } catch { /* ignore */ }
+          const assets = classifyImages(collectPdfImages(page));
+          if (assets.photoDataUrl && !photoDataUrl) photoDataUrl = assets.photoDataUrl;
+          gray = assets.scans.find((s) => !isMostlyBlank(s)) || null;
+          via = gray ? 'embedded' : 'none';
+          if (!gray) { page.cleanup?.(); continue; }
+        } else {
+          const recovered = await pageImageForOcr(page, i, opts);
+          gray = recovered.gray;
+          via = recovered.via;
+          if (recovered.photo && !photoDataUrl) photoDataUrl = recovered.photo;
+          if (via.startsWith('embedded')) usedEmbedded = true;
+          if (!gray || (isMostlyBlank(gray) && via !== 'embedded-faint')) {
+            warnings.push(`Page ${i} looked like a blank white page and no embedded scan could be read.`);
+            page.cleanup?.();
+            continue;
+          }
+        }
+
+        const slot = ocrDone;
+        const out = await ocrGrayPage(gray, {
           ...(opts.ocr || {}),
           isFirstPage: i === 1,
-          // map the page's own 0-100 progress into this page's slice of 46-94
           onProgress: (p) => onProgress?.({
-            stage: `Page ${i}/${numPages} · ${p.stage}`,
-            pct: 46 + ((slot + p.pct / 100) / ocrTargets) * 48,
+            stage: via.startsWith('embedded')
+              ? `Page ${i}/${numPages} · reading the scanned page image · ${p.stage}`
+              : `Page ${i}/${numPages} · ${p.stage}`,
+            pct: 46 + ((slot + p.pct / 100) / slots) * 48,
           }),
         });
         ocrDone++;
         page.cleanup?.();
 
         const textLayer = textPages[i - 1] || '';
-        const useOcr = opts.forceOcr === true
+        if (!out.text.trim()) continue;
+        // Never throw a source away. The stronger pass leads; unique lines
+        // from the other pass are kept so a sidebar or a scanned column
+        // cannot silently disappear.
+        const leadWithOcr = opts.forceOcr === true
           || countChars(textLayer) < SCANNED_THRESHOLD
-          || ocrQuality(out.text) > ocrQuality(textLayer);
-        if (useOcr && out.text.trim()) {
-          textPages[i - 1] = out.text;
-          ocrChars += countChars(out.text);
-          ocrPages++;
-          confidenceSum += out.confidence;
-        }
+          || ocrQuality(out.text) > ocrQuality(textLayer) + 4;
+        textPages[i - 1] = leadWithOcr ? unionText(out.text, textLayer) : unionText(textLayer, out.text);
+        ocrChars += countChars(out.text);
+        ocrPages++;
+        confidenceSum += out.confidence;
       }
 
       if (ocrPages > 0) {
         method = textChars > 120 ? 'mixed' : 'ocr';
         warnings.push(
           looksScanned
-            ? `Scanned/image PDF — text was read with the built-in OCR engine (${assetMode === 'cdn' ? 'downloaded once from the CDN' : 'runs fully offline on your device'}). Check dates and numbers.`
+            ? `Scanned/image PDF — text was read with the built-in OCR engine (${assetMode === 'cdn' ? 'downloaded once from the CDN' : 'runs fully offline on your device'}${usedEmbedded ? ', from the page image itself' : ''}). Check dates and numbers.`
             : `${ocrPages} page${ocrPages > 1 ? 's' : ''} had no usable text layer — read with OCR. Check dates and numbers.`,
         );
         if (numPages > OCR_MAX_PAGES) warnings.push(`OCR covered the first ${OCR_MAX_PAGES} pages only.`);
@@ -381,6 +510,7 @@ export async function extractPdfSmart(
     ocrChars,
     ocrConfidence: ocrPages ? Math.round(confidenceSum / ocrPages) : undefined,
     ocrPages,
+    photoDataUrl,
     warning: warnings.length ? warnings.join(' ') : undefined,
   };
 }

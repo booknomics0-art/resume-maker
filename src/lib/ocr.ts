@@ -18,7 +18,8 @@
 
 import type { GrayImage } from './imaging';
 import {
-  adaptiveThreshold, binarizeOtsu, contrastStretch, cropToPage, fitForOcr, toGray, thresholdLooksSane,
+  adaptiveThreshold, binarizeOtsu, contrastStretch, cropToPage, enhanceFaintInk, fitForOcr, inkRatio,
+  invertGray, toGray, thresholdLooksSane,
 } from './imaging';
 import { cleanOcrLayout, mergeMissingLines, ocrQuality, repairOcrText } from './ocrText';
 
@@ -298,6 +299,22 @@ export async function ocrGrayPage(gray: GrayImage, opts: OcrRunOptions = {}): Pr
     const merged = mergeMissingLines(best.text, sparse);
     if (ocrQuality(merged) > best.quality) {
       best = { text: merged, confidence: r2.confidence, quality: ocrQuality(merged), pass: `${best.pass}+sparse` };
+    }
+  }
+
+  // Last resort for a page that came back blank: the scan is inverted, or the
+  // ink is so light that the first three passes treated it as empty paper.
+  const keptChars = best.text.replace(/\s/g, '').length;
+  if (keptChars < 28) {
+    report(`${pageLabel}: blank page — boosting faint ink…`, 78);
+    const faint = binarizeOtsu(enhanceFaintInk(pre));
+    const r = await recognize(toSource(faint), '6', worker);
+    consider(cleanOcrLayout(r.text), r.confidence, 'faint+block');
+    if (best.text.replace(/\s/g, '').length < 28) {
+      report(`${pageLabel}: trying the inverted scan…`, 90);
+      const inv = binarizeOtsu(invertGray(contrastStretch(pre, 0.01, 0.98)));
+      const r2 = await recognize(toSource(inv), '6', worker);
+      consider(cleanOcrLayout(r2.text), r2.confidence, 'invert+block');
     }
   }
 

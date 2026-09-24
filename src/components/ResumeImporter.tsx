@@ -72,11 +72,11 @@ function sanitizeResume(r: Resume): Resume {
       website: sanitizeURL(r.personal.website),
       photo: r.personal.photo,
     },
-    summary: sanitizeInput(r.summary, 2000),
-    bestExperience: sanitizeInput(r.bestExperience, 1000),
-    skills: r.skills.map((s) => sanitizeInput(s, 50)).filter(Boolean),
-    hobbies: r.hobbies.map((h) => sanitizeInput(h, 50)).filter(Boolean),
-    achievements: r.achievements.map((a) => sanitizeInput(a, 220)).filter(Boolean),
+    summary: sanitizeInput(r.summary, 4000),
+    bestExperience: sanitizeInput(r.bestExperience, 2000),
+    skills: r.skills.map((s) => sanitizeInput(s, 60)).filter(Boolean),
+    hobbies: r.hobbies.map((h) => sanitizeInput(h, 60)).filter(Boolean),
+    achievements: r.achievements.map((a) => sanitizeInput(a, 400)).filter(Boolean),
     experience: r.experience.map((e) => ({
       ...e,
       role: sanitizeInput(e.role, 100),
@@ -84,7 +84,7 @@ function sanitizeResume(r: Resume): Resume {
       location: sanitizeInput(e.location, 60),
       start: sanitizeInput(e.start, 20),
       end: sanitizeInput(e.end, 20),
-      bullets: e.bullets.map((b) => sanitizeInput(b, 250)).filter(Boolean).slice(0, 8),
+      bullets: e.bullets.map((b) => sanitizeInput(b, 400)).filter(Boolean).slice(0, 12),
     })),
     education: r.education.map((ed) => ({
       ...ed,
@@ -92,7 +92,7 @@ function sanitizeResume(r: Resume): Resume {
       school: sanitizeInput(ed.school, 100),
       location: sanitizeInput(ed.location, 60),
       year: sanitizeInput(ed.year, 30),
-      note: sanitizeInput(ed.note, 80),
+      note: sanitizeInput(ed.note, 160),
     })),
     projects: r.projects.map((p) => ({
       id: p.id || uid(),
@@ -338,15 +338,19 @@ export default function ResumeImporter() {
 
   // ── review screen: form (left) ⇄ live resume (right) ──────────────────────
   if (step === 'review' && draft) {
-    const body = [
-      <StepBasics key="b" r={r} set={set} />,
-      <StepSummary key="s" r={r} set={set} />,
-      <StepExperience key="e" r={r} set={set} />,
-      <StepEducation key="ed" r={r} set={set} />,
-      <StepSkills key="sk" r={r} set={set} />,
-      <StepExtras key="x" r={r} set={set} />,
-      <StepDesign key="d" r={r} set={set} />,
-    ][tab];
+    const jump = (id: string) => {
+      setMobileTab('form');
+      document.getElementById(`import-sec-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+    const sections = [
+      { id: 'basics', label: '👤 Basics', node: <StepBasics r={r} set={set} /> },
+      { id: 'summary', label: '📝 Summary', node: <StepSummary r={r} set={set} /> },
+      { id: 'experience', label: '💼 Experience', node: <StepExperience r={r} set={set} /> },
+      { id: 'education', label: '🎓 Education', node: <StepEducation r={r} set={set} /> },
+      { id: 'skills', label: '🛠 Skills', node: <StepSkills r={r} set={set} /> },
+      { id: 'extras', label: '➕ Extras', node: <StepExtras r={r} set={set} /> },
+      { id: 'design', label: '🎨 Template', node: <StepDesign r={r} set={set} /> },
+    ];
 
     return (
       <div className="editor-root">
@@ -389,7 +393,7 @@ export default function ResumeImporter() {
           </div>
           <div className="chips" style={{ marginTop: 10 }}>
             {detected.map((d) => (
-              <button key={d.label} className="chip" style={{ cursor: 'pointer' }} onClick={() => setTab(d.tab)}>
+              <button key={d.label} className="chip" style={{ cursor: 'pointer' }} onClick={() => jump(TABS[d.tab]?.id || 'basics')}>
                 {d.label}
               </button>
             ))}
@@ -405,31 +409,39 @@ export default function ResumeImporter() {
         <div className="editor-grid">
           {/* ── the auto-filled form ── */}
           <div className={`card pad editor-form ${mobileTab === 'preview' ? 'editor-pane-hidden' : ''}`}>
-            <div className="chips" style={{ marginBottom: 14 }}>
-              {TABS.map((t, i) => (
+            <div className="chips" style={{ marginBottom: 14, position: 'sticky', top: 0, zIndex: 2, background: 'var(--card, #fff)', paddingBottom: 8 }}>
+              {sections.map((s) => (
                 <button
-                  key={t.id}
-                  className={`chip ${i === tab ? 'on' : ''}`}
-                  onClick={() => { setTab(i); setMobileTab('form'); }}
+                  key={s.id}
+                  className="chip"
+                  onClick={() => jump(s.id)}
                   style={{ cursor: 'pointer' }}
                 >
-                  {t.label}
+                  {s.label}
                 </button>
               ))}
             </div>
 
             <div className="hint" style={{ marginBottom: 12 }}>
-              Everything below was filled automatically — edit any field and watch the resume on the right change.
+              Every section is open — nothing is hidden in another tab. Edit any field and the resume on the right changes with you.
             </div>
 
-            {body}
+            {sections.map((s) => (
+              <section key={s.id} id={`import-sec-${s.id}`} className="import-sec" style={{ marginBottom: 22 }}>
+                <div style={{ fontWeight: 800, color: 'var(--navy-900)', fontSize: 14, marginBottom: 8, paddingTop: 4 }}>{s.label}</div>
+                {s.node}
+              </section>
+            ))}
 
             <div className="step-foot">
-              <button className="btn" disabled={tab === 0} onClick={() => setTab((t) => Math.max(0, t - 1))}>← Back</button>
+              <button
+                className="btn"
+                disabled={!missing.length}
+                onClick={() => missing[0] && jump(missing[0].step)}
+              >
+                Jump to missing
+              </button>
               <div className="row" style={{ flex: '1 1 auto', justifyContent: 'flex-end' }}>
-                {tab < TABS.length - 1 ? (
-                  <button className="btn" onClick={() => setTab((t) => Math.min(TABS.length - 1, t + 1))}>Next: {TABS[tab + 1].label} →</button>
-                ) : null}
                 <button className="btn primary" onClick={handleSave}>💾 Save &amp; open in editor →</button>
               </div>
             </div>
