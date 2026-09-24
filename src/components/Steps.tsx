@@ -569,7 +569,7 @@ export function StepDesign({ r, set }: StepProps) {
   return (
     <div>
       <div className="notice">
-        Fifty templates across five layout families (Sidebar, Classic, Minimal, Statement, Dense), tuned for
+        Eighty templates across eleven layout families — Sidebar, Classic, Minimal, Statement, Dense, plus Canva-style Portrait, Studio, Monogram, Timeline, Infographic and Corporate — tuned for
         <b> {f.label}</b>. The starred ones fit this field best — section order, emphasis and spacing change
         per field automatically. Use the family filters above the grid. Click any to apply it instantly.
       </div>

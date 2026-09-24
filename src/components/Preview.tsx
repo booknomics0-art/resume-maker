@@ -1,4 +1,4 @@
-// Renders a resume in one of the 50 templates (5 layout families x 10 variants).
+// Renders a resume in one of the 80 templates (11 layout families).
 // Used at full size in the editor, scaled down for thumbnails.
 // The template's palette is applied as CSS custom properties on .sheet;
 // structural variants (mod-invert, mod-serif, mod-band-flat, mod-band-tint)
@@ -7,7 +7,7 @@
 import { useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import type { Resume } from '../lib/types';
 import {
-  SECTION_LABELS, hasSection, sectionOrder, templateById, type SectionId, type Template,
+  SECTION_LABELS, SIDE_SECTIONS, hasSection, sectionOrder, templateById, type SectionId, type Template,
 } from '../lib/templates';
 
 /** A4 at 96dpi — the canonical sheet size used by preview, thumbs and print. */
@@ -205,15 +205,80 @@ function HeaderPhoto({ r, size = 66 }: { r: Resume; size?: number }) {
   );
 }
 
+/** Experience with dates in a left gutter and a dotted line — Timeline family. */
+function TimelineExperience({ r }: { r: Resume }) {
+  if (!hasSection(r, 'experience')) return null;
+  return (
+    <section className="sec sec-experience" style={{ marginBottom: 13 }}>
+      <h3 className="s-sec-title">{SECTION_LABELS.experience}</h3>
+      <div className="tl-list">
+        {r.experience.map((e) => (
+          <div className="tl-row" key={e.id}>
+            <div className="tl-date">{e.start}<br />– {e.current ? 'Present' : e.end}</div>
+            <div className="tl-dot" />
+            <div className="tl-body">
+              <b>{e.role}</b>
+              <div className="s-item-sub">{e.company}{e.location ? ` · ${e.location}` : ''}</div>
+              <ul>{e.bullets.filter(Boolean).map((b, i) => <li key={i}>{b}</li>)}</ul>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/** Deterministic pseudo-level so bars look intentional without asking users for a % — Infographic family. */
+function barWidth(i: number, total: number) {
+  const base = 94 - (i / Math.max(1, total - 1)) * 34; // 94% → 60%
+  return Math.round(base);
+}
+
+function SkillBars({ r }: { r: Resume }) {
+  const skills = r.skills.filter(Boolean);
+  if (!skills.length) return null;
+  return (
+    <section className="sec sec-skills" style={{ marginBottom: 13 }}>
+      <h3 className="s-sec-title">{SECTION_LABELS.skills}</h3>
+      {skills.map((sk, i) => (
+        <div className="bar" key={sk}>
+          <span>{sk}</span>
+          <i><b style={{ width: `${barWidth(i, skills.length)}%` }} /></i>
+        </div>
+      ))}
+    </section>
+  );
+}
+
+const LEVEL_DOTS: Record<string, number> = {
+  native: 5, fluent: 5, professional: 4, advanced: 4, intermediate: 3, conversational: 3, basic: 2, beginner: 1,
+};
+function LanguageDots({ r }: { r: Resume }) {
+  if (!hasSection(r, 'languages')) return null;
+  return (
+    <section className="sec sec-languages" style={{ marginBottom: 13 }}>
+      <h3 className="s-sec-title">{SECTION_LABELS.languages}</h3>
+      {r.languages.map((l) => {
+        const n = LEVEL_DOTS[l.level.trim().toLowerCase()] ?? 3;
+        return (
+          <div className="dots" key={l.id}>
+            <span>{l.name}</span>
+            <i>{[1, 2, 3, 4, 5].map((k) => <b key={k} className={k <= n ? 'on' : ''} />)}</i>
+          </div>
+        );
+      })}
+    </section>
+  );
+}
+
 export default function Preview({ r, tpl }: { r: Resume; tpl?: Template }) {
   const t = tpl ?? templateById(r.templateId);
   const order = sectionOrder(t, r.fieldId);
-  const mainSections = t.layout === 'split'
-    ? order.filter((s) => !['skills', 'languages', 'certs', 'hobbies'].includes(s))
-    : order;
-  const sideSections: SectionId[] = t.layout === 'split'
-    ? (['skills', 'languages', 'certs', 'hobbies'] as SectionId[]).filter((s) => order.includes(s))
-    : [];
+  const sideSet = SIDE_SECTIONS[t.layout] ?? [];
+  const mainSections = order.filter((s) => !sideSet.includes(s));
+  const sideSections: SectionId[] = sideSet.filter((s) => order.includes(s));
+  const p = r.personal;
+  const contactLines = [p.email, p.phone, p.city, p.linkedin, p.website].filter(Boolean);
   const name = r.personal.fullName || 'Your Name';
   const headline = r.personal.headline || 'Target Job Title';
 
@@ -304,6 +369,141 @@ export default function Preview({ r, tpl }: { r: Resume; tpl?: Template }) {
         </div>
         {mainSections.map((s) => (
           <Section r={r} id={s} key={s} />
+        ))}
+      </div>
+    );
+  }
+
+  // ---------- Canva-style families ----------
+
+  if (t.layout === 'portrait') {
+    return (
+      <div className={sheetClass(t)} style={sheetVars(t)}>
+        <div className="head">
+          <div>
+            <h1 className="s-name">{name}</h1>
+            <div className="s-headline">{headline}</div>
+          </div>
+          {p.photo ? <img className="s-photo" src={p.photo} alt="" /> : <div className="s-photo ph">{initials(name)}</div>}
+        </div>
+        <div className="cols">
+          <aside className="side">
+            <section className="sec">
+              <h3 className="s-sec-title">Contact</h3>
+              {contactLines.map((c, i) => <div className="contact-line" key={i}>{c}</div>)}
+            </section>
+            {sideSections.map((s) => <Section r={r} id={s} key={s} />)}
+          </aside>
+          <div className="main">
+            {mainSections.map((s) => <Section r={r} id={s} key={s} />)}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (t.layout === 'studio') {
+    return (
+      <div className={sheetClass(t)} style={sheetVars(t)}>
+        <aside className="side">
+          {p.photo ? <img className="avatar" src={p.photo} alt="" /> : <div className="avatar ph">{initials(name)}</div>}
+          <section className="sec">
+            <h3 className="s-sec-title">Contact</h3>
+            {contactLines.map((c, i) => <div className="contact-line" key={i}>{c}</div>)}
+          </section>
+          {sideSections.map((s) => <Section r={r} id={s} key={s} />)}
+        </aside>
+        <div className="main">
+          <div className="head">
+            <h1 className="s-name">{name}</h1>
+            <div className="s-headline">{headline}</div>
+          </div>
+          {mainSections.map((s) => <Section r={r} id={s} key={s} timeline={s === 'experience'} />)}
+        </div>
+      </div>
+    );
+  }
+
+  if (t.layout === 'monogram') {
+    return (
+      <div className={sheetClass(t)} style={sheetVars(t)}>
+        <div className="head">
+          {p.photo ? <img className="seal seal-photo" src={p.photo} alt="" /> : <div className="seal">{initials(name)}</div>}
+          <h1 className="s-name">{name}</h1>
+          <div className="s-headline">{headline}</div>
+          <ContactBits r={r} />
+        </div>
+        {mainSections.map((s) => <Section r={r} id={s} key={s} />)}
+      </div>
+    );
+  }
+
+  if (t.layout === 'timeline') {
+    return (
+      <div className={sheetClass(t)} style={sheetVars(t)}>
+        <div className="head">
+          <div className="head-inner">
+            <div>
+              <h1 className="s-name">{name}</h1>
+              <div className="s-headline">{headline}</div>
+            </div>
+            <HeaderPhoto r={r} size={74} />
+          </div>
+          <ContactBits r={r} />
+        </div>
+        <div className="body">
+          {mainSections.map((s) => (
+            s === 'experience' ? <TimelineExperience r={r} key={s} /> : <Section r={r} id={s} key={s} />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (t.layout === 'infographic') {
+    return (
+      <div className={sheetClass(t)} style={sheetVars(t)}>
+        <div className="main">
+          <div className="head">
+            <h1 className="s-name">{name}</h1>
+            <div className="s-headline">{headline}</div>
+          </div>
+          {mainSections.map((s) => <Section r={r} id={s} key={s} timeline={s === 'experience'} />)}
+        </div>
+        <aside className="side">
+          {p.photo ? <img className="avatar" src={p.photo} alt="" /> : <div className="avatar ph">{initials(name)}</div>}
+          <section className="sec">
+            <h3 className="s-sec-title">Contact</h3>
+            {contactLines.map((c, i) => <div className="contact-line" key={i}>{c}</div>)}
+          </section>
+          {sideSections.map((s) => (
+            s === 'skills' ? <SkillBars r={r} key={s} />
+              : s === 'languages' ? <LanguageDots r={r} key={s} />
+                : <Section r={r} id={s} key={s} />
+          ))}
+        </aside>
+      </div>
+    );
+  }
+
+  if (t.layout === 'corporate') {
+    return (
+      <div className={sheetClass(t)} style={sheetVars(t)}>
+        <div className="head">
+          <div>
+            <h1 className="s-name">{name}</h1>
+            <div className="s-headline">{headline}</div>
+          </div>
+          <div className="head-right">
+            <HeaderPhoto r={r} size={64} />
+            <div className="s-contact">{contactLines.map((c, i) => <span key={i}>{c}</span>)}</div>
+          </div>
+        </div>
+        {mainSections.filter((id) => hasSection(r, id)).map((id) => (
+          <div className={`crow sec sec-${id}`} key={id}>
+            <div className="label"><h3 className="s-sec-title">{SECTION_LABELS[id]}</h3></div>
+            <div className="content"><SectionBody r={r} id={id} /></div>
+          </div>
         ))}
       </div>
     );

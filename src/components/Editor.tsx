@@ -6,12 +6,11 @@ import {
 } from '../lib/importDraft';
 import { fieldById } from '../lib/fields';
 import { navigate } from '../App';
+import { recordDownload } from '../lib/cloud';
 import Preview, { A4 } from './Preview';
 import {
   StepBasics, StepDesign, StepEducation, StepExperience, StepExtras, StepSkills, StepSummary,
 } from './Steps';
-import { incrementDownload, canDownloadFree, getRemainingFreeDownloads, isPro } from '../lib/billing';
-import PaymentModal from './PaymentModal';
 
 function useContainerScale(baseWidth = A4.w) {
   const ref = useRef<HTMLDivElement>(null);
@@ -80,7 +79,6 @@ export default function Editor({ id }: { id: string }) {
   const [maxVisited, setMaxVisited] = useState(Math.min(initial.step, STEPS.length - 1));
   const [touched, setTouched] = useState(false);
   const [mobileTab, setMobileTab] = useState<'form' | 'preview'>('form');
-  const [showPayment, setShowPayment] = useState(false);
   const dirtyRef = useRef(false);
   const { ref: scaleRef, scale: fitScale } = useContainerScale();
 
@@ -155,9 +153,6 @@ export default function Editor({ id }: { id: string }) {
   const pct = completeness(r);
   const remainingMin = STEPS.slice(step).reduce((a, s) => a + s.minutes, 0);
   const f = fieldById(r.fieldId);
-  const pro = isPro();
-  const remainingFree = getRemainingFreeDownloads();
-  const locked = !pro && remainingFree <= 0;
 
   const go = (i: number) => {
     if (i > step && !canNext) { setTouched(true); return; }
@@ -172,17 +167,7 @@ export default function Editor({ id }: { id: string }) {
     // Save name first
     setR((prev) => ({ ...prev, name: prev.name.startsWith('Untitled') && prev.personal.fullName ? `${prev.personal.fullName} — ${prev.personal.headline}` : prev.name }));
 
-    if (!canDownloadFree()) {
-      setShowPayment(true);
-      return;
-    }
-
-    const result = incrementDownload();
-    if (!result.success && result.requiresPayment) {
-      setShowPayment(true);
-      return;
-    }
-
+    recordDownload(r);
     setTimeout(() => window.print(), 100);
   };
 
@@ -226,10 +211,10 @@ export default function Editor({ id }: { id: string }) {
           <button
             className="btn primary"
             disabled={pct < 100}
-            title={pct < 100 ? 'Finish mandatory fields first' : pro ? 'Download PDF (Pro unlimited)' : remainingFree > 0 ? `Download PDF (${remainingFree} free left)` : 'Free limit reached — needs Pro'}
+            title={pct < 100 ? 'Finish mandatory fields first' : 'Download PDF — free, unlimited'}
             onClick={handleDownload}
           >
-            {locked ? '🔒 Unlock Pro — ₹20' : '⬇ Download PDF'}
+            ⬇ Download PDF
           </button>
         </div>
       </div>
@@ -273,7 +258,7 @@ export default function Editor({ id }: { id: string }) {
             <div className="row" style={{ flex: '1 1 auto', justifyContent: 'flex-end' }}>
               {step === STEPS.length - 1 ? (
                 <button className="btn primary" disabled={pct < 100} onClick={handleDownload}>
-                  {locked ? '🔒 Unlock Pro — ₹20' : '⬇ Finish & download PDF'}
+                  ⬇ Finish & download PDF
                 </button>
               ) : (
                 <button className="btn primary" onClick={() => { setTouched(true); if (canNext) go(step + 1); }}>
@@ -319,7 +304,7 @@ export default function Editor({ id }: { id: string }) {
           </div>
           <div className="row" style={{ justifyContent: 'center', marginTop: 6 }}>
             <button className="btn small primary" disabled={pct < 100} onClick={handleDownload} style={{ flex: '0 0 auto' }}>
-              {locked ? '🔒 Unlock Pro — ₹20' : '⬇ Download PDF'}
+              ⬇ Download PDF
             </button>
           </div>
           <div className="hint" style={{ textAlign: 'center', fontSize: 11.5 }}>
@@ -330,16 +315,6 @@ export default function Editor({ id }: { id: string }) {
 
       <div className="print-root" aria-hidden="true"><Preview r={r} /></div>
 
-      {showPayment && (
-        <PaymentModal
-          remainingFree={remainingFree}
-          onClose={() => setShowPayment(false)}
-          onSuccess={() => {
-            setShowPayment(false);
-            setTimeout(() => window.print(), 500);
-          }}
-        />
-      )}
     </div>
   );
 }

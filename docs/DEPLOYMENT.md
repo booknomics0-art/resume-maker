@@ -52,19 +52,17 @@ HTTPS certificate is automatic and free.
 
 - Login/signup (demo mode — accounts stored in the visitor's browser)
 - Full resume builder, all templates, PDF download
-- Pricing page, settings, backup export
+- Settings, backup export/import, cloud sync status
 
 ## Production upgrades (phase 2, in order)
 
-1. **Real accounts + data sync** — add Supabase (free tier): swap the functions in
-   `src/lib/auth.ts` and `src/lib/store.ts` for Supabase calls. Signatures are
-   already backend-shaped, so it is mostly copy-paste.
+1. **Real accounts + data sync (done in code)** — create a Supabase project, run
+   `supabase/migrations/0001_init.sql` + `supabase/seed/template_catalog.sql`,
+   then set `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` as Netlify env vars.
+   Full guide: `docs/SUPABASE.md`.
 2. **Google login** — create OAuth Client ID in Google Cloud Console, paste in
-   `src/config.ts` (`GOOGLE_CLIENT_ID`).
-3. **₹20 Pro payments** — Razorpay Payment Link (no code needed to start):
-   after payment, unlock all templates for the user. Later, Razorpay webhooks +
-   Supabase for proper entitlements.
-4. **AI assist (optional)** — set up the n8n workflow from `docs/N8N-INTEGRATION.md`
+   `src/config.ts` (`GOOGLE_CLIENT_ID`) and enable the Google provider in Supabase Auth.
+3. **AI assist (optional)** — set up the n8n workflow from `docs/N8N-INTEGRATION.md`
    and paste the webhook in Settings.
 
 ## Rollback

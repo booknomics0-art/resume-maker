@@ -6,7 +6,8 @@ import { Thumb } from './Preview';
 
 type Filter = 'all' | LayoutId;
 
-const FILTERS: Filter[] = ['all', 'split', 'classic', 'minimal', 'metro', 'compact'];
+const FILTERS: Filter[] = ['all', 'portrait', 'studio', 'monogram', 'timeline', 'infographic', 'corporate', 'split', 'classic', 'minimal', 'metro', 'compact'];
+const NEW_FAMILIES = new Set<Filter>(['portrait', 'studio', 'monogram', 'timeline', 'infographic', 'corporate']);
 
 const countByLayout: Record<string, number> = TEMPLATES.reduce(
   (acc, t) => ({ ...acc, [t.layout]: (acc[t.layout] ?? 0) + 1 }),
@@ -41,7 +42,7 @@ export default function TemplateGallery({
             className={`chip ${filter === fl ? 'on' : ''}`}
             onClick={() => setFilter(fl)}
           >
-            {fl === 'all' ? `All ${TEMPLATE_COUNT}` : `${LAYOUT_META[fl].label} ${countByLayout[fl] ?? 0}`}
+            {fl === 'all' ? `All ${TEMPLATE_COUNT}` : `${NEW_FAMILIES.has(fl) ? '✨ ' : ''}${LAYOUT_META[fl].label} ${countByLayout[fl] ?? 0}`}
           </button>
         ))}
       </div>

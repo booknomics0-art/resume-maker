@@ -1,18 +1,19 @@
 import { useEffect, useState } from 'react';
 import Dashboard from './components/Dashboard';
 import Editor from './components/Editor';
-import Pricing from './components/Pricing';
 import Settings from './components/Settings';
 import AuthPage from './components/AuthPage';
 import Footer from './components/Footer';
 import ResumeImporter from './components/ResumeImporter';
 import {
-  AboutPage, ContactPage, FaqPage, PrivacyPage, RefundPage, TermsPage,
-  DisclaimerPage, CookiePage, ShippingPage, CancellationPage, EulaPage,
+  AboutPage, ContactPage, FaqPage, PrivacyPage, TermsPage,
+  DisclaimerPage, CookiePage, EulaPage,
 } from './components/LegalPages';
-import { currentUser, logout, type User } from './lib/auth';
+import { currentUser, logout, setLocalSession, type User } from './lib/auth';
 import { initSecurity } from './lib/security';
-import { isPro } from './lib/billing';
+import { cloudEnabled } from './lib/supabase';
+import { cloudCurrentUser, touchProfile } from './lib/cloud';
+import { syncWithCloud } from './lib/store';
 
 function useHashRoute() {
   const [hash, setHash] = useState(window.location.hash || '#/');
@@ -36,6 +37,30 @@ export default function App() {
   // Initialize application protections on mount
   useEffect(() => {
     initSecurity();
+  }, []);
+
+  // Cloud: restore the Supabase session (e.g. new device / after email confirm)
+  // and merge cloud resumes into the local copy.
+  useEffect(() => {
+    if (!cloudEnabled()) return;
+    let cancelled = false;
+    (async () => {
+      const cu = await cloudCurrentUser();
+      if (cancelled) return;
+      if (cu) {
+        if (!currentUser() || currentUser()?.email !== cu.email) {
+          setLocalSession(cu.name, cu.email, cu.provider);
+          setUser(currentUser());
+        }
+        void touchProfile();
+        await syncWithCloud();
+      } else if (currentUser()) {
+        // local session exists but cloud session expired → force re-login so data keeps syncing
+        logout();
+        setUser(null);
+      }
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   // close drawer on route change
@@ -65,9 +90,6 @@ export default function App() {
   } else if (tab === '/import') {
     page = <ResumeImporter />;
     active = '/import';
-  } else if (tab === '/pricing') {
-    page = <Pricing />;
-    active = '/pricing';
   } else if (tab === '/settings') {
     page = <Settings />;
     active = '/settings';
@@ -83,9 +105,6 @@ export default function App() {
   } else if (tab === '/terms') {
     page = <TermsPage />;
     active = '/terms';
-  } else if (tab === '/refund') {
-    page = <RefundPage />;
-    active = '/refund';
   } else if (tab === '/faq') {
     page = <FaqPage />;
     active = '/faq';
@@ -95,20 +114,12 @@ export default function App() {
   } else if (tab === '/cookies') {
     page = <CookiePage />;
     active = '/cookies';
-  } else if (tab === '/shipping') {
-    page = <ShippingPage />;
-    active = '/shipping';
-  } else if (tab === '/cancellation') {
-    page = <CancellationPage />;
-    active = '/cancellation';
   } else if (tab === '/eula') {
     page = <EulaPage />;
     active = '/eula';
   } else {
     page = <Dashboard />;
   }
-
-  const pro = isPro();
 
   const NavLink = ({ to, id, children }: { to: string; id: string; children: React.ReactNode }) => (
     <a
@@ -149,7 +160,7 @@ export default function App() {
           <div className="brand-badge">CV</div>
           <div>
             <div className="brand-name">CraftCV</div>
-            <div className="brand-sub">Resume Studio {pro ? '· PRO' : ''}</div>
+            <div className="brand-sub">Resume Studio · Free</div>
           </div>
         </div>
 
@@ -157,7 +168,6 @@ export default function App() {
           <NavLink to="/" id="/"><span className="nav-icon">▦</span> Dashboard</NavLink>
           <NavLink to="/editor/new" id="/editor"><span className="nav-icon">✎</span> New resume</NavLink>
           <NavLink to="/import" id="/import"><span className="nav-icon">📤</span> Upload & Edit</NavLink>
-          <NavLink to="/pricing" id="/pricing"><span className="nav-icon">◈</span> Pricing {pro ? '· PRO ✓' : ''}</NavLink>
           <NavLink to="/settings" id="/settings"><span className="nav-icon">⚙</span> Settings</NavLink>
         </nav>
 
@@ -168,13 +178,12 @@ export default function App() {
           <a className="drawer-link" href="#/faq" onClick={(e)=>{e.preventDefault();navigate('/faq');}}>FAQ</a>
           <a className="drawer-link" href="#/contact" onClick={(e)=>{e.preventDefault();navigate('/contact');}}>Contact</a>
           <a className="drawer-link" href="#/privacy" onClick={(e)=>{e.preventDefault();navigate('/privacy');}}>Privacy</a>
-          <a className="drawer-link" href="#/refund" onClick={(e)=>{e.preventDefault();navigate('/refund');}}>Refund (No Refund)</a>
         </div>
 
         <div className="sidebar-foot">
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
             <div style={{
-              width: 36, height: 36, borderRadius: '50%', background: pro ? 'linear-gradient(135deg, #1f8a5b, #0f6848)' : 'var(--navy-700)',
+              width: 36, height: 36, borderRadius: '50%', background: 'var(--navy-700)',
               display: 'grid', placeItems: 'center', color: '#fff', fontWeight: 800, fontSize: 14,
               border: '1px solid rgba(255,255,255,.15)', flex: '0 0 auto'
             }}>
@@ -182,7 +191,7 @@ export default function App() {
             </div>
             <div style={{ minWidth: 0, flex: 1 }}>
               <div style={{ color: '#fff', fontWeight: 700, fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {user.name} {pro && <span style={{ background: '#1f8a5b', fontSize: 10, padding: '1px 6px', borderRadius: 99, marginLeft: 4 }}>PRO</span>}
+                {user.name}
               </div>
               <div style={{ fontSize: 11.5, color: 'var(--silver-400)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.email}</div>
             </div>
@@ -215,9 +224,6 @@ export default function App() {
         </a>
         <a className={`bottom-nav-item ${active==='/editor'?'active':''}`} href="#/editor/new" onClick={(e)=>{e.preventDefault();navigate('/editor/new');}}>
           <span className="bn-icon">✎</span><span>Create</span>
-        </a>
-        <a className={`bottom-nav-item ${active==='/pricing'?'active':''}`} href="#/pricing" onClick={(e)=>{e.preventDefault();navigate('/pricing');}}>
-          <span className="bn-icon">◈</span><span>Pricing</span>
         </a>
         <a className={`bottom-nav-item ${active==='/settings'?'active':''}`} href="#/settings" onClick={(e)=>{e.preventDefault();navigate('/settings');}}>
           <span className="bn-icon">⚙</span><span>Settings</span>
