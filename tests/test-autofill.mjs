@@ -66,7 +66,7 @@ const afterSave = store.loadImportDraft();
 const info = store.importInfoFor(edited.id);
 
 const ok = checks([
-  ['name extracted into the form', filled?.personal.fullName === 'RAHUL VERMA'],
+  ['name extracted into the form', filled?.personal.fullName === 'Rahul Verma'],
   ['headline extracted', /developer/i.test(filled?.personal.headline || '')],
   ['email extracted', filled?.personal.email === 'rahul.verma@gmail.com'],
   ['phone extracted', String(filled?.personal.phone).replace(/\D/g, '').endsWith('9820011223')],
