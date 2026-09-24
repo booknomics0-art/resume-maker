@@ -48,6 +48,54 @@ function resolveConfig() {
   return { url: (url || '').replace(/\/+$/, ''), key: key || '' };
 }
 
+const GOOGLE_HOST = 'accounts.google.com';
+
+/**
+ * Second half of the preflight: ask Supabase to START the Google flow.
+ * A 302 whose Location is on accounts.google.com proves that
+ *   • the provider is wired to a Google OAuth client,
+ *   • the client ID / secret pair was accepted, and
+ *   • Supabase's own callback URI is registered with that client
+ *     (Google rejects an unknown redirect_uri before showing the account
+ *      chooser, so reaching Google at all is meaningful).
+ */
+async function handshake(appUrl) {
+  const authorize = new URL(`${url}/auth/v1/authorize`);
+  authorize.searchParams.set('provider', 'google');
+  if (appUrl) authorize.searchParams.set('redirect_to', `${appUrl}/`);
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 10000);
+  let res;
+  try {
+    res = await fetch(authorize.toString(), { redirect: 'manual', signal: controller.signal });
+  } catch (err) {
+    return { ok: false, note: `request failed (${err?.message || err})` };
+  } finally {
+    clearTimeout(timer);
+  }
+
+  const location = res.headers.get('location') || '';
+  if (res.status >= 300 && res.status < 400 && location.includes(GOOGLE_HOST)) {
+    let clientId = '';
+    let redirectUri = '';
+    let scope = '';
+    try {
+      const target = new URL(location);
+      clientId = target.searchParams.get('client_id') || '';
+      redirectUri = target.searchParams.get('redirect_uri') || '';
+      scope = target.searchParams.get('scope') || '';
+    } catch { /* keep the blanks */ }
+    return { ok: true, status: res.status, clientId, redirectUri, scope };
+  }
+  if (res.status >= 300 && res.status < 400) {
+    return { ok: false, status: res.status, note: `redirected to ${location || 'nowhere'}` };
+  }
+  let body = '';
+  try { body = JSON.stringify(await res.json()); } catch { /* not JSON */ }
+  return { ok: false, status: res.status, note: body || `HTTP ${res.status}` };
+}
+
 const { url, key } = resolveConfig();
 const appUrl = (argValue('app-url') || process.env.CRAFT_CV_SITE_URL || '').replace(/\/+$/, '');
 const projectRef = /^https:\/\/([a-z0-9-]+)\.supabase\.(co|in)$/.exec(url)?.[1] || null;
@@ -88,12 +136,29 @@ console.log(`Email provider   : ${settings?.external?.email === false ? 'disable
 console.log(`New sign-ups     : ${settings?.disable_signup ? 'DISABLED (only existing users can log in)' : 'allowed'}`);
 
 if (google === true) {
-  console.log('\n✅ Nothing to do — “Continue with Google” will sign users in.');
-  if (appUrl) {
-    console.log(`   Reminder: ${appUrl} must be listed under Authentication → URL Configuration.`);
+  const hs = await handshake(appUrl);
+  if (hs.ok) {
+    console.log('Handshake        : OK ✅  (Supabase → Google accepts the redirect)');
+    if (hs.clientId) console.log(`Google client ID : ${hs.clientId}`);
+    if (hs.redirectUri) console.log(`Google redirect  : ${hs.redirectUri}`);
+    if (hs.scope) console.log(`Scopes           : ${hs.scope}`);
+  } else {
+    console.log(`Handshake        : FAILED ❌  ${hs.note || ''}`);
+    console.log('   → the provider row is enabled but the Google client ID/secret may be wrong.');
+    console.log('   → Supabase → Authentication → Providers → Google: re-paste the Client ID + secret.');
   }
+
+  console.log('\n✅ Google login is wired up.');
+  console.log('   Last mile, only you can confirm it (needs a real Google account):');
+  console.log(`   1. Open ${appUrl || 'your deployed site'} and press “Continue with Google”.`);
+  console.log('   2. You should land back on the app, signed in (a brief “Signing you in…” screen is normal).');
+  if (appUrl) {
+    console.log(`   3. If it bounces to the wrong page, ${appUrl}/** is missing from`);
+    console.log('      Supabase → Authentication → URL Configuration → Redirect URLs.');
+  }
+  console.log('   4. OAuth consent screen must be “Published” (not “Testing”) or only test users can sign in.');
   console.log('');
-  process.exit(0);
+  process.exit(hs.ok ? 0 : 1);
 }
 
 console.log(`\n${line}\nFix it in 3 steps (about 3 minutes)\n${line}`);

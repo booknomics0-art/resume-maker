@@ -80,8 +80,9 @@ select count(*) from resumes where field_id = 'it' and template_id like 'portrai
 ## Google login (troubleshooting)
 
 `npm run check:auth -- --app-url=https://your-site` reports the provider state from the public
-`GET /auth/v1/settings` endpoint and prints the exact values to paste into Google Cloud Console and
-Supabase (exit codes: 0 enabled · 1 disabled · 2 could not check). The in-app equivalents are the
+`GET /auth/v1/settings` endpoint, starts (without following) the Google handshake to confirm the
+Google client + callback URI, and prints the exact values to paste into Google Cloud Console and
+Supabase (exit codes: 0 enabled · 1 disabled or broken handshake · 2 could not check). The in-app equivalents are the
 walkthrough behind “Continue with Google” and the **Settings → Google login** card, both with a
 “Check again” button. Error-by-error mapping: [`docs/GOOGLE-LOGIN.md`](GOOGLE-LOGIN.md).
 

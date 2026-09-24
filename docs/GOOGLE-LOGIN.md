@@ -67,6 +67,32 @@ npm run check:auth -- --app-url=https://your-site.example
 # exit 0 = enabled · 1 = disabled · 2 = could not check
 ```
 
+The script reads the public `GET /auth/v1/settings` endpoint **and** starts a
+handshake (`/auth/v1/authorize?provider=google`) without following it, so it can
+also report which Google client Supabase is using and where Google will send the
+user back:
+
+```
+Google provider  : ENABLED ✅
+Handshake        : OK ✅  (Supabase → Google accepts the redirect)
+Google client ID : 834408285039-…apps.googleusercontent.com
+Google redirect  : https://<ref>.supabase.co/auth/v1/callback
+Scopes           : email profile
+```
+
+A green handshake means Supabase reached Google with a client ID/secret pair
+Google accepted — Google rejects an unregistered `redirect_uri` before showing
+the account chooser, so the Google Cloud half of the setup is correct too.
+
+### Two things the script cannot see
+
+* **OAuth consent screen** (Google Cloud → *OAuth consent screen*): if it is still
+  in *Testing*, only listed test users can sign in — everyone else gets
+  *“Access blocked: … has not completed the Google verification process”*. Press
+  **Publish app** (or add test users) before opening sign-up to the public.
+* **Site URL / Redirect URLs** must contain your *real* deployed domain. If they
+  do not, the user is returned to the wrong address after Google accepts them.
+
 The app itself also checks: the login screen probes the project setting, labels
 the button, and the *"Check again"* button inside the built-in walkthrough
 re-reads it after you save. `Settings → Google login` has the same status card.
