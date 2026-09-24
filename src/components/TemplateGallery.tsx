@@ -1,25 +1,24 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ACTIVE_FAMILIES, COLLECTION_NAME, LAYOUT_META, TEMPLATES, TEMPLATE_COUNT,
-  type LayoutId, type Template,
+  ACTIVE_FAMILIES, CATEGORY_META, CATEGORY_ORDER, COLLECTION_NAME, LAYOUT_META,
+  TEMPLATES, TEMPLATE_COUNT, type CategoryId, type LayoutId, type Template,
 } from '../lib/templates';
 import type { Resume } from '../lib/types';
 import { fieldById, type Field } from '../lib/fields';
 import { Thumb } from './Preview';
 
-type Filter = 'all' | LayoutId;
-
-/** Family chips follow the catalogue: a family only appears when it has a
- *  design in it, so the gallery can never show an empty filter. */
-const FILTERS: Filter[] = ['all', ...ACTIVE_FAMILIES];
-
-const countByFamily: Record<string, number> = TEMPLATES.reduce(
-  (acc, t) => {
-    acc[t.layout] = (acc[t.layout] ?? 0) + 1;
+/** Two chip rows over one catalogue: *who it is for* (category) and *how the
+ *  page is built* (family). Both are derived from the catalogue, so an empty
+ *  chip is impossible — a family or category only appears when it has a design. */
+const countBy: (key: 'category' | 'layout') => Record<string, number> = (key) =>
+  TEMPLATES.reduce((acc, t) => {
+    const k = String(t[key]);
+    acc[k] = (acc[k] ?? 0) + 1;
     return acc;
-  },
-  {} as Record<string, number>,
-);
+  }, {} as Record<string, number>);
+
+const countByCategory = countBy('category');
+const countByFamily = countBy('layout');
 
 /**
  * Cards below the fold are not mounted until they come close to the viewport.
@@ -99,7 +98,8 @@ export default function TemplateGallery({
   r: Resume;
   onSelect: (templateId: string) => void;
 }) {
-  const [filter, setFilter] = useState<Filter>('all');
+  const [cat, setCat] = useState<CategoryId | 'all'>('all');
+  const [fam, setFam] = useState<LayoutId | 'all'>('all');
   const [q, setQ] = useState('');
   const [bestOnly, setBestOnly] = useState(false);
   const f = fieldById(r.fieldId);
@@ -108,7 +108,8 @@ export default function TemplateGallery({
     const needle = q.trim().toLowerCase();
     const words = needle ? needle.split(/\s+/) : [];
     const base = TEMPLATES.filter((t) => {
-      if (filter !== 'all' && t.layout !== filter) return false;
+      if (cat !== 'all' && t.category !== cat) return false;
+      if (fam !== 'all' && t.layout !== fam) return false;
       if (bestOnly && !t.bestFor.includes(r.fieldId)) return false;
       if (!words.length) return true;
       const hay = `${t.name} ${t.tagline} ${LAYOUT_META[t.layout]?.label || ''} ${t.strengths.join(' ')}`.toLowerCase();
@@ -120,45 +121,78 @@ export default function TemplateGallery({
       const bi = b.bestFor.includes(r.fieldId) ? 0 : 1;
       return ai - bi;
     });
-  }, [filter, q, bestOnly, r.fieldId]);
+  }, [cat, fam, q, bestOnly, r.fieldId]);
 
   const total = list.length;
   const active = TEMPLATES.find((t) => t.id === r.templateId);
-  const filtersOn = filter !== 'all' || bestOnly || q.trim().length > 0;
+  const filtersOn = cat !== 'all' || fam !== 'all' || bestOnly || q.trim().length > 0;
+  const clearFilters = () => { setCat('all'); setFam('all'); setQ(''); setBestOnly(false); };
 
-  const filterLabel = filter === 'all' ? 'All' : LAYOUT_META[filter as LayoutId]?.label || filter;
+  const filterLabel = [
+    cat === 'all' ? null : CATEGORY_META[cat].label,
+    fam === 'all' ? null : LAYOUT_META[fam].label,
+  ].filter(Boolean).join(' · ');
 
-  const filterBlurb = filter === 'all'
-    ? ''
-    : (LAYOUT_META[filter as LayoutId]?.blurb ? `${LAYOUT_META[filter as LayoutId].blurb}.` : '');
+  const filterBlurb = [
+    cat === 'all' ? null : CATEGORY_META[cat].blurb,
+    fam === 'all' ? null : LAYOUT_META[fam].blurb,
+  ].filter(Boolean).join(' · ');
 
   return (
     <div className="tpl-shell">
       <div className="tpl-bar">
-        <div className="chips tpl-chips" role="group" aria-label="Template families">
-          {FILTERS.map((fl) => {
-            const count = fl === 'all' ? TEMPLATE_COUNT : (countByFamily[fl] ?? 0);
-            return (
-              <button
-                key={fl}
-                type="button"
-                title={fl === 'all'
-                  ? `Show all ${TEMPLATE_COUNT} ${COLLECTION_NAME.toLowerCase()} designs`
-                  : `${LAYOUT_META[fl as LayoutId]?.label} — ${LAYOUT_META[fl as LayoutId]?.blurb}`}
-                className={`chip tpl-chip ${filter === fl ? 'on' : ''}`}
-                aria-pressed={filter === fl}
-                onClick={() => setFilter(fl)}
-              >
-                {fl === 'all' ? `All ${TEMPLATE_COUNT}` : `${LAYOUT_META[fl as LayoutId]?.label} ${count}`}
-              </button>
-            );
-          })}
+        <div className="chips tpl-chips" role="group" aria-label="Template categories">
+          <button
+            type="button"
+            title={`Show all ${TEMPLATE_COUNT} ${COLLECTION_NAME.toLowerCase()} designs`}
+            className={`chip tpl-chip tpl-chip-cat ${cat === 'all' ? 'on' : ''}`}
+            aria-pressed={cat === 'all'}
+            onClick={() => setCat('all')}
+          >
+            All {TEMPLATE_COUNT}
+          </button>
+          {CATEGORY_ORDER.map((c) => (
+            <button
+              key={c}
+              type="button"
+              title={`${CATEGORY_META[c].label} — ${CATEGORY_META[c].blurb}`}
+              className={`chip tpl-chip tpl-chip-cat ${cat === c ? 'on' : ''}`}
+              aria-pressed={cat === c}
+              onClick={() => setCat((cur) => (cur === c ? 'all' : c))}
+            >
+              {CATEGORY_META[c].label} {countByCategory[c] ?? 0}
+            </button>
+          ))}
+        </div>
+
+        <div className="chips tpl-chips tpl-chips-fam" role="group" aria-label="Template families">
+          <button
+            type="button"
+            title="Show every layout family"
+            className={`chip tpl-chip ${fam === 'all' ? 'on' : ''}`}
+            aria-pressed={fam === 'all'}
+            onClick={() => setFam('all')}
+          >
+            All layouts
+          </button>
+          {ACTIVE_FAMILIES.map((l) => (
+            <button
+              key={l}
+              type="button"
+              title={`${LAYOUT_META[l].label} — ${LAYOUT_META[l].blurb}`}
+              className={`chip tpl-chip ${fam === l ? 'on' : ''}`}
+              aria-pressed={fam === l}
+              onClick={() => setFam((cur) => (cur === l ? 'all' : l))}
+            >
+              {LAYOUT_META[l].label} {countByFamily[l] ?? 0}
+            </button>
+          ))}
         </div>
 
         <div className="tpl-tools">
           <span className="tpl-count">
             {total === 1 ? '1 template' : `${total} templates`}
-            {filter !== 'all' && ` · ${filterLabel}`}
+            {filterLabel && ` · ${filterLabel}`}
             {bestOnly && ` · best fit`}
             {q.trim() && ` · “${q.trim()}”`}
           </span>
@@ -199,7 +233,7 @@ export default function TemplateGallery({
         </span>
       </div>
 
-      {(filter !== 'all' || bestOnly) && (
+      {(filtersOn || bestOnly) && (
         <p className="hint tpl-blurb">
           {filterBlurb}
           {bestOnly && <> Showing only the designs that suit <b>{f.label}</b> best.</>}
@@ -211,7 +245,7 @@ export default function TemplateGallery({
           <div className="tpl-empty-ico" aria-hidden="true">⌕</div>
           <h4>No template matches “{q.trim() || filterLabel}”</h4>
           <p className="hint">Try a different word — or clear the filters to see all {TEMPLATE_COUNT} designs.</p>
-          <button type="button" className="btn small" onClick={() => { setQ(''); setFilter('all'); setBestOnly(false); }}>
+          <button type="button" className="btn small" onClick={clearFilters}>
             Clear filters
           </button>
         </div>
@@ -235,7 +269,7 @@ export default function TemplateGallery({
           <button
             type="button"
             className="btn small"
-            onClick={() => { setQ(''); setFilter('all'); setBestOnly(false); }}
+            onClick={clearFilters}
           >
             Clear filters · show all {TEMPLATE_COUNT}
           </button>

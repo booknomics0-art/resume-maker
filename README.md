@@ -1,8 +1,8 @@
 # CraftCV — Professional Resume Studio
 
 A resume builder for India with a navy-blue & silver theme. Login, fill your
-details in 7 short steps (~10 minutes), pick from **43 professional templates across
-16 layout families**, tuned for each of 10 career fields, and download a clean,
+details in 7 short steps (~10 minutes), pick from **50 professional templates across
+20 layout families and 10 categories**, tuned for each of 10 career fields, and download a clean,
 human-written-looking PDF. **100% free — no plans, no watermark, unlimited downloads.**
 Resumes are stored in your own **Supabase** database (see `docs/SUPABASE.md`).
 
@@ -16,17 +16,21 @@ Resumes are stored in your own **Supabase** database (see `docs/SUPABASE.md`).
 - **Profile photo upload** — shown on all templates (auto-resized in-browser).
 - **Mandatory fields enforced** — name, title, email, phone, city, summary, 1 job (or fresher toggle), 1 education entry, 3+ skills. Download unlocks at 100%.
 - **10 career fields** — each ships 3 summary templates, 6 bullet templates, suggested skills (Communication & Decision Making in every field), project ideas.
-- **43 professional templates across 16 layout families** — one original design
-  per row in `src/lib/templates.ts`. The catalogue is grouped by how the page is
-  organised, not by where the design came from:
-  - **Dense (ATS)** — Sterling, Executive, Technical, Entry Level: single column, plain
-    headings, tracker-safe.
-  - **Sidebar** — Navy, Graphite, Petrol, Ivory: facts in a tinted column, story beside it.
-  - **Classic** — Executive Serif, Hairline, Academic CV, Gold Rule: centred serif headers.
-  - **Minimal, Statement, Corporate, Timeline, Portrait, Studio, Monogram, Infographic,
-    Editorial, Spine, Soft, Banner, Ledger** — the same content, re-structured.
-  - Palettes are ink-led and restrained (navy, graphite, steel, petrol, pine, oxblood,
-    mocha, brass); a variant only re-skins a family, it never forks the layout code.
+- **50 professional templates · 20 layout families · 10 categories** — one original
+  design per row in `src/lib/templates.ts`. Grouped by *how the page is built* and by
+  *who it is for*, so the gallery filters on both axes:
+  - **Families** — Dense/ATS, Sidebar, Classic, Minimal, Corporate grid, Statement band,
+    Ledger, Timeline, Portrait, Studio panel, Monogram, Skills bars, Editorial, Spine,
+    Soft panels, Banner, plus the four display families: **Masthead** (oversized name +
+    facts rail), **Panel Band** (photo band over a tinted rail), **Tint Sheet** (page wash,
+    one tracked name, boxed skills) and **Gradient Spine** (gradient rail, centred headings).
+  - **Categories (5 each)** — ATS & Plain · Corporate & Finance · Tech & Product ·
+    Design & Creative · Executive & Board · Academic & Research · Healthcare & Care ·
+    Education & Teaching · Sales & Marketing · Fresher & Switch.
+  - Palettes stay ink-led and restrained (navy, graphite, steel, petrol, pine, oxblood,
+    mocha, brass); a variant re-skins and re-tunes a family, it never forks layout code.
+  - Review them all on one page: `npm run preview:templates` → open
+    `/template-preview.html` (renders every sheet through `Preview.tsx` itself).
   - Seeded into `public.template_catalog` by `npm run seed:templates`.
 - **Hobbies & Best Experience sections** — human touches that make the resume feel written, not generated.
 - **PDF export** — print-perfect A4 via browser print.

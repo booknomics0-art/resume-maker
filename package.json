@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "CraftCV \u2014 free professional resume studio. 43 professional templates across 16 layout families, 10 career fields, Supabase cloud sync, n8n AI webhook, offline PDF + photo OCR import.",
+  "description": "CraftCV — free professional resume studio. 50 professional templates across 20 layout families, 10 career fields, Supabase cloud sync, n8n AI webhook, offline PDF + photo OCR import.",
   "scripts": {
     "predev": "node scripts/copy-ocr-assets.mjs",
     "dev": "vite",
@@ -18,7 +18,8 @@
     "seed:templates:push": "node scripts/seed-templates.mjs --push",
     "test:auth": "node tests/test-google-auth.mjs",
     "check:auth": "node scripts/check-google-auth.mjs",
-    "test:templates": "node tests/test-templates.mjs"
+    "test:templates": "node tests/test-templates.mjs",
+    "preview:templates": "node scripts/render-templates.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.1",

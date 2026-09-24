@@ -263,6 +263,12 @@ label.f .req { color: var(--err); margin-left: 2px; }
 }
 .tpl-chips { min-width: 0; }
 .tpl-chip { padding: 5px 11px; min-height: 30px; font-size: 12.4px; font-weight: 600; }
+/* second chip row = layout families, visually lighter than the category row */
+.tpl-chips-fam {
+  flex-basis: 100%; padding-top: 8px; border-top: 1px dashed var(--silver-200); margin-top: 2px;
+}
+.chip.tpl-chip-cat { font-weight: 700; }
+.tpl-chips-fam .tpl-chip { padding: 3px 9px; min-height: 25px; font-size: 11.6px; opacity: .92; }
 .tpl-tools { display: flex; align-items: center; gap: 8px 10px; flex-wrap: wrap; }
 .tpl-count { flex: 1 1 auto; min-width: 0; font-size: 12.5px; color: var(--silver-500); }
 .tpl-search { position: relative; display: flex; align-items: center; flex: 0 1 auto; }

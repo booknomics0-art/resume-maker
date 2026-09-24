@@ -48,8 +48,11 @@ await build({
 });
 
 const { lib, render } = await import(pathToFileURL(outfile).href);
-const { TEMPLATES, TEMPLATE_COUNT, LAYOUT_META, SIDE_SECTIONS, SECTION_LABELS,
+const { TEMPLATES, TEMPLATE_COUNT, LAYOUT_META, SIDE_SECTIONS, SECTION_LABELS, CATEGORY_META,
+  CATEGORY_ORDER, ACTIVE_FAMILIES, templatesByCategory, hasSection,
   templateById, sectionOrder, recommendedTemplates, DEFAULT_TEMPLATE_ID } = lib;
+
+const VALID_MODS = new Set(['mod-invert', 'mod-serif', 'mod-band-flat', 'mod-band-tint', 'mod-square', 'mod-dark', 'mod-tint', 'mod-numbered']);
 
 const FIELDS = ['it', 'data', 'marketing', 'sales', 'finance', 'hr', 'design', 'healthcare', 'education', 'operations'];
 
@@ -98,6 +101,14 @@ ok('every template has tagline, strengths and mods', TEMPLATES.every(
   (t) => t.tagline.length > 12 && t.strengths.length >= 3 && Array.isArray(t.mods),
 ));
 ok('bestFor only names real career fields', TEMPLATES.every((t) => t.bestFor.every((f) => FIELDS.includes(f))));
+ok('5 designs in every category', CATEGORY_ORDER.every((c) => templatesByCategory(c).length === 5));
+ok('categories cover the whole catalogue', TEMPLATES.every((t) => CATEGORY_ORDER.includes(t.category))
+  && CATEGORY_ORDER.reduce((n, c) => n + templatesByCategory(c).length, 0) === TEMPLATES.length);
+ok('every category has a label and a blurb', CATEGORY_ORDER.every((c) => CATEGORY_META[c].label && CATEGORY_META[c].blurb));
+ok('every layout family is used at least twice',
+  ACTIVE_FAMILIES.every((l) => TEMPLATES.filter((t) => t.layout === l).length >= 2));
+ok('mods are real modifier classes', TEMPLATES.every((t) => t.mods.every((m) => VALID_MODS.has(m))));
+ok('palettes use hex colours only', TEMPLATES.every((t) => Object.values(t.pal).every((v) => /^#[0-9a-f]{6}$/i.test(v))));
 ok('every family in the catalogue has a label and a blurb',
   [...new Set(TEMPLATES.map((t) => t.layout))].every((l) => LAYOUT_META[l].label && LAYOUT_META[l].blurb));
 ok('no template is orphaned from a gallery filter',
@@ -119,6 +130,8 @@ ok('every family assigns each section exactly once',
     const order = sectionOrder({ layout: l }, 'it');
     return new Set(order).size === order.length && order.length === Object.keys(SECTION_LABELS).length;
   }));
+ok('every side section is rendered somewhere on the sheet',
+  Object.entries(SIDE_SECTIONS).every(([, side]) => side.every((s) => Object.keys(SECTION_LABELS).includes(s))));
 ok('side sections of a two-column family are in that family’s order',
   Object.entries(SIDE_SECTIONS).every(([l, side]) => {
     const order = sectionOrder({ layout: l }, 'finance');

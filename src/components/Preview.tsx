@@ -653,6 +653,124 @@ export default function Preview({ r, tpl }: { r: Resume; tpl?: Template }) {
     );
   }
 
+  // ---------- display families (masthead / panel band / tint sheet / gradient spine) ----------
+
+  if (t.layout === 'masthead') {
+    const numbered = t.mods.includes('mod-numbered');
+    let n = 0;
+    return (
+      <div className={sheetClass(t)} style={sheetVars(t)}>
+        <div className="mast-top">
+          <div>
+            <h1 className="mast-name s-name">{name}</h1>
+            <div className="mast-role">{headline}</div>
+          </div>
+          {p.photo && <img className="mast-photo" src={p.photo} alt="" />}
+        </div>
+        <div className="mast-strip">{contactLines.map((c, i) => <span key={i}>{c}</span>)}</div>
+        <div className="mast-cols">
+          <div className="main">
+            {mainSections.map((s) => {
+              n += 1;
+              return <Section r={r} id={s} key={s} index={numbered ? n : undefined} />;
+            })}
+          </div>
+          <aside className="rail">
+            <section className="sec">
+              <h3 className="s-sec-title">Contact</h3>
+              {contactLines.map((c, i) => <div className="contact-line" key={i}>{c}</div>)}
+            </section>
+            {sideSections.map((s) => <Section r={r} id={s} key={s} />)}
+          </aside>
+        </div>
+      </div>
+    );
+  }
+
+  if (t.layout === 'panelband') {
+    return (
+      <div className={sheetClass(t)} style={sheetVars(t)}>
+        <div className="band">
+          <div className="band-inner">
+            {p.photo ? (
+              <img className="band-photo" src={p.photo} alt="" />
+            ) : (
+              <div className="band-photo ph">{initials(name)}</div>
+            )}
+            <div>
+              <h1 className="s-name">{name}</h1>
+              <div className="s-headline">{headline}</div>
+              <div className="s-contact">{contactLines.map((c, i) => <span key={i}>{c}</span>)}</div>
+            </div>
+          </div>
+        </div>
+        <div className="cols">
+          <aside className="side">
+            {sideSections.map((s) => <Section r={r} id={s} key={s} />)}
+          </aside>
+          <div className="main">
+            {mainSections.map((s) => <Section r={r} id={s} key={s} timeline={s === 'experience'} />)}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (t.layout === 'tintsheet') {
+    return (
+      <div className={sheetClass(t)} style={sheetVars(t)}>
+        {p.photo && <img className="tint-photo" src={p.photo} alt="" />}
+        <div className="tint-head">
+          <h1 className="s-name">{name}</h1>
+          <div className="s-headline">{headline}</div>
+        </div>
+        <div className="tint-contact">{contactLines.map((c, i) => <span key={i}>{c}</span>)}</div>
+        <div className="tint-cols">
+          <div className="main">
+            {mainSections.map((s) => <Section r={r} id={s} key={s} timeline={s === 'experience'} />)}
+          </div>
+          <aside className="aside">
+            {sideSections.map((s) => <Section r={r} id={s} key={s} />)}
+          </aside>
+        </div>
+      </div>
+    );
+  }
+
+  if (t.layout === 'spinegradient') {
+    return (
+      <div className={sheetClass(t)} style={sheetVars(t)}>
+        <aside className="rail">
+          {p.photo ? (
+            <img className="rail-photo" src={p.photo} alt="" />
+          ) : (
+            <div className="rail-photo ph">{initials(name)}</div>
+          )}
+          <div>
+            <div className="rail-role">{headline}</div>
+            <h1 className="rail-name s-name">{name}</h1>
+          </div>
+          <div className="rail-block">
+            <h4>Contact</h4>
+            {contactLines.map((c, i) => <div key={i}>{c}</div>)}
+          </div>
+          {sideSections.map((s) => (
+            <div className="rail-block" key={s}>
+              <h4>{SPINE_LABELS[s]}</h4>
+              {s === 'skills' && r.skills.filter(Boolean).map((sk) => <div key={sk}>{sk}</div>)}
+              {s === 'languages' && r.languages.map((l) => <div key={l.id}>{l.name}{l.level ? ` — ${l.level}` : ''}</div>)}
+              {s === 'certs' && r.certs.map((c) => <div key={c.id}>{c.name}{c.year ? ` (${c.year})` : ''}</div>)}
+              {s === 'hobbies' && r.hobbies.filter(Boolean).map((h) => <div key={h}>{h}</div>)}
+            </div>
+          ))}
+        </aside>
+        <div className="body">
+          {mainSections.map((s) => <Section r={r} id={s} key={s} />)}
+        </div>
+      </div>
+    );
+  }
+
   // minimal
   return (
     <div className={sheetClass(t)} style={sheetVars(t)}>
