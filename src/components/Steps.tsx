@@ -580,6 +580,14 @@ export function StepDesign({ r, set }: StepProps) {
 
       <TemplateGallery r={r} onSelect={(templateId) => set({ templateId })} />
 
+      <p className="hint design-sheet-link">
+        Want the whole catalogue on one page?{' '}
+        <a href="/template-preview.html" target="_blank" rel="noopener">
+          Open the A4 review sheet ↗
+        </a>{' '}
+        — every design, printed full-size, no login needed.
+      </p>
+
       <div className="design-notes">
         <div className="notice">
           <b>Not sure which one?</b> Keep the ★ pick for {f.label} — you can switch designs any time,

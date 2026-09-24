@@ -59,7 +59,7 @@ Admins can read every row and the dashboards below.
 | `resumes` | **every resume of every user** — full JSON in `data`, plus `name`, `field_id`, `template_id`, `completeness` for filtering; soft-delete with `is_deleted` |
 | `resume_downloads` | one row per PDF download (who, which resume, which template) |
 | `events` | generic product events |
-| `template_catalog` | the 80 templates (id, family, palette, tagline…) — join target for stats |
+| `template_catalog` | the template library (id, family, palette, tagline…) — join target for stats |
 
 Views for you (admin only): `admin_overview` (totals), `admin_template_usage`
 (which templates people pick/download), `admin_resumes` (every resume with owner + candidate name).

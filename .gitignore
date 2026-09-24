@@ -19,3 +19,7 @@ tests/.tmp/
 
 # local visual-check harness (puppeteer screenshots), never shipped
 .scratch/
+
+# public/template-preview.html IS tracked on purpose: it is the owner's review
+# sheet (npm run preview:templates regenerates it), and it must survive a fresh
+# clone or a sandbox wipe — an untracked public/ file disappears with them.

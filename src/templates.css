@@ -1,5 +1,5 @@
 /* Resume sheet: A4 at 96dpi = 794 x 1123px.
-   80-template library: 5 core families x 10 variants + 6 Canva-style families x 5 variants.
+   One row per template in src/lib/templates.ts picks a family + palette;
    Each template sets CSS custom properties on .sheet (see Preview.tsx):
      --p  primary (headings, rules, title bars, band)   --p2/--p3 gradient mid/end
      --pm mid tone on dark surfaces                     --a  accent (silver line / gold detail)
@@ -55,7 +55,7 @@
 .s-table .edu-school { width: 38%; color: #3d475c; font-size: 12.6px; }
 .s-table .edu-year { width: 18%; text-align: right; white-space: nowrap; color: #55617a; font-size: 12.2px; }
 
-/* timeline experience (Canva best-seller style) — used by Sidebar & Minimal */
+/* timeline experience — used by Sidebar & Minimal */
 .tpl-split .sec-experience.tl .s-item,
 .tpl-minimal .sec-experience.tl .s-item {
   position: relative; padding-left: 16px; border-left: 2px solid #c9d2de; margin-left: 4px;
@@ -66,7 +66,7 @@
   border-radius: 50%; background: #fff; border: 2.5px solid var(--p);
 }
 
-/* ============ 1. Sidebar — gradient side column (Canva's #1 style) ============ */
+/* ============ 1. Sidebar — gradient side column ============ */
 .tpl-split { flex-direction: row; }
 .tpl-split .side {
   width: 258px; flex: 0 0 258px;
@@ -223,7 +223,7 @@
 .tpl-metro.mod-band-tint .s-photo { border-color: #fff; box-shadow: 0 0 0 3px var(--p); }
 
 /* ====================================================================== */
-/* ============ Canva-style families (original code) ==================== */
+/* ============ photo / panel / margin families (original code) ========== */
 /* ====================================================================== */
 
 /* ============ 6. Portrait — letter-spaced name, square photo, hairline columns ============ */
@@ -543,6 +543,192 @@
 .tpl-ledger .s-item-head > div, .tpl-ledger .s-item > ul, .tpl-ledger .s-item > .s-item-sub { grid-column: 2; }
 .tpl-ledger .s-table td { border-bottom: 1px solid var(--a); padding: 7px 12px 7px 0; }
 .tpl-ledger .sec-led > .s-item:nth-child(even) { background: rgba(0, 0, 0, .015); }
+
+/* ====================================================================== */
+/* ============ 17-20. Display families (original code) ================ */
+/* ====================================================================== */
+
+/* 17. Masthead — oversized display name across the top, contact strip in
+      columns, story on the left, a hairline facts rail on the right. */
+.tpl-masthead { padding: 30px 38px 26px; font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif; }
+.tpl-masthead .mast-name {
+  font-size: 46px; font-weight: 800; line-height: .96; letter-spacing: -1.4px;
+  text-transform: uppercase; color: var(--p);
+}
+.tpl-masthead .mast-role {
+  display: inline-block; margin-top: 10px; padding: 3px 10px; background: var(--p); color: #fff;
+  font-size: 11.5px; font-weight: 700; letter-spacing: 2.2px; text-transform: uppercase;
+}
+.tpl-masthead .mast-photo { width: 108px; height: 132px; object-fit: cover; flex: 0 0 auto; filter: grayscale(1) contrast(1.06); }
+.tpl-masthead .mast-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 22px; }
+.tpl-masthead .mast-strip {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px 18px;
+  margin-top: 16px; padding-top: 10px; border-top: 3px solid var(--p);
+  font-size: 11.4px; color: #3d475c; word-break: break-word;
+}
+.tpl-masthead .mast-cols { display: flex; gap: 26px; margin-top: 18px; align-items: flex-start; }
+.tpl-masthead .main { flex: 1; min-width: 0; }
+.tpl-masthead .rail { width: 196px; flex: 0 0 196px; border-left: 1px solid var(--a); padding-left: 18px; }
+.tpl-masthead .s-sec-title {
+  color: var(--p); font-size: 11.5px; letter-spacing: 2.6px; margin-bottom: 7px;
+  padding-bottom: 4px; border-bottom: 1px solid var(--a);
+}
+.tpl-masthead .sec { margin-bottom: 13px; }
+.tpl-masthead .s-item { margin-bottom: 9px; }
+.tpl-masthead .rail .contact-line { font-size: 11.4px; color: #3d475c; margin-bottom: 4px; word-break: break-word; }
+.tpl-masthead .rail .s-skillset { flex-direction: column; gap: 4px; }
+.tpl-masthead .rail .s-skill { background: var(--a); border-color: transparent; border-radius: 0; padding: 3px 8px; }
+.tpl-masthead .s-table td { border-bottom: 1px solid var(--a); padding: 5px 8px 5px 0; font-size: 12px; }
+
+/* 18. Panel band — dark header band with a round photo, then a tinted rail
+      under it holding contact + education + skills. */
+.tpl-panelband { font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif; }
+.tpl-panelband .band { background: var(--p); color: #fff; padding: 26px 34px 30px; position: relative; }
+.tpl-panelband .band::after {
+  content: ''; position: absolute; left: 34px; right: 34px; bottom: 12px; height: 2px; background: var(--a); opacity: .5;
+}
+.tpl-panelband .band-inner { display: flex; align-items: center; gap: 22px; }
+.tpl-panelband .band-photo {
+  width: 96px; height: 96px; border-radius: 50%; object-fit: cover; flex: 0 0 auto;
+  border: 3px solid rgba(255, 255, 255, .8); background: #fff;
+}
+.tpl-panelband .band-photo.ph { display: grid; place-items: center; color: var(--p); font-size: 30px; font-weight: 800; }
+.tpl-panelband .s-name { font-size: 30px; font-weight: 800; letter-spacing: 1.4px; text-transform: uppercase; line-height: 1.12; }
+.tpl-panelband .s-headline { color: var(--a); font-size: 12.5px; letter-spacing: 2.4px; text-transform: uppercase; font-weight: 600; margin-top: 7px; }
+.tpl-panelband .band .s-contact { margin-top: 10px; color: rgba(255, 255, 255, .86); font-size: 11.4px; }
+.tpl-panelband .band .s-contact span:not(:first-child)::before { content: '·'; margin-right: 12px; color: var(--a); }
+.tpl-panelband .cols { display: flex; align-items: flex-start; flex: 1; }
+.tpl-panelband .side { width: 236px; flex: 0 0 236px; background: var(--p2, #f1f3f7); padding: 22px 22px 8px; color: #2c3547; }
+.tpl-panelband.tint-side .side { background: var(--a); }
+.tpl-panelband .main { flex: 1; min-width: 0; padding: 22px 32px 26px; }
+.tpl-panelband .s-sec-title { color: var(--p); font-size: 11px; letter-spacing: 2.4px; margin-bottom: 7px; }
+.tpl-panelband .side .s-sec-title { color: var(--p); border-bottom: 1px solid rgba(0, 0, 0, .12); padding-bottom: 4px; }
+.tpl-panelband .side .contact-line { font-size: 11.4px; margin-bottom: 5px; word-break: break-word; }
+.tpl-panelband .side .s-skill { background: rgba(255, 255, 255, .75); border-color: transparent; }
+.tpl-panelband .side .s-table td { display: block; width: 100%; border: none; padding: 0 0 3px; font-size: 11.8px; }
+.tpl-panelband .side .s-table tr { display: block; margin-bottom: 9px; }
+.tpl-panelband .main .sec { margin-bottom: 14px; }
+.tpl-panelband .main .s-sec-title {
+  padding-left: 9px; border-left: 3px solid var(--p); letter-spacing: 2.2px;
+}
+
+/* 19. Tint sheet — the whole page is washed in a pale tint, one giant tracked
+      name up top, hairline rules, boxed skills in a two-column grid. */
+.tpl-tintsheet {
+  padding: 34px 42px 30px; background: var(--p2, #eef0ee); color: #232a38;
+  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+}
+.tpl-tintsheet .tint-head { text-align: center; padding-bottom: 14px; border-bottom: 1px solid rgba(0, 0, 0, .18); }
+.tpl-tintsheet .s-name {
+  font-size: 44px; font-weight: 800; letter-spacing: 9px; text-transform: uppercase; line-height: 1.08; color: #1b1d20;
+  text-indent: 9px;
+}
+.tpl-tintsheet .s-headline { margin-top: 8px; font-size: 12px; letter-spacing: 4px; text-transform: uppercase; color: #4b4f55; }
+.tpl-tintsheet .tint-contact {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 3px 20px;
+  margin: 14px 0 18px; font-size: 11.2px; color: #3a4048; word-break: break-word;
+}
+.tpl-tintsheet .tint-photo {
+  width: 132px; height: 160px; object-fit: cover; margin: 0 auto 12px; display: block;
+  border: 6px solid #fff; box-shadow: 0 2px 10px rgba(0, 0, 0, .12); filter: grayscale(1) contrast(1.05);
+}
+.tpl-tintsheet .tint-cols { display: flex; gap: 26px; align-items: flex-start; }
+.tpl-tintsheet .main { flex: 1; min-width: 0; }
+.tpl-tintsheet .aside { width: 208px; flex: 0 0 208px; }
+.tpl-tintsheet .s-sec-title {
+  font-size: 11.5px; letter-spacing: 3px; color: #1b1d20; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 10px;
+}
+.tpl-tintsheet .s-sec-title::after { content: ''; flex: 1; border-bottom: 1px solid rgba(0, 0, 0, .25); }
+.tpl-tintsheet .sec { margin-bottom: 14px; }
+.tpl-tintsheet .s-item-head b { font-size: 12.8px; }
+.tpl-tintsheet .s-skillset { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+.tpl-tintsheet .s-skill {
+  background: rgba(255, 255, 255, .82); border: 1px solid rgba(0, 0, 0, .12); border-radius: 0;
+  padding: 4px 8px; font-size: 11.4px; text-align: center;
+}
+.tpl-tintsheet .s-table td { border-bottom: 1px solid rgba(0, 0, 0, .12); padding: 5px 8px 5px 0; font-size: 11.8px; }
+.tpl-tintsheet .aside .s-table td { display: block; width: 100%; border: none; padding: 0 0 2px; }
+.tpl-tintsheet .aside .s-table tr { display: block; margin-bottom: 8px; }
+.tpl-tintsheet li { margin-bottom: 3px; }
+
+/* 20. Spine gradient — a gradient rail down the left edge carrying the name,
+      body with centered section headings on a hairline grid. */
+.tpl-spinegradient { flex-direction: row; font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif; }
+.tpl-spinegradient .rail {
+  width: 178px; flex: 0 0 178px; background: linear-gradient(170deg, var(--p) 0%, var(--p2, var(--p)) 55%, var(--p3, var(--p)) 100%);
+  color: #fff; padding: 34px 20px; display: flex; flex-direction: column; gap: 18px;
+}
+.tpl-spinegradient .rail-name {
+  font-size: 34px; font-weight: 800; line-height: 1.06; letter-spacing: -.4px; font-style: italic;
+  font-family: Georgia, "Times New Roman", serif;
+}
+.tpl-spinegradient .rail-role { font-size: 11.5px; letter-spacing: 2.4px; text-transform: uppercase; color: var(--a); font-weight: 700; }
+.tpl-spinegradient .rail-photo { width: 118px; height: 118px; object-fit: cover; border-radius: 50%; border: 3px solid rgba(255, 255, 255, .75); }
+.tpl-spinegradient .rail-photo.ph { display: grid; place-items: center; background: rgba(255, 255, 255, .16); font-size: 34px; font-weight: 700; }
+.tpl-spinegradient .rail-block { font-size: 11.2px; line-height: 1.5; word-break: break-word; }
+.tpl-spinegradient .rail-block h4 {
+  margin: 0 0 5px; font-size: 10px; letter-spacing: 2.2px; text-transform: uppercase; color: var(--a); font-weight: 800;
+}
+.tpl-spinegradient .body { flex: 1; min-width: 0; padding: 30px 34px 26px; }
+.tpl-spinegradient .s-sec-title {
+  text-align: center; color: var(--p); font-size: 11.5px; letter-spacing: 3.4px;
+  display: flex; align-items: center; gap: 12px; margin-bottom: 9px;
+}
+.tpl-spinegradient .s-sec-title::before, .tpl-spinegradient .s-sec-title::after { content: ''; flex: 1; border-bottom: 1px solid var(--a); }
+.tpl-spinegradient .sec { margin-bottom: 14px; }
+.tpl-spinegradient .s-item-head { display: block; }
+.tpl-spinegradient .s-dates { display: block; margin-top: 2px; }
+.tpl-spinegradient .s-skill { border-radius: 0; background: #fff; border-color: var(--a); }
+
+/* photo frame: square variant + the "no upload yet" placeholder */
+.s-photo.sq { border-radius: 4px; box-shadow: none; border: 1px solid var(--a); }
+.s-photo.ph {
+  display: grid; place-items: center; background: var(--tint, #eef1f5); color: var(--p);
+  font-family: Georgia, "Times New Roman", serif; font-size: 24px; font-weight: 700; letter-spacing: 1px;
+  border: 1px dashed color-mix(in srgb, var(--p) 45%, #fff); border-radius: inherit;
+}
+.tpl-masthead .mast-photo.ph, .tpl-tintsheet .tint-photo.ph {
+  display: grid; place-items: center; color: var(--p); font-family: Georgia, serif;
+  font-size: 34px; font-weight: 700; background: #e9ecf1; filter: none;
+  border: 1px dashed color-mix(in srgb, var(--p) 40%, #fff);
+}
+.tpl-editorial .ed-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
+.tpl-editorial .ed-head .s-contact { margin-top: 8px; }
+
+/* ============ one-page fit (.mod-tight) ============
+   Same sheet, tuned to hold a full career on a single A4: slightly smaller
+   body type, tighter leading and section gaps, shorter bullets. Every family
+   inherits it, so a "1 page" design is a fit choice, not a separate layout. */
+.sheet.mod-tight { font-size: 12.3px; line-height: 1.42; }
+.sheet.mod-tight .s-name { font-size: 24px; }
+.sheet.mod-tight .s-headline { font-size: 12.5px; }
+.sheet.mod-tight .sec { margin-bottom: 9px !important; }
+.sheet.mod-tight .s-sec-title { margin-bottom: 5px; letter-spacing: 1.4px; }
+.sheet.mod-tight .s-item { margin-bottom: 7px; }
+.sheet.mod-tight .s-item-head b { font-size: 12.6px; }
+.sheet.mod-tight li { margin-bottom: 2px; }
+.sheet.mod-tight .s-skill { padding: 1px 8px; font-size: 11px; }
+.sheet.mod-tight .s-table td { padding: 4px 10px 4px 0; }
+.sheet.mod-tight .s-contact { font-size: 11.2px; }
+.tpl-split.mod-tight .main, .tpl-studio.mod-tight .main { padding: 20px 22px; }
+.tpl-split.mod-tight .side { padding: 24px 20px; }
+.tpl-panelband.mod-tight .main { padding: 16px 26px 18px; }
+.tpl-panelband.mod-tight .band { padding: 20px 30px 24px; }
+.tpl-masthead.mod-tight { padding: 24px 34px 20px; }
+.tpl-masthead.mod-tight .mast-name { font-size: 40px; }
+.tpl-tintsheet.mod-tight { padding: 26px 38px 22px; }
+.tpl-tintsheet.mod-tight .s-name { font-size: 38px; letter-spacing: 7px; }
+.tpl-spinegradient.mod-tight .body { padding: 24px 28px 20px; }
+.tpl-spinegradient.mod-tight .rail { padding: 26px 18px; gap: 14px; }
+
+/* shared: page wash + numbered margin variants for the display families */
+.mod-tint { background: var(--p2, #f1f3f6); }
+.mod-numbered .sec { position: relative; }
+.mod-numbered .sec-no {
+  position: absolute; left: -26px; top: 0; font-size: 11px; font-weight: 800; letter-spacing: 1px; color: var(--p); opacity: .55;
+}
+.mod-numbered .main, .mod-numbered .body { padding-left: 26px; }
 
 /* ---------- print ---------- */
 .print-root { display: none; }
