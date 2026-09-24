@@ -4,8 +4,12 @@ import {
   type CertItem, type Resume,
 } from '../lib/types';
 import { COMMON_SKILLS, FIELDS, fieldById } from '../lib/fields';
+import { LAYOUT_META, TEMPLATE_COUNT } from '../lib/templates';
 import { callAi, loadAiSettings } from '../lib/ai';
 import TemplateGallery from './TemplateGallery';
+
+/** Layout families — derived from the template library, never hard-coded. */
+const FAMILY_COUNT = Object.keys(LAYOUT_META).length;
 
 export interface StepProps {
   r: Resume;
@@ -567,20 +571,25 @@ export function StepExtras({ r, set }: StepProps) {
 export function StepDesign({ r, set }: StepProps) {
   const f = fieldById(r.fieldId);
   return (
-    <div>
-      <div className="notice">
-        Eighty templates across eleven layout families — Sidebar, Classic, Minimal, Statement, Dense, plus Canva-style Portrait, Studio, Monogram, Timeline, Infographic and Corporate — tuned for
-        <b> {f.label}</b>. The starred ones fit this field best — section order, emphasis and spacing change
-        per field automatically. Use the family filters above the grid. Click any to apply it instantly.
+    <div className="design-step">
+      <div className="notice design-intro">
+        <b>{TEMPLATE_COUNT} templates · {FAMILY_COUNT} families</b> — every thumbnail below is
+        <b> your own resume</b> in that design, sized for <b>{f.label}</b> (section order, emphasis and
+        spacing follow your field). Tap a card to apply it, filter by family, or search by name.
       </div>
+
       <TemplateGallery r={r} onSelect={(templateId) => set({ templateId })} />
-      <div className="hint" style={{ marginTop: 10 }}>
-        Not sure? Keep the starred pick. You can switch any time, even after download.
-      </div>
-      <div className="notice" style={{ marginTop: 14 }}>
-        <b>10-second honesty check before download</b> — every number should be yours, every tool listed
-        is one you have actually used, and no borrowed phrases. Companies trust concrete facts over
-        adjectives, which is why these designs put your own content first, not decoration.
+
+      <div className="design-notes">
+        <div className="notice">
+          <b>Not sure which one?</b> Keep the ★ pick for {f.label} — you can switch designs any time,
+          even after downloading. Nothing gets locked.
+        </div>
+        <div className="notice">
+          <b>10-second honesty check before download</b> — every number should be yours, every tool
+          listed is one you have actually used, and no borrowed phrases. Recruiters trust concrete
+          facts over adjectives, which is why these designs put your content first, not decoration.
+        </div>
       </div>
     </div>
   );

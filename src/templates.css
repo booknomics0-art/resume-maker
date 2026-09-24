@@ -405,6 +405,145 @@
 .tpl-corporate .content .s-item:last-child { margin-bottom: 0; }
 .tpl-corporate .s-skill { border-radius: 2px; }
 
+/* ======================================================================
+   Second wave of studio families: Editorial, Spine, Soft, Banner, Ledger
+   ====================================================================== */
+
+/* ============ 12. Editorial — numbered sections in a wide margin ============ */
+.tpl-editorial { padding: 30px 44px 24px; font-family: Georgia, "Times New Roman", serif; color: #26282d; }
+.tpl-editorial .head { padding-bottom: 12px; margin-bottom: 12px; border-bottom: 2px solid var(--p); }
+.tpl-editorial .s-name { font-size: 32px; font-weight: 400; letter-spacing: .5px; line-height: 1.12; color: var(--p); }
+.tpl-editorial .s-headline {
+  font-family: "Segoe UI", Arial, sans-serif; font-size: 12px; font-weight: 600;
+  letter-spacing: 2.6px; text-transform: uppercase; color: #6b7280; margin-top: 8px;
+}
+.tpl-editorial .s-contact { margin-top: 9px; font-family: "Segoe UI", Arial, sans-serif; color: #4b5563; font-size: 11.6px; }
+.tpl-editorial .s-contact span:not(:first-child)::before { content: '·'; margin-right: 14px; color: var(--a); }
+.tpl-editorial .sec { position: relative; padding-left: 58px; margin-bottom: 9px !important; }
+.tpl-editorial .sec-no {
+  position: absolute; left: 0; top: 1px; font-size: 15px; letter-spacing: 1px;
+  color: var(--a); font-family: inherit;
+}
+.tpl-editorial .s-sec-title {
+  font-size: 13px; letter-spacing: 1px; text-transform: none; color: var(--p); margin-bottom: 5px;
+}
+.tpl-editorial p, .tpl-editorial li { font-size: 12.6px; line-height: 1.48; }
+.tpl-editorial li { margin-bottom: 2px; }
+.tpl-editorial .s-item { margin-bottom: 7px; }
+.tpl-editorial .s-item-head b { font-size: 13.6px; }
+.tpl-editorial .s-skill { font-family: "Segoe UI", Arial, sans-serif; background: #fff; }
+
+/* ============ 13. Spine — colour edge with sideways section titles ============ */
+.tpl-spine { flex-direction: row; font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif; }
+.tpl-spine .spine {
+  width: 116px; flex: 0 0 116px; background: linear-gradient(180deg, var(--p) 0%, var(--p2, var(--p)) 100%);
+  color: #fff; padding: 24px 0; display: flex; flex-direction: column; align-items: center; gap: 14px;
+}
+.tpl-spine .spine-mono, .tpl-spine .spine-photo {
+  width: 62px; height: 62px; border-radius: 50%; flex: 0 0 auto; object-fit: cover;
+  border: 2px solid var(--a); background: rgba(255, 255, 255, .12);
+  display: grid; place-items: center; font-size: 21px; font-weight: 700; letter-spacing: 2px; color: #fff;
+}
+.tpl-spine .spine-label {
+  writing-mode: vertical-rl; transform: rotate(180deg);
+  font-size: 9.8px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--a);
+}
+.tpl-spine .spine-body { flex: 1; min-width: 0; padding: 22px 30px 20px; line-height: 1.4; font-size: 12.6px; }
+.tpl-spine .head { padding-bottom: 12px; margin-bottom: 14px; border-bottom: 1px solid var(--a); }
+.tpl-spine .s-name { font-size: 27px; font-weight: 800; color: var(--p); line-height: 1.1; }
+.tpl-spine .s-headline { color: #55617a; font-size: 12.8px; margin-top: 3px; }
+.tpl-spine .s-contact { margin-top: 8px; color: #3d475c; }
+.tpl-spine .s-contact span:not(:first-child)::before { content: '·'; margin-right: 14px; color: var(--p); }
+.tpl-spine .s-sec-title { color: var(--p); letter-spacing: 2.2px; display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+.tpl-spine .s-sec-title::after { content: ''; flex: 1; height: 1px; background: var(--a); }
+.tpl-spine .sec { margin-bottom: 9px !important; }
+.tpl-spine .s-item { margin-bottom: 6px; }
+.tpl-spine li { margin-bottom: 2px; }
+.tpl-spine .s-skill { border-radius: 3px; padding: 1px 8px; }
+.tpl-spine .s-skillset { gap: 4px; }
+
+/* ============ 14. Soft — rounded panels and pill skills ============ */
+.tpl-soft { padding: 34px 36px 30px; font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif; }
+.tpl-soft .head {
+  display: flex; justify-content: space-between; align-items: center; gap: 20px;
+  background: var(--p2, var(--p)); border-radius: 18px; padding: 18px 22px; margin-bottom: 14px;
+  color: #fff;
+}
+.tpl-soft .s-name { font-size: 28px; font-weight: 800; line-height: 1.15; }
+.tpl-soft .s-headline { font-size: 12.5px; letter-spacing: 1.4px; text-transform: uppercase; font-weight: 600; color: var(--a); margin-top: 5px; }
+.tpl-soft .s-photo { width: 82px; height: 82px; border-radius: 50%; object-fit: cover; border: 3px solid #fff; }
+.tpl-soft .s-photo.ph {
+  display: grid; place-items: center; background: #fff; color: var(--p); font-size: 26px; font-weight: 800;
+}
+.tpl-soft .soft-panels { display: flex; gap: 20px; align-items: flex-start; }
+.tpl-soft .panel {
+  width: 230px; flex: 0 0 230px; background: var(--a); border-radius: 16px; padding: 15px 16px 4px;
+  line-height: 1.42;
+}
+.tpl-soft .panel .sec { margin-bottom: 10px !important; }
+.tpl-soft .panel .s-sec-title { color: var(--p); letter-spacing: 2px; font-size: 11px; }
+.tpl-soft .panel .contact-line { font-size: 11.6px; color: #33404f; margin-bottom: 5px; word-break: break-word; }
+.tpl-soft .main { flex: 1; min-width: 0; line-height: 1.46; }
+.tpl-soft .main .sec { margin-bottom: 11px; }
+.tpl-soft li { margin-bottom: 2px; }
+.tpl-soft .s-sec-title { color: var(--p); letter-spacing: 2.2px; }
+.tpl-soft .s-skill { background: #fff; border-color: var(--p3, var(--p)); border-radius: 99px; padding: 3px 11px; }
+.tpl-soft .panel .s-skill { background: #fff; border-color: transparent; }
+.tpl-soft .s-item { margin-bottom: 8px; }
+
+/* ============ 15. Banner — full-width band, story left, facts in a right rail ============ */
+.tpl-banner { font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif; }
+.tpl-banner .band { background: linear-gradient(120deg, var(--p) 0%, var(--p2, var(--p)) 100%); color: #fff; padding: 24px 34px; }
+.tpl-banner .band-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; }
+.tpl-banner .s-name { font-size: 29px; font-weight: 800; letter-spacing: .4px; line-height: 1.1; }
+.tpl-banner .s-headline { color: var(--a); font-size: 13px; letter-spacing: 1.6px; text-transform: uppercase; font-weight: 600; margin-top: 6px; }
+.tpl-banner .s-photo { border-radius: 12px; border: 3px solid rgba(255, 255, 255, .7); }
+.tpl-banner .rails { display: flex; gap: 24px; padding: 20px 34px 26px; align-items: flex-start; }
+.tpl-banner .main { flex: 1; min-width: 0; }
+.tpl-banner .rail { width: 214px; flex: 0 0 214px; border-left: 1px solid var(--a); padding-left: 20px; }
+.tpl-banner .s-sec-title { color: var(--p); letter-spacing: 2.2px; margin-bottom: 6px; }
+.tpl-banner .sec { margin-bottom: 11px; }
+.tpl-banner .main, .tpl-banner .rail { line-height: 1.46; }
+.tpl-banner .s-item { margin-bottom: 8px; }
+.tpl-banner li { margin-bottom: 2px; }
+.tpl-banner .rail .contact-line { font-size: 11.6px; color: #3d475c; margin-bottom: 5px; word-break: break-word; }
+.tpl-banner .s-skill { background: var(--a); border-color: transparent; }
+.tpl-banner .rail .sec-experience, .tpl-banner .rail .sec-education { font-size: 12px; }
+.tpl-banner .rail .s-table td { display: block; width: 100%; padding: 0 0 4px; border: none; }
+.tpl-banner .rail .s-table .edu-year { text-align: left; }
+
+/* ============ 16. Ledger — ruled rows, dates in the left rule ============ */
+.tpl-ledger { padding: 26px 38px 22px; font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif; line-height: 1.38; }
+.tpl-ledger .head {
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 22px;
+  padding-bottom: 12px; margin-bottom: 2px; border-bottom: 3px double var(--p);
+}
+.tpl-ledger .s-name { font-size: 27px; font-weight: 800; color: var(--p); line-height: 1.1; }
+.tpl-ledger .s-headline { color: #55617a; font-size: 13px; margin-top: 4px; }
+.tpl-ledger .head-right { display: flex; align-items: center; gap: 14px; }
+.tpl-ledger .head-right .s-contact { flex-direction: column; gap: 2px; align-items: flex-end; text-align: right; color: #3d475c; font-size: 11.5px; }
+.tpl-ledger .sec {
+  border-top: 1px solid #e4e9f0; padding-top: 7px; margin-bottom: 5px !important;
+}
+.tpl-ledger .sec:first-of-type { border-top: none; }
+.tpl-ledger .s-sec-title { color: var(--p); letter-spacing: 2.4px; margin-bottom: 5px; }
+.tpl-ledger .s-item {
+  display: grid; grid-template-columns: 94px 1fr; gap: 0 16px; padding: 4px 0;
+  border-bottom: 1px solid var(--a); margin-bottom: 0;
+}
+.tpl-ledger li { margin-bottom: 1px; }
+.tpl-ledger .s-item:last-child { border-bottom: none; }
+.tpl-ledger .s-item-head { display: contents; }
+.tpl-ledger .s-dates {
+  order: -1; text-align: right; color: #55617a; font-size: 11.6px;
+  white-space: normal; overflow-wrap: anywhere; line-height: 1.45;
+}
+.tpl-ledger .s-item-head > div { grid-column: 2; }
+.tpl-ledger .s-item > ul { grid-column: 2; margin-top: 4px; }
+.tpl-ledger .s-item-head > div, .tpl-ledger .s-item > ul, .tpl-ledger .s-item > .s-item-sub { grid-column: 2; }
+.tpl-ledger .s-table td { border-bottom: 1px solid var(--a); padding: 7px 12px 7px 0; }
+.tpl-ledger .sec-led > .s-item:nth-child(even) { background: rgba(0, 0, 0, .015); }
+
 /* ---------- print ---------- */
 .print-root { display: none; }
 @page { size: A4; margin: 0; }

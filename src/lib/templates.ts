@@ -1,5 +1,6 @@
-// The 80-template library: 5 core layout families × 10 variants + 6 Canva-style
-// families (portrait, studio, monogram, timeline, infographic, corporate) × 5 variants.
+// The 105-template library: 5 core layout families × 10 variants + 11 studio
+// families (portrait, studio, monogram, timeline, infographic, corporate,
+// editorial, spine, soft, banner, ledger) × 5 variants.
 // All designs are original code — inspired by the most popular resume styles.
 // Every template is one row below — palette, structural mods, copy and fit.
 // Palettes are applied as CSS custom properties (see Preview.tsx + templates.css),
@@ -22,7 +23,8 @@ export type SectionId =
 
 export type LayoutId =
   | 'split' | 'classic' | 'minimal' | 'metro' | 'compact'
-  | 'portrait' | 'studio' | 'monogram' | 'timeline' | 'infographic' | 'corporate';
+  | 'portrait' | 'studio' | 'monogram' | 'timeline' | 'infographic' | 'corporate'
+  | 'editorial' | 'spine' | 'soft' | 'banner' | 'ledger';
 
 /** Structural (non-palette) modifier classes applied to the sheet. */
 export type Mod = 'mod-invert' | 'mod-serif' | 'mod-band-flat' | 'mod-band-tint' | 'mod-square' | 'mod-dark';
@@ -63,6 +65,11 @@ export const LAYOUT_META: Record<LayoutId, { label: string; blurb: string }> = {
   timeline: { label: 'Timeline', blurb: 'Dates in the gutter, dotted career line — story at a glance' },
   infographic: { label: 'Infographic', blurb: 'Dark skills panel with level bars — visual and bold' },
   corporate: { label: 'Corporate', blurb: 'Label column on the left, content on the right — boardroom clean' },
+  editorial: { label: 'Editorial', blurb: 'Numbered sections in the wide margin — magazine spacing, very legible' },
+  spine: { label: 'Spine', blurb: 'A colour spine down the page edge with sideways section titles — gallery-style' },
+  soft: { label: 'Soft', blurb: 'Rounded pastel panels and pill skills — the friendly modern look' },
+  banner: { label: 'Banner', blurb: 'Full-width colour banner up top, then story left and facts in a right rail' },
+  ledger: { label: 'Ledger', blurb: 'Dates in the left rule, ruled rows — the unsentimental finance dossier' },
 };
 
 const SPLIT_FIT = ['it', 'data', 'design', 'marketing'];
@@ -83,6 +90,13 @@ const PLUM: Palette = { p: '#37194d', p2: '#462361', p3: '#582f79', pm: '#6d4192
 const BRONZE: Palette = { p: '#4d2f1c', p2: '#5f3c25', p3: '#72492f', pm: '#8a5c3d', a: '#ddc1a9' };
 const COBALT: Palette = { p: '#1d3f94', p2: '#2551b8', p3: '#2f64d4', pm: '#4a76e0', a: '#c3d3f2' };
 const GRAPHITE: Palette = { p: '#2e3138', p2: '#3a3e47', p3: '#474c57', pm: '#565c69', a: '#b4bac4' };
+// studio families (editorial / spine / soft / banner / ledger) palettes
+const SAGE: Palette = { p: '#5c6f5a', p2: '#6b7f68', p3: '#7d9179', pm: '#93a68f', a: '#cdd9c9' };
+const ROSE: Palette = { p: '#8c4a5f', p2: '#a05a70', p3: '#b46d83', pm: '#c98a9d', a: '#eed3db' };
+const SKY: Palette = { p: '#2b6cb0', p2: '#2f7ecb', p3: '#3a90e0', pm: '#5aa3ea', a: '#cfe3f7' };
+const CLAY: Palette = { p: '#a05a3c', p2: '#b36848', p3: '#c47a58', pm: '#d49a7d', a: '#f0d9c8' };
+const BOTTLE: Palette = { p: '#1f4d3f', p2: '#275e4d', p3: '#2f715c', pm: '#3d8770', a: '#bcd8cc' };
+const INDIGO: Palette = { p: '#2f3676', p2: '#3b438c', p3: '#4851a4', pm: '#5c66bd', a: '#c8cdf0' };
 
 // p + a only (light layouts: primary as ink, accent as hairline)
 const mono = (p: string, a: string): Palette => ({ p, a });
@@ -292,9 +306,81 @@ const CORPORATE: Spec[] = [
     ['hr', 'operations', 'sales', 'education'], ['Warm and grounded', 'Senior-friendly', 'Clean structure'], mono(BRONZE.p, BRONZE.a)],
 ];
 
+/* ======================================================================
+   Studio families — the second wave of Canva-style designs.
+   Same idea as the rest of the file: one row per template, palette + a few
+   structural modifiers, layout code lives in Preview.tsx/templates.css.
+   ====================================================================== */
+
+const EDITORIAL: Spec[] = [
+  ['editorial-wide', 'Editorial Wide', 'Numbered sections in the wide margin. Magazine spacing, very easy to scan.',
+    ['design', 'marketing', 'education', 'hr'], ['Reads like a profile piece', 'Huge white space, zero clutter', 'Great for portfolio careers'], mono(ONYX_GOLD.p, ONYX_GOLD.a)],
+  ['editorial-navy', 'Editorial Navy', 'Navy serif headings over hairline rules. Boardroom magazine.',
+    ['finance', 'operations', 'sales', 'it'], ['Quiet authority', 'Scans fast for long histories', 'Prints beautifully on laser'], mono(NAVY.p, NAVY.a)],
+  ['editorial-sage', 'Editorial Sage', 'Soft green headings, calm margins. Considered and human.',
+    ['healthcare', 'hr', 'education', 'operations'], ['Gentle, low-contrast look', 'Good for people-facing roles', 'Distinct from blue resumes'], mono(SAGE.p, SAGE.a)],
+  ['editorial-plum', 'Editorial Plum', 'Deep plum headings, wide margin numerals. Creative but composed.',
+    ['design', 'marketing', 'hr', 'sales'], ['Creative without loud colour', 'Strong typographic rhythm', 'Memorable section numbers'], mono(PLUM.p, PLUM.a)],
+  ['editorial-graphite', 'Editorial Graphite', 'Charcoal headings, near-paper white. The sober editorial.',
+    ['finance', 'operations', 'data'], ['Neutral for any sector', 'Excellent for 2-page histories', 'No colour distractions'], mono(GRAPHITE.p, GRAPHITE.a)],
+];
+
+const SPINE: Spec[] = [
+  ['spine', 'Spine Navy', 'A navy spine down the margin with sideways section titles.',
+    ['it', 'data', 'design', 'operations'], ['Strong visual identity', 'Keeps the page edge clean', 'Photo sits in the spine'], mono(NAVY.p, NAVY.a)],
+  ['spine-forest', 'Spine Forest', 'Deep green spine, sage rules. Steady and distinctive.',
+    ['finance', 'healthcare', 'operations', 'education'], ['Trustworthy for client-facing roles', 'Distinct from navy stacks', 'Calm colour fields'], mono(BOTTLE.p, BOTTLE.a)],
+  ['spine-wine', 'Spine Bordeaux', 'Wine spine, rose rules. Warm authority.',
+    ['sales', 'finance', 'hr', 'marketing'], ['Warm and memorable', 'Good for senior client work', 'Stands out in a stack'], mono(WINE.p, WINE.a)],
+  ['spine-ink', 'Spine Ink', 'Near-black spine, gold hairline. Gallery-style confidence.',
+    ['design', 'marketing', 'it', 'hr'], ['Design-forward, still formal', 'Single gold accent', 'Great for creatives'], ONYX_GOLD],
+  ['spine-sky', 'Spine Sky', 'Bright blue spine, light panels. Friendly and current.',
+    ['it', 'marketing', 'education', 'data'], ['Modern and optimistic', 'Good for startups', 'Friendly without being casual'], SKY],
+];
+
+const SOFT: Spec[] = [
+  ['soft', 'Soft Navy', 'Rounded navy panels, pill skills. Friendly and modern.',
+    ['it', 'data', 'hr', 'education'], ['Approachable, still professional', 'Pills make skills scannable', 'Great for early-career'], NAVY],
+  ['soft-rose', 'Soft Rose', 'Blush panels and rounded rules. Warm and human.',
+    ['hr', 'healthcare', 'design', 'education'], ['Nurturing tone', 'Good for care and teaching roles', 'Soft on the eye'], ROSE],
+  ['soft-sage', 'Soft Sage', 'Sage panels, rounded chips. Calm and grounded.',
+    ['healthcare', 'education', 'operations', 'hr'], ['Calm, low-glare look', 'Reads kind and steady', 'Prints softly'], SAGE],
+  ['soft-sky', 'Soft Sky', 'Light blue panels with rounded corners. Fresh and tidy.',
+    ['it', 'marketing', 'data', 'sales'], ['Fresh and current', 'Friendly for product teams', 'Clear hierarchy'], SKY],
+  ['soft-clay', 'Soft Clay', 'Warm clay panels, terracotta rules. Earthy and grounded.',
+    ['design', 'sales', 'marketing', 'operations'], ['Warm and distinctive', 'Good for creative sales', 'Comfortable long read'], CLAY],
+];
+
+const BANNER: Spec[] = [
+  ['banner', 'Banner Navy', 'Full-width navy banner, facts in a right rail. Confident header.',
+    ['it', 'operations', 'sales', 'data'], ['Header does the hard work', 'Rail keeps facts visible', 'Great for mobile PDF viewing'], NAVY],
+  ['banner-cobalt', 'Banner Cobalt', 'Bright cobalt banner, energetic rail. Modern product look.',
+    ['it', 'marketing', 'design', 'sales'], ['High energy, high polish', 'Stands out from plain pages', 'Good for startups'], COBALT],
+  ['banner-ocean', 'Banner Ocean', 'Teal banner with a light rail. Cool and clean.',
+    ['data', 'it', 'finance', 'operations'], ['Calm colour, clear structure', 'Good for analytics roles', 'Distinct from navy'], OCEAN],
+  ['banner-graphite', 'Banner Graphite', 'Charcoal banner, hairline rail. The unsentimental one.',
+    ['finance', 'data', 'operations', 'sales'], ['Maximum signal, no colour noise', 'Ages well', 'Boardroom-neutral'], GRAPHITE],
+  ['banner-indigo', 'Banner Indigo', 'Deep indigo banner, silver rail. Premium and composed.',
+    ['finance', 'hr', 'marketing', 'sales'], ['Premium first impression', 'Quiet luxury palette', 'Works for senior roles'], INDIGO],
+];
+
+const LEDGER: Spec[] = [
+  ['ledger', 'Ledger Navy', 'Dates in the left rule, ruled rows. An unsentimental dossier.',
+    ['finance', 'data', 'operations', 'sales'], ['Extremely easy to scan', 'Dates never get lost', 'Great for 10+ year histories'], mono(NAVY.p, NAVY.a)],
+  ['ledger-forest', 'Ledger Forest', 'Green rules, ruled date column. Steady and precise.',
+    ['finance', 'operations', 'healthcare', 'education'], ['Precise and trustworthy', 'Distinct from navy dossiers', 'Prints crisp in black too'], mono(BOTTLE.p, BOTTLE.a)],
+  ['ledger-ink', 'Ledger Ink', 'Near-black rules, gold hairline accents. Formal and dense.',
+    ['finance', 'operations', 'data'], ['Most formal in the set', 'Handles long histories', 'Discreet gold accent'], mono(ONYX_GOLD.p, ONYX_GOLD.a)],
+  ['ledger-oxford', 'Ledger Oxford', 'Wine rules, double date column. Old-school precision.',
+    ['finance', 'sales', 'hr', 'education'], ['Traditional and confident', 'Reads authoritative', 'Great for partner-track CVs'], mono(WINE.p, WINE.a)],
+  ['ledger-slate', 'Ledger Slate', 'Cool graphite rules, tight leading. Modern dossier.',
+    ['data', 'it', 'operations', 'finance'], ['Cool and current', 'Fits maximum content', 'ATS-friendly structure'], mono(SLATE.p, SLATE.a)],
+];
+
 export const TEMPLATES: Template[] = [
   ...SPLIT, ...CLASSIC, ...MINIMAL, ...METRO, ...COMPACT,
   ...PORTRAIT, ...STUDIO, ...MONOGRAM, ...TIMELINE, ...INFOGRAPHIC, ...CORPORATE,
+  ...EDITORIAL, ...SPINE, ...SOFT, ...BANNER, ...LEDGER,
 ].map(
   ([id, name, tagline, bestFor, strengths, pal, mods]) => ({
     id, name, tagline, bestFor, strengths, pal, mods: mods ?? [], layout: layoutOf(id),
@@ -312,10 +398,15 @@ function layoutOf(id: string): LayoutId {
   if (TIMELINE.some((s) => s[0] === id)) return 'timeline';
   if (INFOGRAPHIC.some((s) => s[0] === id)) return 'infographic';
   if (CORPORATE.some((s) => s[0] === id)) return 'corporate';
+  if (EDITORIAL.some((s) => s[0] === id)) return 'editorial';
+  if (SPINE.some((s) => s[0] === id)) return 'spine';
+  if (SOFT.some((s) => s[0] === id)) return 'soft';
+  if (BANNER.some((s) => s[0] === id)) return 'banner';
+  if (LEDGER.some((s) => s[0] === id)) return 'ledger';
   return 'compact';
 }
 
-export const TEMPLATE_COUNT = TEMPLATES.length; // 80
+export const TEMPLATE_COUNT = TEMPLATES.length; // 105
 
 /** Sections rendered in the side/panel column for two-column layouts. */
 export const SIDE_SECTIONS: Partial<Record<LayoutId, SectionId[]>> = {
@@ -323,6 +414,8 @@ export const SIDE_SECTIONS: Partial<Record<LayoutId, SectionId[]>> = {
   portrait: ['education', 'skills', 'languages', 'certs', 'hobbies'],
   studio: ['skills', 'languages', 'certs', 'hobbies'],
   infographic: ['skills', 'languages', 'certs', 'hobbies'],
+  soft: ['skills', 'languages', 'certs', 'hobbies'],
+  banner: ['skills', 'languages', 'certs', 'hobbies'],
 };
 
 export const templateById = (id: string): Template => TEMPLATES.find((t) => t.id === id) ?? TEMPLATES[0];
@@ -344,6 +437,27 @@ export function sectionOrder(tpl: Template, fieldId: string): SectionId[] {
     case 'portrait':
       // side column: education, skills, languages, certs, hobbies; main: story
       return ['summary', 'highlight', 'experience', 'projects', 'education', 'skills', 'languages', 'certs', 'achievements', 'hobbies'];
+    case 'editorial':
+    case 'ledger':
+      // the wide left margin carries the section numbers / dates
+      return tech
+        ? ['summary', 'highlight', 'skills', 'experience', 'projects', 'education', 'certs', 'achievements', 'languages', 'hobbies']
+        : ['summary', 'highlight', 'experience', 'skills', 'education', 'projects', 'certs', 'achievements', 'languages', 'hobbies'];
+    case 'spine':
+      // one flowing column beside the colour spine
+      return tech
+        ? ['summary', 'highlight', 'skills', 'experience', 'projects', 'education', 'certs', 'languages', ...tail]
+        : ['summary', 'highlight', 'experience', 'education', 'skills', 'projects', 'certs', 'languages', ...tail];
+    case 'soft':
+      // panel column: skills / languages / certs / hobbies (see SIDE_SECTIONS)
+      return tech
+        ? ['summary', 'highlight', 'experience', 'projects', 'education', 'skills', 'languages', 'certs', 'achievements', 'hobbies']
+        : ['summary', 'highlight', 'experience', 'education', 'projects', 'skills', 'languages', 'certs', 'achievements', 'hobbies'];
+    case 'banner':
+      // right rail: skills / languages / certs / hobbies (see SIDE_SECTIONS)
+      return tech
+        ? ['summary', 'highlight', 'experience', 'projects', 'education', 'skills', 'languages', 'certs', 'achievements', 'hobbies']
+        : ['summary', 'highlight', 'experience', 'education', 'projects', 'skills', 'languages', 'certs', 'achievements', 'hobbies'];
     case 'metro':
     case 'timeline':
     case 'monogram':

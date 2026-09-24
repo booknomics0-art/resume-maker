@@ -8,6 +8,8 @@ import { loadResumes, syncWithCloud, upsertResume } from '../lib/store';
 import CloudBadge from './CloudBadge';
 import GoogleSetupPanel from './GoogleSetupPanel';
 
+import { TEMPLATE_COUNT } from '../lib/templates';
+
 export default function Settings() {
   const user = currentUser();
   const [showAudit, setShowAudit] = useState(false);
@@ -76,7 +78,7 @@ export default function Settings() {
           <button className="btn" style={{ flex: '0 0 auto' }} onClick={() => { logout(); location.hash = '#/'; location.reload(); }}>Logout</button>
         </div>
         <div className="notice" style={{ marginTop: 12, fontSize: 12.5 }}>
-          🎁 <b>CraftCV is 100% free</b> — unlimited resumes, unlimited PDF downloads, all {80} templates. No plans, nothing to unlock.
+          🎁 <b>CraftCV is 100% free</b> — unlimited resumes, unlimited PDF downloads, all {TEMPLATE_COUNT} templates. No plans, nothing to unlock.
         </div>
       </div>
 
