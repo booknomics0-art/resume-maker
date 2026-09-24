@@ -24,13 +24,6 @@ begin
   return new;
 end $$;
 
-create or replace function public.is_admin()
-returns boolean language sql stable security definer set search_path = public as $$
-  select coalesce(
-    (select role = 'admin' from public.profiles where id = auth.uid()),
-    false
-  );
-$$;
 
 -- ---------------------------------------------------------------------------
 -- profiles
@@ -75,6 +68,15 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
+
+-- is_admin() — defined after profiles exists (plpgsql, so body is not validated early)
+create or replace function public.is_admin()
+returns boolean language plpgsql stable security definer set search_path = public as $$
+declare r text;
+begin
+  select role into r from public.profiles where id = auth.uid();
+  return coalesce(r = 'admin', false);
+end $$;
 
 alter table public.profiles enable row level security;
 drop policy if exists "profiles: read own"   on public.profiles;
