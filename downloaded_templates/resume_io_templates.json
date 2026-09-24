@@ -1,0 +1,558 @@
+{
+  "source": "https://resume.io/resume-templates",
+  "extractedAt": "2026-09-24T17:28:00Z",
+  "totalTemplates": 36,
+  "categories": [
+    "ATS",
+    "Word",
+    "Simple",
+    "Professional",
+    "Two-column",
+    "One-page",
+    "Creative",
+    "Modern",
+    "Classic"
+  ],
+  "templates": [
+    {
+      "id": "london",
+      "name": "London",
+      "category": "Classic",
+      "style": "Classically structured resume template, for a robust career history.",
+      "layout": "classic",
+      "sourceUrl": "https://resume.io/app/create-resume?template=london",
+      "features": ["Serif typography", "Double horizontal dividing rules", "Dates on margin", "ATS Gold standard"],
+      "palette": {
+        "primary": "#1a202c",
+        "accent": "#4a5568",
+        "description": "Charcoal / Dark Ink with Silver Accent"
+      },
+      "bestFor": ["finance", "operations", "sales", "hr"]
+    },
+    {
+      "id": "santiago",
+      "name": "Santiago",
+      "category": "Traditional",
+      "style": "Classic full-page resume template with sizable resume sections.",
+      "layout": "classic",
+      "sourceUrl": "https://resume.io/app/create-resume?template=santiago",
+      "features": ["100% Monochrome", "Full-width traditional sections", "Generous line height"],
+      "palette": {
+        "primary": "#111827",
+        "accent": "#9ca3af",
+        "description": "Pure Monochrome Black & White"
+      },
+      "bestFor": ["finance", "education", "hr", "operations"]
+    },
+    {
+      "id": "dublin",
+      "name": "Dublin",
+      "category": "Professional",
+      "style": "A touch of personality with a well-organized resume structure.",
+      "layout": "split",
+      "sourceUrl": "https://resume.io/app/create-resume?template=dublin",
+      "features": ["Teal modern accents", "Two-column sidebar structure", "Highlighted skills & education", "Bottom accent bar"],
+      "palette": {
+        "primary": "#0d9488",
+        "accent": "#5eead4",
+        "description": "Vibrant Teal & Dark Slate"
+      },
+      "bestFor": ["healthcare", "it", "marketing", "design"]
+    },
+    {
+      "id": "helsinki",
+      "name": "Helsinki",
+      "category": "Prime ATS",
+      "style": "Professional, streamlined resume template optimized for maximum ATS compatibility and readability.",
+      "layout": "compact",
+      "sourceUrl": "https://resume.io/app/create-resume?template=helsinki",
+      "features": ["Streamlined single column", "Zero parsing bottlenecks", "Clean section headers"],
+      "palette": {
+        "primary": "#1e293b",
+        "accent": "#94a3b8",
+        "description": "Slate Navy & Cool Gray"
+      },
+      "bestFor": ["it", "data", "finance", "operations"]
+    },
+    {
+      "id": "seoul",
+      "name": "Seoul",
+      "category": "Pure ATS",
+      "style": "Pure ATS minimalist single-column format that lets your achievements speak.",
+      "layout": "minimal",
+      "sourceUrl": "https://resume.io/app/create-resume?template=seoul",
+      "features": ["ATS-first layout", "Laser printer friendly", "Crisp font hierarchy"],
+      "palette": {
+        "primary": "#18181b",
+        "accent": "#a1a1aa",
+        "description": "Charcoal Ink & Hairlines"
+      },
+      "bestFor": ["it", "data", "finance"]
+    },
+    {
+      "id": "specialist",
+      "name": "Specialist",
+      "category": "Specialist",
+      "style": "Traditional yet modern, clear structure for specialist roles.",
+      "layout": "corporate",
+      "sourceUrl": "https://resume.io/app/create-resume?template=specialist_traditional1",
+      "features": ["Label column on left", "Content on right", "Fast executive scanning"],
+      "palette": {
+        "primary": "#1e3a5f",
+        "accent": "#cbd5e1",
+        "description": "Deep Slate Blue & Ice"
+      },
+      "bestFor": ["it", "data", "healthcare", "operations"]
+    },
+    {
+      "id": "berlin",
+      "name": "Berlin",
+      "category": "Clean",
+      "style": "Modern resume template with bold, clean formatting.",
+      "layout": "split",
+      "sourceUrl": "https://resume.io/app/create-resume?template=berlin",
+      "features": ["High contrast monochrome", "Two-column balance", "Bold typography"],
+      "palette": {
+        "primary": "#111827",
+        "accent": "#d1d5db",
+        "description": "High-Contrast Monochrome Black"
+      },
+      "bestFor": ["design", "marketing", "it"]
+    },
+    {
+      "id": "athens",
+      "name": "Athens",
+      "category": "Simple ATS",
+      "style": "Clean, modern template design that is easily read by ATS scanners.",
+      "layout": "classic",
+      "sourceUrl": "https://resume.io/app/create-resume?template=athens",
+      "features": ["Gold standard ATS compliance", "Classic ruled headers", "Scannable lists"],
+      "palette": {
+        "primary": "#422006",
+        "accent": "#fde047",
+        "description": "Dark Bronze & Gold Hairlines"
+      },
+      "bestFor": ["finance", "sales", "operations"]
+    },
+    {
+      "id": "new-york",
+      "name": "New York",
+      "category": "Corporate",
+      "style": "Professional and elegant resume template with a timeline structure.",
+      "layout": "corporate",
+      "sourceUrl": "https://resume.io/app/create-resume?template=new_york",
+      "features": ["Wall Street corporate look", "Timeline alignment", "Refined serif titles"],
+      "palette": {
+        "primary": "#1f2937",
+        "accent": "#9ca3af",
+        "description": "Monochrome Charcoal & Silver"
+      },
+      "bestFor": ["finance", "operations", "sales", "hr"]
+    },
+    {
+      "id": "vienna",
+      "name": "Vienna",
+      "category": "Clear",
+      "style": "Striking modern header, professional two column template structure.",
+      "layout": "banner",
+      "sourceUrl": "https://resume.io/app/create-resume?template=vienna",
+      "features": ["Full-width modern header banner", "Two-column rail layout", "Segmented skill bars"],
+      "palette": {
+        "primary": "#0f766e",
+        "accent": "#99f6e4",
+        "description": "Emerald Teal Banner & Mint"
+      },
+      "bestFor": ["it", "design", "marketing", "sales"]
+    },
+    {
+      "id": "prague",
+      "name": "Prague",
+      "category": "Precision ATS",
+      "style": "Showcase career skills through a highlighted skills section. ATS-optimized resume template.",
+      "layout": "compact",
+      "sourceUrl": "https://resume.io/app/create-resume?template=prague",
+      "features": ["Dedicated skill callouts", "Dense career section", "Fast recruiter scan"],
+      "palette": {
+        "primary": "#1e3a8a",
+        "accent": "#93c5fd",
+        "description": "Precision Navy & Sky"
+      },
+      "bestFor": ["data", "it", "finance"]
+    },
+    {
+      "id": "brussels",
+      "name": "Brussels",
+      "category": "Two column ATS",
+      "style": "A simple, two-tone resume template. Easy to read and highlights your experience.",
+      "layout": "split",
+      "sourceUrl": "https://resume.io/app/create-resume?template=brussels",
+      "features": ["Two-tone split sidebar", "Clear progression flow", "High information density"],
+      "palette": {
+        "primary": "#1e40af",
+        "accent": "#bfdbfe",
+        "description": "Deep Cobalt & Crisp Silver"
+      },
+      "bestFor": ["it", "operations", "sales"]
+    },
+    {
+      "id": "sydney",
+      "name": "Sydney",
+      "category": "Balanced",
+      "style": "Modern and eye-catching resume template. Beautiful contrasting structure.",
+      "layout": "split",
+      "sourceUrl": "https://resume.io/app/create-resume?template=sydney",
+      "features": ["Contrasting sidebar", "Fresh coastal palette", "Clean typography"],
+      "palette": {
+        "primary": "#0369a1",
+        "accent": "#bae6fd",
+        "description": "Ocean Teal & Light Cyan"
+      },
+      "bestFor": ["marketing", "sales", "design"]
+    },
+    {
+      "id": "shanghai",
+      "name": "Shanghai",
+      "category": "Header ATS",
+      "style": "Dedicated achievements section to highlight successes. Use an ATS-optimized template to increase visibility.",
+      "layout": "metro",
+      "sourceUrl": "https://resume.io/app/create-resume?template=shanghai",
+      "features": ["Bold header band", "Dedicated achievements highlight", "High energy tone"],
+      "palette": {
+        "primary": "#991b1b",
+        "accent": "#fecaca",
+        "description": "Imperial Crimson & Soft Pink"
+      },
+      "bestFor": ["sales", "marketing", "operations"]
+    },
+    {
+      "id": "stockholm",
+      "name": "Stockholm",
+      "category": "Essential",
+      "style": "Perfect balance of fresh and functional resume template design.",
+      "layout": "minimal",
+      "sourceUrl": "https://resume.io/app/create-resume?template=stockholm",
+      "features": ["Scandinavian clean minimalism", "Airy section separation", "Modern sans-serif typography"],
+      "palette": {
+        "primary": "#334155",
+        "accent": "#e2e8f0",
+        "description": "Nordic Slate & Soft Frost"
+      },
+      "bestFor": ["design", "it", "education"]
+    },
+    {
+      "id": "paris",
+      "name": "Paris",
+      "category": "Polished",
+      "style": "A great blend of personal charm, readability and elegance.",
+      "layout": "portrait",
+      "sourceUrl": "https://resume.io/app/create-resume?template=paris",
+      "features": ["Letter-spaced elegant name", "Photo header integration", "Refined two columns"],
+      "palette": {
+        "primary": "#374151",
+        "accent": "#fbcfe8",
+        "description": "Parisian Charcoal & Dusty Rose"
+      },
+      "bestFor": ["marketing", "hr", "design", "sales"]
+    },
+    {
+      "id": "madrid",
+      "name": "Madrid",
+      "category": "Vivid",
+      "style": "Powerful modern resume template with bold section highlights.",
+      "layout": "metro",
+      "sourceUrl": "https://resume.io/app/create-resume?template=madrid",
+      "features": ["Bold section highlight badges", "Vivid modern header", "Stands out in recruiter stacks"],
+      "palette": {
+        "primary": "#c2410c",
+        "accent": "#fed7aa",
+        "description": "Vivid Amber & Rust Orange"
+      },
+      "bestFor": ["marketing", "sales", "design"]
+    },
+    {
+      "id": "rome",
+      "name": "Rome",
+      "category": "Calligraphic",
+      "style": "A charming resume template with eye-catching section titles and a balanced column structure.",
+      "layout": "editorial",
+      "sourceUrl": "https://resume.io/app/create-resume?template=rome",
+      "features": ["Classical Italian typography", "Calligraphic serif section titles", "Numbered editorial flow"],
+      "palette": {
+        "primary": "#9a3412",
+        "accent": "#ffedd5",
+        "description": "Classical Terracotta & Warm Cream"
+      },
+      "bestFor": ["education", "design", "marketing"]
+    },
+    {
+      "id": "milan",
+      "name": "Milan",
+      "category": "Harmonized",
+      "style": "Streamlined professional resume template with a human touch.",
+      "layout": "portrait",
+      "sourceUrl": "https://resume.io/app/create-resume?template=milan",
+      "features": ["High fashion proportions", "Clean photo header", "Refined gold hairlines"],
+      "palette": {
+        "primary": "#18181b",
+        "accent": "#ca8a04",
+        "description": "Milan Fashion Charcoal & Gold"
+      },
+      "bestFor": ["design", "marketing", "sales", "hr"]
+    },
+    {
+      "id": "toronto",
+      "name": "Toronto",
+      "category": "Defined",
+      "style": "A web-inspired resume template perfect for chatting up your achievements.",
+      "layout": "soft",
+      "sourceUrl": "https://resume.io/app/create-resume?template=toronto",
+      "features": ["Web-inspired rounded cards", "Pill skill badges", "Modern friendly UI feel"],
+      "palette": {
+        "primary": "#1d4ed8",
+        "accent": "#dbeafe",
+        "description": "Maple Blue & Soft Cyan"
+      },
+      "bestFor": ["it", "data", "marketing"]
+    },
+    {
+      "id": "singapore",
+      "name": "Singapore",
+      "category": "Minimalist",
+      "style": "Clean, orderly template structure with stylish minimalism.",
+      "layout": "compact",
+      "sourceUrl": "https://resume.io/app/create-resume?template=singapore",
+      "features": ["Asian stylish minimalism", "Orderly single-column grid", "Dense recruiter-speed scanning"],
+      "palette": {
+        "primary": "#27272a",
+        "accent": "#e4e4e7",
+        "description": "Graphite & Silver Hairlines"
+      },
+      "bestFor": ["finance", "data", "it"]
+    },
+    {
+      "id": "amsterdam",
+      "name": "Amsterdam",
+      "category": "Industrial",
+      "style": "Modern minimalist resume template structure with graceful clarity.",
+      "layout": "minimal",
+      "sourceUrl": "https://resume.io/app/create-resume?template=amsterdam",
+      "features": ["Industrial design clarity", "Architectural hairlines", "Sophisticated serif titles"],
+      "palette": {
+        "primary": "#1f2937",
+        "accent": "#cbd5e1",
+        "description": "Dutch Ink & Crisp Gray"
+      },
+      "bestFor": ["design", "education", "it"]
+    },
+    {
+      "id": "barcelona",
+      "name": "Barcelona",
+      "category": "Elegant",
+      "style": "Attractive, friendly template design. Creative two column structure.",
+      "layout": "studio",
+      "sourceUrl": "https://resume.io/app/create-resume?template=barcelona",
+      "features": ["Creative pastel two-column layout", "Approachable round photo", "Soft modern feel"],
+      "palette": {
+        "primary": "#0284c7",
+        "accent": "#bae6fd",
+        "description": "Mediterranean Sky Blue & Frost"
+      },
+      "bestFor": ["marketing", "hr", "design", "education"]
+    },
+    {
+      "id": "oslo",
+      "name": "Oslo",
+      "category": "Bold",
+      "style": "Reliable and elegant image. Minimalist single column outline.",
+      "layout": "compact",
+      "sourceUrl": "https://resume.io/app/create-resume?template=oslo",
+      "features": ["Bold minimalist single column", "Deep pine green presence", "High reliability factor"],
+      "palette": {
+        "primary": "#065f46",
+        "accent": "#a7f3d0",
+        "description": "Nordic Pine & Pale Sage"
+      },
+      "bestFor": ["finance", "operations", "healthcare"]
+    },
+    {
+      "id": "chicago",
+      "name": "Chicago",
+      "category": "Authority",
+      "style": "Bold and forward structure that’s impossible to ignore. When you really need to impress and showcase your profile.",
+      "layout": "ledger",
+      "sourceUrl": "https://resume.io/app/create-resume?template=chicago",
+      "features": ["Authority date gutter", "Ruled chronological ledger rows", "Executive presence"],
+      "palette": {
+        "primary": "#0f172a",
+        "accent": "#94a3b8",
+        "description": "Deep Steel Slate & Silver"
+      },
+      "bestFor": ["sales", "operations", "finance"]
+    },
+    {
+      "id": "copenhagen",
+      "name": "Copenhagen",
+      "category": "Half Tone",
+      "style": "Emphasizing your personal story above all else, this template blends a traditional style with attention-grabbing design.",
+      "layout": "split",
+      "sourceUrl": "https://resume.io/app/create-resume?template=copenhagen",
+      "features": ["Storytelling emphasis", "Light tinted Scandinavian sidebar", "Gentle olive tones"],
+      "palette": {
+        "primary": "#3f6212",
+        "accent": "#d9f99d",
+        "description": "Muted Nordic Olive & Cream"
+      },
+      "bestFor": ["design", "education", "hr"]
+    },
+    {
+      "id": "boston",
+      "name": "Boston",
+      "category": "Executive",
+      "style": "A streamlined, multi-column structure gives this resume template an innovative yet organized feel.",
+      "layout": "corporate",
+      "sourceUrl": "https://resume.io/app/create-resume?template=boston",
+      "features": ["Ivy executive structure", "Left-label column grid", "Crimson formal accents"],
+      "palette": {
+        "primary": "#881337",
+        "accent": "#fecdd3",
+        "description": "Ivy Crimson & Soft Rose"
+      },
+      "bestFor": ["finance", "education", "hr", "sales"]
+    },
+    {
+      "id": "geneva",
+      "name": "Geneva",
+      "category": "Statement",
+      "style": "Minimalist font styling contrasts with an electric background in this edgy resume template.",
+      "layout": "metro",
+      "sourceUrl": "https://resume.io/app/create-resume?template=geneva",
+      "features": ["Electric blue header band", "Swiss minimalist typography", "High-contrast statement"],
+      "palette": {
+        "primary": "#0c4a6e",
+        "accent": "#38bdf8",
+        "description": "Swiss Electric Blue & Ice"
+      },
+      "bestFor": ["it", "data", "marketing"]
+    },
+    {
+      "id": "tokyo",
+      "name": "Tokyo",
+      "category": "Modern",
+      "style": "Tech-inspired design, minimalist page, skill-point visuals.",
+      "layout": "infographic",
+      "sourceUrl": "https://resume.io/app/create-resume?template=tokyo",
+      "features": ["Skill level proficiency bars", "Language dot meters", "Tech-inspired indigo panel"],
+      "palette": {
+        "primary": "#312e81",
+        "accent": "#c7d2fe",
+        "description": "Neo Tokyo Indigo & Light Purple"
+      },
+      "bestFor": ["it", "data", "design"]
+    },
+    {
+      "id": "lisbon",
+      "name": "Lisbon",
+      "category": "Creative",
+      "style": "A beautiful way to showcase your expertise, this creative resume template stands out with artistic touches.",
+      "layout": "soft",
+      "sourceUrl": "https://resume.io/app/create-resume?template=lisbon",
+      "features": ["Warm artistic touches", "Rounded card panels", "Sunlit terracotta ochre"],
+      "palette": {
+        "primary": "#b45309",
+        "accent": "#fef3c7",
+        "description": "Sunlit Amber & Warm Sand"
+      },
+      "bestFor": ["design", "marketing", "education"]
+    },
+    {
+      "id": "moscow",
+      "name": "Moscow",
+      "category": "Pastel",
+      "style": "Open white-space template, excellent readability.",
+      "layout": "minimal",
+      "sourceUrl": "https://resume.io/app/create-resume?template=moscow",
+      "features": ["Generous white space", "Subtle pastel accents", "Low eye fatigue"],
+      "palette": {
+        "primary": "#3730a3",
+        "accent": "#e0e7ff",
+        "description": "Lilac Slate & Whisper Violet"
+      },
+      "bestFor": ["education", "healthcare", "design"]
+    },
+    {
+      "id": "rio",
+      "name": "Rio",
+      "category": "Visionary",
+      "style": "Fluid and energetic, this template makes a statement with creativity and style.",
+      "layout": "spine",
+      "sourceUrl": "https://resume.io/app/create-resume?template=rio",
+      "features": ["Sideways vertical spine titles", "Fluid and energetic layout", "Vibrant emerald green"],
+      "palette": {
+        "primary": "#047857",
+        "accent": "#a7f3d0",
+        "description": "Vibrant Emerald & Mint Spine"
+      },
+      "bestFor": ["marketing", "sales", "design"]
+    },
+    {
+      "id": "vancouver",
+      "name": "Vancouver",
+      "category": "Confetti",
+      "style": "Creative, light-hearted resume template with color and flair.",
+      "layout": "monogram",
+      "sourceUrl": "https://resume.io/app/create-resume?template=vancouver",
+      "features": ["Initials seal badge", "Pacific teal tones", "Creative light-hearted touch"],
+      "palette": {
+        "primary": "#0f766e",
+        "accent": "#99f6e4",
+        "description": "Pacific Teal & Seafoam"
+      },
+      "bestFor": ["it", "education", "marketing"]
+    },
+    {
+      "id": "cape-town",
+      "name": "Cape Town",
+      "category": "Color Splash",
+      "style": "Get noticed with this resume template featuring a strong font accented by playful pops of color.",
+      "layout": "metro",
+      "sourceUrl": "https://resume.io/app/create-resume?template=cape_town",
+      "features": ["Playful pops of color", "Strong name banner", "Warm sunset palette"],
+      "palette": {
+        "primary": "#c2410c",
+        "accent": "#ffedd5",
+        "description": "Sunset Orange & Cream Pop"
+      },
+      "bestFor": ["sales", "marketing", "design"]
+    },
+    {
+      "id": "academic",
+      "name": "Academic",
+      "category": "Academic",
+      "style": "Scholarly focus on research, education, publications, and credentials.",
+      "layout": "classic",
+      "sourceUrl": "https://resume.io/app/create-resume?template=academic",
+      "features": ["Comprehensive academic format", "Publication-ready serif", "Dense credentials hierarchy"],
+      "palette": {
+        "primary": "#4a0404",
+        "accent": "#e2d8d8",
+        "description": "Oxford Burgundy & Parchment"
+      },
+      "bestFor": ["education", "healthcare", "data"]
+    },
+    {
+      "id": "entry-level",
+      "name": "Entry Level",
+      "category": "Entry Level",
+      "style": "Formatted specifically for students and freshers to emphasize skills and education.",
+      "layout": "soft",
+      "sourceUrl": "https://resume.io/app/create-resume?template=entry_level",
+      "features": ["Student & fresher friendly", "Highlights coursework and skills", "Welcoming modern aesthetic"],
+      "palette": {
+        "primary": "#0284c7",
+        "accent": "#e0f2fe",
+        "description": "Sky Blue & Soft Cloud"
+      },
+      "bestFor": ["it", "education", "sales", "hr"]
+    }
+  ]
+}

@@ -1,0 +1,321 @@
+{
+  "source": "https://www.canva.com/s/templates?query=&adj=eyJFIjp7IkEiOiJ0QUNaQ2tpNHRiWSJ9fQ",
+  "canvaCategoryId": "tACZCki4tbY",
+  "categoryName": "Resumes / CV Templates",
+  "extractedAt": "2026-09-24T17:28:00Z",
+  "totalTemplates": 24,
+  "templates": [
+    {
+      "id": "canva-modern-biz",
+      "name": "White Modern Business Administration",
+      "style": "Canva #1 Bestseller: Bold sans-serif name, photo header, airy two columns.",
+      "layout": "portrait",
+      "features": ["Portrait photo header", "Airy two-column layout", "High readability sans-serif"],
+      "palette": {
+        "primary": "#111827",
+        "accent": "#e5e7eb",
+        "description": "Jet Black & Crisp White"
+      },
+      "bestFor": ["operations", "sales", "it", "marketing"]
+    },
+    {
+      "id": "canva-bw-corporate",
+      "name": "Black and White Corporate",
+      "style": "Canva classic corporate: Solid dark section headings, grid-aligned career history.",
+      "layout": "corporate",
+      "features": ["Section header bands", "Label-aligned content", "Boardroom-ready typography"],
+      "palette": {
+        "primary": "#0f172a",
+        "accent": "#cbd5e1",
+        "description": "Pure Ink & Silver"
+      },
+      "bestFor": ["finance", "operations", "sales", "hr"]
+    },
+    {
+      "id": "canva-clean-minimal",
+      "name": "White Clean Minimalist",
+      "style": "Canva minimalist: Subtle gray category dividers and generous breathing room.",
+      "layout": "minimal",
+      "features": ["Subtle hairlines", "Generous whitespace", "Ultra-clean scan"],
+      "palette": {
+        "primary": "#475569",
+        "accent": "#e2e8f0",
+        "description": "Neutral Slate & Crisp Paper"
+      },
+      "bestFor": ["design", "it", "data"]
+    },
+    {
+      "id": "canva-gray-clean",
+      "name": "Gray and White Simple Clean",
+      "style": "Soft light gray section panels, structured chronological hierarchy.",
+      "layout": "soft",
+      "features": ["Soft gray paneling", "Pill skill badges", "Low-contrast gentle reading"],
+      "palette": {
+        "primary": "#374151",
+        "accent": "#f3f4f6",
+        "description": "Cool Gray & Soft Surface"
+      },
+      "bestFor": ["operations", "hr", "finance"]
+    },
+    {
+      "id": "canva-freelancer",
+      "name": "Minimalist Simple Freelancer",
+      "style": "Two-column freelance dossier with skills and client projects front-and-center.",
+      "layout": "split",
+      "features": ["Light sidebar", "Skillset chips", "Project portfolio focus"],
+      "palette": {
+        "primary": "#262626",
+        "accent": "#e5e5e5",
+        "description": "Dark Charcoal & Tan Tone"
+      },
+      "bestFor": ["design", "it", "marketing"]
+    },
+    {
+      "id": "canva-elegant-classic",
+      "name": "Simple Elegant Clean Classic",
+      "style": "Classic serif typography with rich forest green rules and balanced margins.",
+      "layout": "classic",
+      "features": ["Authoritative serif", "Forest green divider rules", "Boardroom balance"],
+      "palette": {
+        "primary": "#14532d",
+        "accent": "#dcfce7",
+        "description": "Deep Forest Green & Pale Mint"
+      },
+      "bestFor": ["education", "healthcare", "finance"]
+    },
+    {
+      "id": "canva-monogram",
+      "name": "Black & White Monogrammed",
+      "style": "Centered monogram seal with candidate initials, magazine-grade typography.",
+      "layout": "monogram",
+      "features": ["Centered initials seal", "Magazine-style spacing", "Executive presence"],
+      "palette": {
+        "primary": "#0f172a",
+        "accent": "#f1f5f9",
+        "description": "Midnight Navy & Frosted Silver"
+      },
+      "bestFor": ["sales", "operations", "hr", "finance"]
+    },
+    {
+      "id": "canva-blue-pro",
+      "name": "Blue Simple Professional",
+      "style": "Canva top-rated professional blue sidebar with silver skill tags.",
+      "layout": "split",
+      "features": ["Deep blue sidebar", "Two-column balance", "Prominent contact list"],
+      "palette": {
+        "primary": "#1d4ed8",
+        "accent": "#bfdbfe",
+        "description": "Royal Blue & Ice Blue"
+      },
+      "bestFor": ["it", "marketing", "sales"]
+    },
+    {
+      "id": "canva-student",
+      "name": "White Simple Student",
+      "style": "Lightweight and friendly layout designed to highlight education, coursework, and skills.",
+      "layout": "soft",
+      "features": ["Fresher-first layout", "Coursework highlights", "Rounded skill pills"],
+      "palette": {
+        "primary": "#0891b2",
+        "accent": "#cffafe",
+        "description": "Teal Blue & Cloud Soft"
+      },
+      "bestFor": ["education", "it", "sales"]
+    },
+    {
+      "id": "canva-white-gold",
+      "name": "White Gold Elegant Minimalist",
+      "style": "Black typography with rich metallic gold double rules. Confident and luxury.",
+      "layout": "classic",
+      "features": ["Metallic gold accents", "High contrast black ink", "Luxury executive tone"],
+      "palette": {
+        "primary": "#171717",
+        "accent": "#d97706",
+        "description": "Matte Black & Rich Gold"
+      },
+      "bestFor": ["finance", "marketing", "sales"]
+    },
+    {
+      "id": "canva-abu-abu",
+      "name": "Abu-Abu Minimalist",
+      "style": "The viral Indonesian Abu-Abu minimalist aesthetic: subtle gray hairlines and airy text.",
+      "layout": "minimal",
+      "features": ["Abu-Abu aesthetic", "Delicate hairlines", "Contemporary flow"],
+      "palette": {
+        "primary": "#52525b",
+        "accent": "#f4f4f5",
+        "description": "Warm Gray & Clean White"
+      },
+      "bestFor": ["design", "it", "marketing"]
+    },
+    {
+      "id": "canva-dark-orange",
+      "name": "Marketing & Sales Dark Orange",
+      "style": "High-impact dark orange banner header designed for marketing and sales leaders.",
+      "layout": "banner",
+      "features": ["Full-width rust orange banner", "Story left, rail right", "High visual impact"],
+      "palette": {
+        "primary": "#c2410c",
+        "accent": "#ffedd5",
+        "description": "Dark Rust Orange & Cream"
+      },
+      "bestFor": ["marketing", "sales"]
+    },
+    {
+      "id": "canva-copywriter",
+      "name": "White Simple Copywriter",
+      "style": "Words-first editorial layout with numbered section headers and spacious margins.",
+      "layout": "editorial",
+      "features": ["Numbered section headers", "Wide margin notes", "Profile-article tone"],
+      "palette": {
+        "primary": "#262626",
+        "accent": "#e5e5e5",
+        "description": "Pure Charcoal & Soft Gray"
+      },
+      "bestFor": ["marketing", "education", "design"]
+    },
+    {
+      "id": "canva-science-eng",
+      "name": "Science and Engineering",
+      "style": "Technical precision dossier with dates in the gutter and ruled specification rows.",
+      "layout": "ledger",
+      "features": ["Ruled specification rows", "Dates in gutter", "Clean engineering layout"],
+      "palette": {
+        "primary": "#0f172a",
+        "accent": "#94a3b8",
+        "description": "Deep Slate & Steel Line"
+      },
+      "bestFor": ["it", "data", "operations"]
+    },
+    {
+      "id": "canva-white-beige",
+      "name": "White Beige Minimalist",
+      "style": "Gentle warm beige side panel with round avatar. Calming and contemporary.",
+      "layout": "studio",
+      "features": ["Warm beige side panel", "Round portrait avatar", "Modern friendly tone"],
+      "palette": {
+        "primary": "#57493b",
+        "accent": "#e8e0d5",
+        "description": "Warm Taupe & Pale Beige"
+      },
+      "bestFor": ["hr", "healthcare", "education"]
+    },
+    {
+      "id": "canva-blue-ats",
+      "name": "White & Blue Minimalist ATS",
+      "style": "Maximum information density, ATS-ready typography with crisp blue title bars.",
+      "layout": "compact",
+      "features": ["ATS scanner friendly", "Blue title markers", "Dense 1-page fit"],
+      "palette": {
+        "primary": "#1e3a8a",
+        "accent": "#bfdbfe",
+        "description": "Tech Navy & Soft Blue"
+      },
+      "bestFor": ["it", "data", "finance"]
+    },
+    {
+      "id": "canva-pink-pastel",
+      "name": "Pink Pastel Creative",
+      "style": "Delicate blush pink panels and rounded skill pills. Warm, creative, and memorable.",
+      "layout": "soft",
+      "features": ["Pastel blush panels", "Pill skill badges", "Warm human touch"],
+      "palette": {
+        "primary": "#9d174d",
+        "accent": "#fce7f3",
+        "description": "Soft Rose & Blush Pink"
+      },
+      "bestFor": ["design", "marketing", "hr"]
+    },
+    {
+      "id": "canva-blue-gray",
+      "name": "Blue and Gray Simple",
+      "style": "Light slate-blue sidebar with crisp steel accents. Clean corporate balance.",
+      "layout": "split",
+      "features": ["Light-tinted sidebar", "Steel blue accents", "Corporate calm"],
+      "palette": {
+        "primary": "#2563eb",
+        "accent": "#e0e7ff",
+        "description": "Steel Blue & Ice"
+      },
+      "bestFor": ["it", "operations", "sales"]
+    },
+    {
+      "id": "canva-green-black",
+      "name": "Green and Black Modern",
+      "style": "Modern emerald green statement header band with high contrast dark typography.",
+      "layout": "metro",
+      "features": ["Emerald header band", "High contrast black ink", "Energetic structure"],
+      "palette": {
+        "primary": "#064e3b",
+        "accent": "#6ee7b7",
+        "description": "Emerald Green & Mint Accent"
+      },
+      "bestFor": ["finance", "operations", "sales"]
+    },
+    {
+      "id": "canva-orange-gray",
+      "name": "Orange Gray Modern Creative",
+      "style": "Creative sideways section titles with a warm tangerine margin spine.",
+      "layout": "spine",
+      "features": ["Sideways margin spine", "Warm tangerine accent", "Modern creative flow"],
+      "palette": {
+        "primary": "#ea580c",
+        "accent": "#ffedd5",
+        "description": "Vibrant Tangerine & Peach"
+      },
+      "bestFor": ["marketing", "design", "sales"]
+    },
+    {
+      "id": "canva-photographer",
+      "name": "Minimalist Photographer",
+      "style": "Portfolio-grade portrait header with stark monochrome contrast and spacious text.",
+      "layout": "portrait",
+      "features": ["Large portrait photo", "Gallery monochrome", "Portfolio feel"],
+      "palette": {
+        "primary": "#0a0a0a",
+        "accent": "#d4d4d4",
+        "description": "Jet Black & Gallery Gray"
+      },
+      "bestFor": ["design", "marketing"]
+    },
+    {
+      "id": "canva-infographic",
+      "name": "Black & Grey Simple Infographic",
+      "style": "Visual proficiency bars for skills and dot meters for languages. Highly engaging.",
+      "layout": "infographic",
+      "features": ["Skill percentage bars", "Language proficiency dots", "Dark visual panel"],
+      "palette": {
+        "primary": "#1e293b",
+        "accent": "#94a3b8",
+        "description": "Deep Charcoal & Steel Gray"
+      },
+      "bestFor": ["it", "data", "design"]
+    },
+    {
+      "id": "canva-navy-modern",
+      "name": "Navy and White Modern",
+      "style": "Canva navy two-tone layout with electric cyan highlights and clean white body.",
+      "layout": "split",
+      "features": ["Two-tone navy sidebar", "Cyan highlights", "Modern corporate"],
+      "palette": {
+        "primary": "#0f172a",
+        "accent": "#38bdf8",
+        "description": "Deep Navy & Electric Cyan"
+      },
+      "bestFor": ["it", "sales", "finance"]
+    },
+    {
+      "id": "canva-teal-engineer",
+      "name": "Teal Green Network Engineer",
+      "style": "Engineering-grade dense layout with crisp teal section accents and compact spacing.",
+      "layout": "compact",
+      "features": ["Engineered density", "Teal section markers", "High information bandwidth"],
+      "palette": {
+        "primary": "#0f766e",
+        "accent": "#99f6e4",
+        "description": "Deep Teal & Soft Seafoam"
+      },
+      "bestFor": ["it", "data", "operations"]
+    }
+  ]
+}
