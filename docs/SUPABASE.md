@@ -17,8 +17,7 @@ offline copy, but the database is the source of truth, and you (as admin) can se
 
 ## 2. Create the tables
 
-**SQL Editor → New query**, paste the whole file `supabase/migrations/0001_init.sql`, **Run**.
-Then paste `supabase/seed/template_catalog.sql` and **Run** (loads the 80 templates).
+**SQL Editor → New query**, paste the whole file **`supabase/SETUP_ALL_IN_ONE.sql`** (migration + 80-template seed in one), **Run**. Safe to re-run.
 
 > Alternatively with the CLI: `supabase link --project-ref <ref>` then `supabase db push`,
 > and `npm run seed:templates:push` with `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` set.
@@ -32,7 +31,7 @@ Local: create `.env` (never commit it):
 VITE_SUPABASE_URL=https://xxxx.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJ...
 ```
-Netlify: **Site configuration → Environment variables** → add the same two, then redeploy.
+Netlify: already set in `netlify.toml` under `[build.environment]` — nothing to add; just deploy.
 
 Without these two variables the app runs in offline mode (browser-only accounts).
 With them, sign-up/login goes through Supabase Auth and every save syncs.

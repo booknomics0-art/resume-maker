@@ -8,6 +8,11 @@
 [build.environment]
   # Pin Node 22 so the toolchain (and its npm) stays stable on every deploy.
   NODE_VERSION = "22"
+  # Supabase project (cloud accounts + resume database). The anon key is a
+  # PUBLIC key by design — it ships in the browser bundle; row-level security
+  # protects the data. Never put the service-role key here.
+  VITE_SUPABASE_URL = "https://voyvalrnxmdogsllarnz.supabase.co"
+  VITE_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZveXZhbHJueG1kb2dzbGxhcm56Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyMjgxOTAsImV4cCI6MjEwNTgwNDE5MH0.Ma0sJbzkoXLhEyDFKEYJdLym8kD9Jlfhfxg6Ev2O0no"
 
 # Security headers for all pages — high-tech hardening
 [[headers]]
