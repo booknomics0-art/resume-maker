@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { login, signup, setLocalSession } from '../lib/auth';
 import { cloudEnabled } from '../lib/supabase';
-import { cloudSignIn, cloudSignUp, cloudStartGoogleSignIn, cloudGoogleProviderState, touchProfile } from '../lib/cloud';
+import {
+  cloudSignIn, cloudSignUp, cloudStartGoogleSignIn, cloudGoogleProviderState,
+  cloudOnAuthChange, pendingFlowInterrupted, touchProfile,
+} from '../lib/cloud';
+import { hasAuthCallback } from '../lib/authRedirect';
 import { providerStateNote, type GoogleAuthIssue, type GoogleProviderState } from '../lib/googleAuth';
 import { syncWithCloud } from '../lib/store';
 import GoogleSetupPanel from './GoogleSetupPanel';
@@ -35,6 +39,8 @@ export default function AuthPage({ onAuth, notice }: { onAuth: () => void; notic
   const [googleBusy, setGoogleBusy] = useState(false);
   const [googleIssue, setGoogleIssue] = useState<GoogleAuthIssue | null>(notice ?? null);
   const [showSetup, setShowSetup] = useState(false);
+  // True when the handshake continues in another tab (embedded preview).
+  const [awaitingTab, setAwaitingTab] = useState(false);
 
   // A failed Google round-trip arrives as a prop from App.
   useEffect(() => {
@@ -57,6 +63,35 @@ export default function AuthPage({ onAuth, notice }: { onAuth: () => void; notic
 
   // Label the button correctly on load instead of failing on click.
   useEffect(() => { void refreshGoogleState(); }, [refreshGoogleState]);
+
+  // The Google flow may be running in a separate tab: inside embedded previews
+  // (where Google refuses to render in a frame) `cloudStartGoogleSignIn()` opens
+  // a real top-level tab. Once that tab finishes, the session is shared with
+  // this one — follow along so the user does not have to reload by hand.
+  useEffect(() => {
+    if (!awaitingTab) return;
+    return cloudOnAuthChange(() => onAuth());
+  }, [awaitingTab, onAuth]);
+
+  // Did this browser leave for Google and come back with nothing? Google's own
+  // “Access blocked” page (consent screen still in Testing) never redirects back
+  // to us, so without this the user would just see the login form again and no
+  // reason. A real callback is handled by App instead — see cloudBootAuth().
+  useEffect(() => {
+    if (!cloudEnabled() || hasAuthCallback()) return;
+    const pending = pendingFlowInterrupted();
+    if (!pending.interrupted) return;
+    setGoogleIssue({
+      code: 'consent_testing',
+      title: 'You came back from Google without finishing',
+      message:
+        'The tab returned through no callback of ours, which is what happens when Google refuses to show the sign-in screen — most often because the OAuth consent screen is still in “Testing”.',
+      hint: 'Press “Publish app” in Google Cloud → APIs & Services → OAuth consent screen (or add your email as a test user), then try again. Step 2 below walks you through it.',
+      showSetup: true,
+      raw: `left for Google (${pending.redirectTo || 'unknown address'}) and returned with no code`,
+    });
+    setShowSetup(true);
+  }, []);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -129,6 +164,7 @@ export default function AuthPage({ onAuth, notice }: { onAuth: () => void; notic
 
     setGoogleBusy(true);
     setGoogleIssue(null);
+    setAwaitingTab(false);
     try {
       const res = await cloudStartGoogleSignIn();
       if (!res.ok) {
@@ -136,8 +172,13 @@ export default function AuthPage({ onAuth, notice }: { onAuth: () => void; notic
         if (res.issue?.showSetup) setShowSetup(true);
         // The setting may have changed (or our probe was stale) — re-read it.
         void refreshGoogleState();
+      } else if (res.openedInNewTab) {
+        // Embedded preview: Google's pages cannot be framed, so the handshake
+        // continues in a real tab. Stay on this screen and pick the session up.
+        setAwaitingTab(true);
+        setInfo('Google sign-in opened in a new tab — finish it there and you will be signed in here automatically.');
       }
-      // On success the browser is already navigating to Google.
+      // Otherwise the browser is already navigating to Google in this tab.
     } finally {
       setGoogleBusy(false);
     }
@@ -232,14 +273,29 @@ export default function AuthPage({ onAuth, notice }: { onAuth: () => void; notic
               </div>
             )}
 
+            {awaitingTab && (
+              <div className="notice" style={{ margin: 0, fontSize: 12.5 }}>
+                ⏳ Waiting for the Google tab… finish the sign-in there and you will be brought in here automatically.
+              </div>
+            )}
+
             {googleIssue && !showSetup && (
               <div className="notice err" style={{ margin: 0, fontSize: 12.5 }}>
                 <b>{googleIssue.title}</b>
                 <div style={{ marginTop: 2 }}>{googleIssue.message}</div>
                 {googleIssue.hint && <div style={{ marginTop: 4, opacity: 0.85 }}>{googleIssue.hint}</div>}
-                <button type="button" className="btn small" style={{ marginTop: 8 }} onClick={() => setShowSetup(true)}>
-                  Show me the fix
-                </button>
+                {googleIssue.code === 'embedded_preview' && (
+                  // Plain anchor with target="_blank": works even when scripts
+                  // are not allowed to open windows from inside the frame.
+                  <a className="btn small primary" style={{ marginTop: 8 }} href={window.location.href} target="_blank" rel="noreferrer noopener">
+                    Open the app in a new tab ↗
+                  </a>
+                )}
+                {googleIssue.code !== 'embedded_preview' && (
+                  <button type="button" className="btn small" style={{ marginTop: 8 }} onClick={() => setShowSetup(true)}>
+                    Show me the fix
+                  </button>
+                )}
               </div>
             )}
 

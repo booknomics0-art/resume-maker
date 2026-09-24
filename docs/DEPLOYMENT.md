@@ -63,7 +63,9 @@ HTTPS certificate is automatic and free.
    Full guide: `docs/SUPABASE.md`.
 2. **Google login** — enable the Google provider in Supabase Auth and paste a Google Cloud
    OAuth *Web application* client ID + secret (Google redirect URI:
-   `https://<project-ref>.supabase.co/auth/v1/callback`); add the site to Supabase →
+   `https://<project-ref>.supabase.co/auth/v1/callback`); **publish the OAuth consent
+   screen** (while it is in “Testing”, Google blocks everyone except the listed test users
+   and never redirects back to the app); add the site to Supabase →
    Authentication → URL Configuration. The app no longer needs a client ID in the repo
    (`src/config.ts` is gone) and it detects + explains a missing/incorrect setup instead of
    dead-ending. Verify with `npm run check:auth -- --app-url=https://your-site`.

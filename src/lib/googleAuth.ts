@@ -104,7 +104,7 @@ export function providerStateNote(state: GoogleProviderState): string {
     return 'Google login is switched off for this project — tap the button for the 2-minute setup.';
   }
   if (state === 'unknown') {
-    return 'Signed-out of Google? Use email + password — it always works.';
+    return 'Could not read the Google setting from this browser — the button still works. Email + password works too.';
   }
   return '';
 }
@@ -169,8 +169,11 @@ export function googleSetupInfo(appUrl: string, supabaseUrl: string): GoogleSetu
 export type GoogleAuthIssueCode =
   | 'provider_disabled'
   | 'provider_misconfigured'
+  | 'consent_testing'
   | 'redirect_not_allowed'
   | 'verifier_missing'
+  | 'insecure_context'
+  | 'embedded_preview'
   | 'cancelled'
   | 'signups_disabled'
   | 'cloud_missing'
@@ -230,6 +233,63 @@ export function classifyAuthError(raw: string, extra: { code?: string; status?: 
     });
   }
 
+  // The single most common *Google-side* blocker once Supabase is configured:
+  // the OAuth consent screen is still in “Testing”, so Google lets only the
+  // listed test users through and everybody else sees
+  // “Access blocked: <app> has not completed the Google verification process”.
+  // Nothing in Supabase or in this repo can fix it — it is one button in the
+  // Google Cloud console — so name it exactly, with the deep link.
+  if (
+    m.includes('access blocked') ||
+    m.includes('verification process') ||
+    m.includes('has not completed the google') ||
+    m.includes('app is in testing') ||
+    m.includes('test users') ||
+    m.includes('org_internal') ||
+    m.includes('admin_policy_enforced') ||
+    m.includes('unverified app')
+  ) {
+    return out({
+      code: 'consent_testing',
+      title: 'Google is blocking the app — the consent screen is still in “Testing”',
+      message:
+        'Google accepted the sign-in request but refused to show it, because this Google Cloud project’s OAuth consent screen has not been published. In “Testing” only the emails you listed as test users are allowed in.',
+      hint:
+        'Open Google Cloud Console → APIs & Services → OAuth consent screen and press “Publish app” (or add this email under “Test users”). It takes effect immediately — no review needed for the basic email/profile scopes this app uses.',
+      showSetup: true,
+    });
+  }
+
+  // The app is running inside an iframe (preview panel, dashboard embed) and
+  // the popup with the real tab was blocked. Google sends its sign-in pages with
+  // `X-Frame-Options: DENY`, so there is no way to finish the handshake in a
+  // frame — the user has to open the app in its own tab.
+  if (m.includes('embedded_preview')) {
+    return out({
+      code: 'embedded_preview',
+      title: 'Google sign-in cannot run inside this preview frame',
+      message:
+        'The app is being shown inside another page here, and Google refuses to display its sign-in screen in a frame — that is a security rule on Google’s side, not a problem with your account.',
+      hint: 'Open the app in its own browser tab and press “Continue with Google” there; this page will pick up the session automatically. Email + password also works right here.',
+      showSetup: false,
+    });
+  }
+
+  // PKCE needs `crypto.subtle`, which only exists in a secure context
+  // (https, or localhost). Without it supabase-js cannot build the code
+  // challenge and Google sign-in is impossible — say so instead of failing
+  // later with a cryptic “code verifier” error.
+  if (m.includes('insecure_context') || m.includes('crypto.subtle') || m.includes('subtle is not')) {
+    return out({
+      code: 'insecure_context',
+      title: 'This page is not on a secure (HTTPS) address',
+      message:
+        'Google sign-in uses the modern PKCE handshake, and browsers only expose the crypto it needs on https:// pages (or localhost).',
+      hint: 'Open the app over https:// (or on http://localhost) and try again. Email + password works either way.',
+      showSetup: false,
+    });
+  }
+
   // A callback that arrives with a stale/used/foreign flow state (user pressed
   // Back, reloaded an old callback URL, or the flow timed out) is NOT a
   // credentials problem — Supabase answers
@@ -267,12 +327,19 @@ export function classifyAuthError(raw: string, extra: { code?: string; status?: 
     });
   }
 
-  if (m.includes('redirect') && (m.includes('not allowed') || m.includes('invalid') || m.includes('mismatch'))) {
+  if (
+    (m.includes('redirect') && (m.includes('not allowed') || m.includes('invalid') || m.includes('mismatch'))) ||
+    m.includes('redirect_to') ||
+    m.includes('unauthorized_client') ||
+    m.includes('email link is invalid') ||
+    m.includes('request_path')
+  ) {
     return out({
       code: 'redirect_not_allowed',
       title: 'This site’s address is not whitelisted for sign-in',
-      message: 'Supabase only returns users to addresses listed in the project’s URL configuration.',
-      hint: 'Add the Site URL and Redirect URL shown below in Supabase → Authentication → URL Configuration.',
+      message:
+        'Supabase only returns users to addresses listed in the project’s URL configuration. This address is not on that list, so the sign-in could not be handed back to the app.',
+      hint: 'Add the Site URL and Redirect URL shown below in Supabase → Authentication → URL Configuration, then try again from that exact address.',
       showSetup: true,
     });
   }
@@ -338,11 +405,22 @@ export function classifyAuthError(raw: string, extra: { code?: string; status?: 
 
 /** Builds the message for an error that came back on the callback URL. */
 export function issueFromRedirect(params: RedirectAuthParams): GoogleAuthIssue {
-  const raw = [params.error, params.errorCode, params.errorDescription].filter(Boolean).join(' ');
+  const raw = [params.error, params.errorCode, params.errorDescription].filter(Boolean).join(' ').trim();
+  // Everything Google sent is classified together, description included: Google
+  // reports several *different* problems as `error=access_denied` and the only
+  // thing telling them apart is the description
+  //   · “the user denied the request”            → really cancelled
+  //   · “Access blocked: <app> has not completed the Google verification
+  //      process” / “org_internal” / “admin_policy_enforced”
+  //                                              → consent screen still in Testing
+  // The blanket “access_denied means cancelled” shortcut that used to live here
+  // threw that description away, so a blocked app looked like a user mistake.
   const issue = classifyAuthError(raw || 'unknown error');
-  // Google's `access_denied` on the callback means the user closed / refused the
-  // consent screen — the most common "error" there is, and not a real failure.
-  if (/access_denied/i.test(raw)) return classifyAuthError('access_denied');
+  // A bare `access_denied` (no description at all) really is just “closed the
+  // consent screen” — keep the friendly wording.
+  if (!params.errorDescription && /access_denied/i.test(params.error)) {
+    return classifyAuthError('access_denied');
+  }
   return issue;
 }
 
