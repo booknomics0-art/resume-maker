@@ -105,17 +105,20 @@ ok('every template has tagline, strengths and mods', TEMPLATES.every(
   (t) => t.tagline.length > 12 && t.strengths.length >= 3 && Array.isArray(t.mods),
 ));
 ok('bestFor only names real career fields', TEMPLATES.every((t) => t.bestFor.every((f) => FIELDS.includes(f))));
-// The collection is being built in batches: 12 flagships first, then 5 per
-// category (50). Until the 50 land, every category must at least have a design.
-ok('every category has at least one design', CATEGORY_ORDER.every((c) => templatesByCategory(c).length >= 1));
+ok('exactly 5 designs in every one of the 10 categories',
+  CATEGORY_ORDER.every((c) => templatesByCategory(c).length === 5) && TEMPLATES.length === 50);
+ok('no category repeats a layout family',
+  CATEGORY_ORDER.every((c) => new Set(templatesByCategory(c).map((t) => t.layout)).size === 5));
+ok('all 20 layout families are in use',
+  Object.keys(LAYOUT_META).length === 20 && ACTIVE_FAMILIES.length === 20);
 ok('categories cover the whole catalogue, no orphans', TEMPLATES.every((t) => CATEGORY_ORDER.includes(t.category))
   && CATEGORY_ORDER.reduce((n, c) => n + templatesByCategory(c).length, 0) === TEMPLATES.length);
 ok('every design carries a photo frame and a one-page fit', TEMPLATES.every((t) => t.photo && t.onePage));
 ok('every design names its palette', TEMPLATES.every((t) => typeof t.paletteName === 'string' && t.paletteName.length > 2));
 ok('every design is tuned with .mod-tight', TEMPLATES.every((t) => t.mods.includes('mod-tight')));
 ok('every category has a label and a blurb', CATEGORY_ORDER.every((c) => CATEGORY_META[c].label && CATEGORY_META[c].blurb));
-ok('every family shown in the chips actually has designs',
-  ACTIVE_FAMILIES.every((l) => TEMPLATES.filter((t) => t.layout === l).length >= 1));
+ok('every layout family is used at least twice',
+  ACTIVE_FAMILIES.every((l) => TEMPLATES.filter((t) => t.layout === l).length >= 2));
 ok('mods are real modifier classes', TEMPLATES.every((t) => t.mods.every((m) => VALID_MODS.has(m))));
 ok('every modifier used has CSS behind it', [...VALID_MODS].every((m) => css.includes(`.${m}`)));
 ok('every layout family used has CSS behind it',

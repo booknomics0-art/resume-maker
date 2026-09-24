@@ -24,9 +24,9 @@ Resumes are stored in your own **Supabase** database (see `docs/SUPABASE.md`).
     Soft panels, Banner, plus the four display families: **Masthead** (oversized name +
     facts rail), **Panel Band** (photo band over a tinted rail), **Tint Sheet** (page wash,
     one tracked name, boxed skills) and **Gradient Spine** (gradient rail, centred headings).
-  - **Categories (5 each)** — ATS & Plain · Corporate & Finance · Tech & Product ·
-    Design & Creative · Executive & Board · Academic & Research · Healthcare & Care ·
-    Education & Teaching · Sales & Marketing · Fresher & Switch.
+  - **Categories (5 each)** — ATS & General · IT & Software · Data & Analytics ·
+    Corporate & Finance · Sales & Marketing · Healthcare & Care · Education & Teaching ·
+    Design & Creative · Leadership & Admin · Fresher & Entry.
   - Palettes stay ink-led and restrained (navy, graphite, steel, petrol, pine, oxblood,
     mocha, brass); a variant re-skins and re-tunes a family, it never forks layout code.
   - Review them all on one page: `npm run preview:templates` → open
