@@ -205,17 +205,21 @@ function Section({
   );
 }
 
-/** Round photo used by the single-column templates, when uploaded. */
-function HeaderPhoto({ r, size = 66 }: { r: Resume; size?: number }) {
-  if (!r.personal.photo) return null;
-  return (
-    <img
-      className="s-photo"
-      src={r.personal.photo}
-      alt=""
-      style={{ width: size, height: size }}
-    />
-  );
+/**
+ * The photo frame every family uses. Either the uploaded photo, or a
+ * placeholder in exactly the same box — so the layout keeps its shape (and the
+ * candidate can see where the photo will sit) before anything is uploaded.
+ */
+function HeaderPhoto({ r, size = 66, square }: { r: Resume; size?: number; square?: boolean }) {
+  const box = { width: size, height: size };
+  if (!r.personal.photo) {
+    return (
+      <div className={`s-photo ph${square ? ' sq' : ''}`} style={box} aria-hidden="true">
+        {initials(r.personal.fullName)}
+      </div>
+    );
+  }
+  return <img className={`s-photo${square ? ' sq' : ''}`} src={r.personal.photo} alt="" style={box} />;
 }
 
 /** Experience with dates in a left gutter and a dotted line — Timeline family. */
@@ -522,10 +526,13 @@ export default function Preview({ r, tpl }: { r: Resume; tpl?: Template }) {
     let n = 0;
     return (
       <div className={sheetClass(t)} style={sheetVars(t)}>
-        <div className="head">
-          <h1 className="s-name">{name}</h1>
-          <div className="s-headline">{headline}</div>
-          <ContactBits r={r} />
+        <div className="head ed-head">
+          <div>
+            <h1 className="s-name">{name}</h1>
+            <div className="s-headline">{headline}</div>
+            <ContactBits r={r} />
+          </div>
+          <HeaderPhoto r={r} size={80} square />
         </div>
         {mainSections.map((s) => {
           n += 1;
@@ -665,7 +672,7 @@ export default function Preview({ r, tpl }: { r: Resume; tpl?: Template }) {
             <h1 className="mast-name s-name">{name}</h1>
             <div className="mast-role">{headline}</div>
           </div>
-          {p.photo && <img className="mast-photo" src={p.photo} alt="" />}
+          {p.photo ? <img className="mast-photo" src={p.photo} alt="" /> : <div className="mast-photo ph">{initials(name)}</div>}
         </div>
         <div className="mast-strip">{contactLines.map((c, i) => <span key={i}>{c}</span>)}</div>
         <div className="mast-cols">
@@ -719,7 +726,7 @@ export default function Preview({ r, tpl }: { r: Resume; tpl?: Template }) {
   if (t.layout === 'tintsheet') {
     return (
       <div className={sheetClass(t)} style={sheetVars(t)}>
-        {p.photo && <img className="tint-photo" src={p.photo} alt="" />}
+        {p.photo ? <img className="tint-photo" src={p.photo} alt="" /> : <div className="tint-photo ph">{initials(name)}</div>}
         <div className="tint-head">
           <h1 className="s-name">{name}</h1>
           <div className="s-headline">{headline}</div>

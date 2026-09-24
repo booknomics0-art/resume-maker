@@ -681,6 +681,47 @@
 .tpl-spinegradient .s-dates { display: block; margin-top: 2px; }
 .tpl-spinegradient .s-skill { border-radius: 0; background: #fff; border-color: var(--a); }
 
+/* photo frame: square variant + the "no upload yet" placeholder */
+.s-photo.sq { border-radius: 4px; box-shadow: none; border: 1px solid var(--a); }
+.s-photo.ph {
+  display: grid; place-items: center; background: var(--tint, #eef1f5); color: var(--p);
+  font-family: Georgia, "Times New Roman", serif; font-size: 24px; font-weight: 700; letter-spacing: 1px;
+  border: 1px dashed color-mix(in srgb, var(--p) 45%, #fff); border-radius: inherit;
+}
+.tpl-masthead .mast-photo.ph, .tpl-tintsheet .tint-photo.ph {
+  display: grid; place-items: center; color: var(--p); font-family: Georgia, serif;
+  font-size: 34px; font-weight: 700; background: #e9ecf1; filter: none;
+  border: 1px dashed color-mix(in srgb, var(--p) 40%, #fff);
+}
+.tpl-editorial .ed-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
+.tpl-editorial .ed-head .s-contact { margin-top: 8px; }
+
+/* ============ one-page fit (.mod-tight) ============
+   Same sheet, tuned to hold a full career on a single A4: slightly smaller
+   body type, tighter leading and section gaps, shorter bullets. Every family
+   inherits it, so a "1 page" design is a fit choice, not a separate layout. */
+.sheet.mod-tight { font-size: 12.3px; line-height: 1.42; }
+.sheet.mod-tight .s-name { font-size: 24px; }
+.sheet.mod-tight .s-headline { font-size: 12.5px; }
+.sheet.mod-tight .sec { margin-bottom: 9px !important; }
+.sheet.mod-tight .s-sec-title { margin-bottom: 5px; letter-spacing: 1.4px; }
+.sheet.mod-tight .s-item { margin-bottom: 7px; }
+.sheet.mod-tight .s-item-head b { font-size: 12.6px; }
+.sheet.mod-tight li { margin-bottom: 2px; }
+.sheet.mod-tight .s-skill { padding: 1px 8px; font-size: 11px; }
+.sheet.mod-tight .s-table td { padding: 4px 10px 4px 0; }
+.sheet.mod-tight .s-contact { font-size: 11.2px; }
+.tpl-split.mod-tight .main, .tpl-studio.mod-tight .main { padding: 20px 22px; }
+.tpl-split.mod-tight .side { padding: 24px 20px; }
+.tpl-panelband.mod-tight .main { padding: 16px 26px 18px; }
+.tpl-panelband.mod-tight .band { padding: 20px 30px 24px; }
+.tpl-masthead.mod-tight { padding: 24px 34px 20px; }
+.tpl-masthead.mod-tight .mast-name { font-size: 40px; }
+.tpl-tintsheet.mod-tight { padding: 26px 38px 22px; }
+.tpl-tintsheet.mod-tight .s-name { font-size: 38px; letter-spacing: 7px; }
+.tpl-spinegradient.mod-tight .body { padding: 24px 28px 20px; }
+.tpl-spinegradient.mod-tight .rail { padding: 26px 18px; gap: 14px; }
+
 /* shared: page wash + numbered margin variants for the display families */
 .mod-tint { background: var(--p2, #f1f3f6); }
 .mod-numbered .sec { position: relative; }

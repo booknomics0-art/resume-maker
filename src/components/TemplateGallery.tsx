@@ -83,9 +83,25 @@ function TplCard({
           {selected && <span className="tpl-applied">✓ Applied</span>}
         </div>
         <p className="tpl-tag">{t.tagline}</p>
+
+        <div className="tpl-flags">
+          {t.photo && <span className="tpl-flag" title="This design carries a photo frame — upload one in Basics">◉ Photo</span>}
+          {t.onePage && <span className="tpl-flag" title="Tuned to hold a full career on one A4 page">▤ 1 page</span>}
+          <span className="tpl-flag tpl-flag-cat">{CATEGORY_META[t.category].label}</span>
+        </div>
+
         <div className="tpl-foot">
           <span className="tpl-fam">{LAYOUT_META[t.layout]?.label || t.layout}</span>
-          <span className="tpl-strength" title={t.strengths.join(' · ')}>{t.strengths[0]}</span>
+          <span
+            className="tpl-swatch"
+            title={`Palette: ${t.paletteName}`}
+            aria-label={`Palette ${t.paletteName}`}
+          >
+            {[t.pal.p, t.pal.p2, t.pal.a].filter(Boolean).map((c, i) => (
+              <i key={i} style={{ background: c }} />
+            ))}
+            <em>{t.paletteName}</em>
+          </span>
         </div>
       </div>
     </article>

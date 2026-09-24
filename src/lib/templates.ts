@@ -37,8 +37,8 @@ export type LayoutId =
   | 'masthead' | 'panelband' | 'tintsheet' | 'spinegradient';
 
 export type CategoryId =
-  | 'ats' | 'corporate' | 'tech' | 'creative' | 'executive'
-  | 'academic' | 'healthcare' | 'education' | 'sales' | 'fresher';
+  | 'ats' | 'it' | 'data' | 'corporate' | 'sales'
+  | 'healthcare' | 'education' | 'creative' | 'leadership' | 'fresher';
 
 /** Structural (non-palette) modifier classes applied to the sheet. */
 export type Mod =
@@ -64,10 +64,16 @@ export interface Template {
   layout: LayoutId;
   category: CategoryId;
   pal: Palette;
+  /** the palette's name — shown as swatches + a tooltip in the gallery */
+  paletteName: string;
   mods: Mod[];
   tagline: string;
   bestFor: string[]; // field ids where it is the top pick
   strengths: string[];
+  /** every family draws a photo frame (photo, or the placeholder box) */
+  photo: boolean;
+  /** tuned with .mod-tight to hold a full career on one A4 */
+  onePage: boolean;
 }
 
 export const COLLECTION_NAME = 'Professional';
@@ -111,23 +117,26 @@ export const LAYOUT_META: Record<LayoutId, { label: string; blurb: string }> = {
   },
 };
 
-/** What each category is for — drives the gallery's first chip row. */
+/**
+ * The 10 categories candidates actually ask for. First chip row in the
+ * gallery; every design belongs to exactly one.
+ */
 export const CATEGORY_META: Record<CategoryId, { label: string; blurb: string }> = {
-  ats: { label: 'ATS & Plain', blurb: 'Tracker-safe single column, no decoration, maximum parse rate' },
-  corporate: { label: 'Corporate & Finance', blurb: 'Grids, ledgers and label columns for conservative hiring' },
-  tech: { label: 'Tech & Product', blurb: 'Skills high on the page, room for stacks, ships and metrics' },
-  creative: { label: 'Design & Creative', blurb: 'Display type, wide margins, colour used once and on purpose' },
-  executive: { label: 'Executive & Board', blurb: 'Serif gravitas, restrained metal accents, senior tone' },
-  academic: { label: 'Academic & Research', blurb: 'Publications, teaching and credentials with scholarly order' },
-  healthcare: { label: 'Healthcare & Care', blurb: 'Clinical clarity: licences, units, shift and patient detail' },
+  ats: { label: 'ATS & General', blurb: 'Tracker-safe single column, plain headings, maximum parse rate' },
+  it: { label: 'IT & Software', blurb: 'Stack high on the page, ships and metrics, one clean scan' },
+  data: { label: 'Data & Analytics', blurb: 'Tools, models and business impact — numbered, dense, legible' },
+  corporate: { label: 'Corporate & Finance', blurb: 'Grids, labels and ledgers for conservative hiring' },
+  sales: { label: 'Sales & Marketing', blurb: 'Quotas, campaigns and revenue first, photo where it helps' },
+  healthcare: { label: 'Healthcare & Care', blurb: 'Licences, units, shifts and patient detail, calmly aligned' },
   education: { label: 'Education & Teaching', blurb: 'Curriculum, boards, faculty roles and classroom outcomes' },
-  sales: { label: 'Sales & Marketing', blurb: 'Numbers first — quotas, campaigns, revenue, pipeline' },
-  fresher: { label: 'Fresher & Switch', blurb: 'Projects, coursework and internships carry the page' },
+  creative: { label: 'Design & Creative', blurb: 'Display type and one deliberate accent — portfolio-forward' },
+  leadership: { label: 'Leadership & Admin', blurb: 'Serif gravitas, restrained metal accents, senior tone' },
+  fresher: { label: 'Fresher & Entry', blurb: 'Projects, coursework and internships carry the page' },
 };
 
 export const CATEGORY_ORDER: CategoryId[] = [
-  'ats', 'corporate', 'tech', 'creative', 'executive',
-  'academic', 'healthcare', 'education', 'sales', 'fresher',
+  'ats', 'it', 'data', 'corporate', 'sales',
+  'healthcare', 'education', 'creative', 'leadership', 'fresher',
 ];
 
 /** p + a only — light families, primary doubles as the ink colour. */
@@ -162,243 +171,162 @@ type Row = [
   bestFor: string[],
   strengths: string[],
   pal: Palette,
-  mods?: Mod[],
+  /** palette name + one-page fit + structural mods */
+  opts?: { mods?: Mod[]; swatch?: string },
 ];
 
 const ATS_FIELDS = ['it', 'data', 'finance', 'operations', 'healthcare', 'education'];
+
+/* --------------------------------------------------------------------------
+   Named palettes. Each is one of the colour pairings people recognise as
+   "professional" — a deep, low-saturation primary with a single quiet accent.
+   They are applied aesthetically, not decoratively: accent for rules, chips
+   and hairlines only; never more than one accent on a sheet.
+   -------------------------------------------------------------------------- */
+
+type Swatch = readonly [label: string, pal: Palette];
+
+const SWATCHES: Record<string, Swatch> = {
+  'Navy & Silver': ['Navy & Silver', mono('#12233f', '#c8d3e2')],
+  'Charcoal & Gold': ['Charcoal & Gold', mono('#22262e', '#c9a227')],
+  'Deep Teal & Mist': ['Deep Teal & Mist', mono('#0e4b56', '#b6d7dd')],
+  'Burgundy & Cream': ['Burgundy & Cream', mono('#4d1828', '#e3cfd4')],
+  'Forest & Sand': ['Forest & Sand', mono('#1d4032', '#d9c9a8')],
+  'Royal Blue & Slate': ['Royal Blue & Slate', mono('#1d3f94', '#bccbe4')],
+  'Espresso & Beige': ['Espresso & Beige', mono('#3f2a1d', '#dcc9b0')],
+  'Midnight & Copper': ['Midnight & Copper', mono('#151a2b', '#b06f3a')],
+  'Slate & Pearl': ['Slate & Pearl', mono('#334155', '#e2e8f0')],
+  'Ink & White': ['Ink & White', mono('#101114', '#d7dade')],
+};
+
+/** Full dark-surface ramp for the families that paint a band, rail or panel. */
+const RAMP: Record<string, Palette> = {
+  'Navy & Silver': NAVY,
+  'Charcoal & Gold': { p: '#22262e', p2: '#2c313b', p3: '#373d49', pm: '#4d5563', a: '#c9a227' },
+  'Deep Teal & Mist': { p: '#0c3540', p2: '#14505d', p3: '#1d6a79', pm: '#3d8b99', a: '#a9d6de' },
+  'Burgundy & Cream': { p: '#3d1220', p2: '#54192c', p3: '#6c2339', pm: '#8a4258', a: '#e3cfd4' },
+  'Forest & Sand': { p: '#1d4032', p2: '#255242', p3: '#2e6453', pm: '#457a66', a: '#d9c9a8' },
+  'Royal Blue & Slate': { p: '#1d3f94', p2: '#2551b8', p3: '#2f64d4', pm: '#4a76e0', a: '#bccbe4' },
+  'Espresso & Beige': { p: '#1d2b3a', p2: '#f2e8de', p3: '#e2d0c0', pm: '#94765c', a: '#c99a63' },
+  'Midnight & Copper': { p: '#15181f', p2: '#20242d', p3: '#2b303b', pm: '#414a5a', a: '#b06f3a' },
+  'Slate & Pearl': SLATE_INK,
+  'Ink & White': INK,
+};
+
+/** light tint for the Tint Sheet family, per palette */
+const TINT: Record<string, Palette> = {
+  'Forest & Sand': { p: '#26402f', p2: '#f0ece1', p3: '#e0d8c6', pm: '#7b7460', a: '#9c8a63' },
+  'Slate & Pearl': TINT_STEEL,
+  'Deep Teal & Mist': { p: '#1d3b42', p2: '#e7f0f1', p3: '#d1e3e5', pm: '#6d8c91', a: '#8fb4b9' },
+  'Ink & White': { p: '#1b1d21', p2: '#f1f2f4', p3: '#e0e2e6', pm: '#6f747d', a: '#a8adb6' },
+};
+
+const pal = (name: keyof typeof SWATCHES | string, kind: 'mono' | 'ramp' | 'tint' = 'mono'): Palette => {
+  const table = kind === 'ramp' ? RAMP : kind === 'tint' ? TINT : SWATCHES;
+  const hit = (table as Record<string, Swatch | Palette>)[name];
+  if (!hit) throw new Error(`Unknown palette: ${name}`);
+  return Array.isArray(hit) ? (hit as Swatch)[1] : (hit as Palette);
+};
+
+/**
+ * REVIEW BATCH — 12 flagship designs, one per category (two for the three
+ * biggest), each with a photo frame and a one-page-tight fit on the 20 layout
+ * families. The rest of the 50 come after this batch is signed off.
+ *
+ * Row shape: [id, name, family, category, tagline, bestFor, strengths, palette, opts]
+ */
 const ROWS: Row[] = [
-  /* ── ATS & plain ───────────────────────────────────────────────────────── */
+  /* 1 ─ ATS & General ─────────────────────────────────────────────────────── */
   ['ats-sterling', 'Sterling ATS', 'compact', 'ats',
-    'One clean column, plain headings, zero decoration. The safest file you can send.',
-    ATS_FIELDS, ['Parses in every tracker', 'Fits a long history', 'Prints in pure black and white'],
-    mono('#1c2430', '#c4cddb')],
-  ['ats-executive', 'Executive ATS', 'compact', 'ats',
-    'Navy title bars over a dense single column — same parse, more authority.',
-    ['finance', 'operations', 'sales', 'hr'], ['Section bars guide the eye', 'Senior-candidate tone', 'One or two pages, both clean'],
-    mono(NAVY.p, NAVY.a)],
-  ['ats-technical', 'Technical ATS', 'compact', 'ats',
-    'Graphite rules, tight leading, skills listed first so keyword matching never misses.',
-    ['it', 'data', 'operations'], ['Skills high on the page', 'Handles a big tool list', 'Maximum content per page'],
-    mono(GRAPHITE.p, GRAPHITE.a)],
-  ['ledger-dossier', 'Ruled Dossier', 'ledger', 'ats',
-    'Dates in the left rule, ruled rows, nothing a parser has to guess about.',
-    ['operations', 'finance', 'data', 'sales'], ['Extremely easy to scan', 'Dates never get lost', 'Built for 10+ years'],
-    mono(SLATE_INK.p, SLATE_INK.a)],
-  ['minimal-hairline', 'Hairline ATS', 'minimal', 'ats',
-    'Air, hairlines and one accent. ATS-safe and still looks designed.',
-    ['design', 'data', 'education'], ['Very clean scan', 'Works with less content', 'No decoration to break'],
-    mono('#6c7789', '#dde3ec')],
+    'One clean column, plain headings, photo top-right. The safest file you can send.',
+    ATS_FIELDS, ['Parses in every tracker', 'One A4 page, top to bottom', 'Photo frame, no clutter'],
+    pal('Navy & Silver'), { swatch: 'Navy & Silver' }],
+  ['ats-ink', 'Ink ATS', 'minimal', 'ats',
+    'Hairlines and air in pure black and white — an ATS sheet that still looks designed.',
+    ['design', 'data', 'education', 'operations'], ['Zero decoration to break', 'Reads calm and fast', 'Prints on any printer'],
+    pal('Ink & White'), { swatch: 'Ink & White' }],
 
-  /* ── corporate & finance ───────────────────────────────────────────────── */
-  ['grid-boardroom', 'Boardroom Grid', 'corporate', 'corporate',
-    'Section labels in a left rail, content on the right. Extremely scannable.',
-    ['finance', 'operations', 'hr', 'sales'], ['Instant section finding', 'Formal by default', 'ATS-friendly structure'],
-    mono(INK.p, '#d6dae1')],
-  ['grid-navy', 'Navy Grid', 'corporate', 'corporate',
-    'The same rail in navy ink with a rule under every block.',
-    ['finance', 'it', 'data', 'operations'], ['Classic corporate grid', 'Reads authoritative', 'Prints crisp'],
-    mono(NAVY.p, NAVY.a)],
-  ['classic-exec', 'Executive Serif', 'classic', 'corporate',
-    'Centred serif name over double rules — the formal choice for conservative hiring.',
-    ['finance', 'operations', 'sales', 'hr', 'education'], ['Loved by senior reviewers', 'Reads authoritative', 'Nothing to apologise for'],
-    mono(NAVY.p, NAVY.a), ['mod-serif']],
-  ['tint-steel', 'Steel Memo', 'tintsheet', 'corporate',
-    'A pale steel page, one giant tracked name, boxed skills in a grid.',
-    ['operations', 'finance', 'hr', 'design'],
-    ['Distinct without colour noise', 'Skills read in one sweep', 'Great on screen and paper'],
-    TINT_STEEL],
-  ['metro-slate', 'Slate Band', 'metro', 'corporate',
-    'Steel band with a flat finish — the statement with the colour dialled down.',
-    ['operations', 'finance', 'data', 'it'], ['Neutral for any sector', 'Sharp on a laser printer', 'Strong name presence'],
-    STEEL, ['mod-band-flat']],
-
-  /* ── tech & product ────────────────────────────────────────────────────── */
-  ['split-navy', 'Navy Sidebar', 'split', 'tech',
-    'Deep navy column, silver detail. Contacts and skills never scroll out of view.',
-    ['it', 'data', 'design', 'marketing', 'operations'], ['Skills always visible', 'Strong first impression', 'Great one-page scan'],
-    NAVY],
-  ['split-graphite', 'Graphite Sidebar', 'split', 'tech',
-    'Soft black column with cool gray detail — modern, serious, quiet.',
-    ['it', 'data', 'sales', 'finance'], ['High contrast, low noise', 'Roomy for a long stack list', 'Ages well'],
-    GRAPHITE],
-  ['bars-skills', 'Skills Bars', 'infographic', 'tech',
-    'Tinted right panel with proficiency bars and language dots. Visual, kept tidy.',
-    ['it', 'design', 'data', 'marketing'], ['Skills read at a glance', 'Bold first impression', 'Photo-friendly'],
-    NAVY],
-  ['mast-dev', 'Dev Masthead', 'masthead', 'tech',
-    'Oversized name, contact strip, numbered sections and a facts rail for your stack.',
+  /* 2 ─ IT & Software ─────────────────────────────────────────────────────── */
+  ['it-sidebar', 'Navy Sidebar', 'split', 'it',
+    'Navy column for stack, links and photo; story on the right, one page, no waste.',
+    ['it', 'data', 'operations', 'design'], ['Skills always visible', 'Photo in the rail', 'Tuned to hold one page'],
+    { ...RAMP['Navy & Silver'] }, { swatch: 'Navy & Silver' }],
+  ['it-masthead', 'Dev Masthead', 'masthead', 'it',
+    'Oversized name, numbered sections, facts rail for your stack and links.',
     ['it', 'data', 'design'], ['Numbered sections scan fast', 'Stack stays in the rail', 'Engineer-grade density'],
-    mono('#1b2536', '#dbe3ee'), ['mod-numbered']],
-  ['timeline-career', 'Career Timeline', 'timeline', 'tech',
-    'Dates in the left gutter, a dotted line down the page. Progression is obvious.',
-    ['it', 'sales', 'operations', 'marketing'], ['Progression reads instantly', 'Great for 5+ years', 'Recruiter-friendly scan'],
-    NAVY],
+    pal('Slate & Pearl'), { mods: ['mod-numbered'], swatch: 'Slate & Pearl' }],
 
-  /* ── design & creative ─────────────────────────────────────────────────── */
-  ['spine-ink', 'Ink Spine', 'spine', 'creative',
-    'Near-black spine with a brass hairline and sideways titles. Design-forward, still formal.',
-    ['design', 'marketing', 'hr', 'it'], ['Designer-grade header', 'Single metal accent', 'Memorable structure'],
-    NOIR_GOLD],
-  ['editorial-wide', 'Wide Margin', 'editorial', 'creative',
-    'Numbered sections in a broad left margin, magazine spacing down the page.',
-    ['design', 'marketing', 'education', 'hr'], ['Reads like a profile piece', 'Huge margins, zero clutter', 'Portfolio careers'],
-    mono('#16181d', '#c9ccd3')],
-  ['portrait-ink', 'Portrait Ink', 'portrait', 'creative',
-    'Letter-spaced name, square photo, hairline columns. The clean photo CV.',
-    ['marketing', 'hr', 'design', 'education'], ['Photo without heaviness', 'Very readable columns', 'Recognisable structure'],
-    mono('#16181d', '#d9dde3'), ['mod-square']],
-  ['spine-clay', 'Clay Gradient Spine', 'spinegradient', 'creative',
-    'A warm gradient rail carrying an italic serif name, body on a hairline grid.',
-    ['design', 'marketing', 'hr', 'education'],
-    ['Rail holds the identity', 'Centred headings, calm body', 'Stands out in a stack'],
-    SPINE_CLAY],
-  ['mast-display', 'Display Masthead', 'masthead', 'creative',
-    'Giant uppercase name, role on a filled tab, three-column contact strip.',
-    ['design', 'marketing', 'sales', 'data'],
-    ['Instant personal brand', 'Type does the talking', 'Photo optional, works either way'],
-    mono(NOIR_GOLD.p, '#e2e5ea')],
+  /* 3 ─ Data & Analytics ──────────────────────────────────────────────────── */
+  ['data-bars', 'Skills Bars', 'infographic', 'data',
+    'Tinted panel with proficiency bars, language dots and your photo up top.',
+    ['data', 'it', 'finance', 'operations'], ['Skills read at a glance', 'Photo + facts in one panel', 'Bold but tidy'],
+    RAMP['Royal Blue & Slate'], { swatch: 'Royal Blue & Slate' }],
+  ['data-grid', 'Analytics Grid', 'corporate', 'data',
+    'Label rail on the left, metrics on the right — a dashboard on paper.',
+    ['data', 'finance', 'operations'], ['Every number aligned', 'Formal, ultra-scannable', 'Two pages if you need them'],
+    pal('Charcoal & Gold'), { swatch: 'Charcoal & Gold' }],
 
-  /* ── executive & board ─────────────────────────────────────────────────── */
-  ['classic-luxe', 'Gold Rule Classic', 'classic', 'executive',
-    'Near-black serif with a single brass rule. Formal, a shade warm.',
-    ['finance', 'sales', 'hr', 'operations'], ['Quiet premium detail', 'Memorable without colour', 'Boardroom-safe'],
-    mono(NOIR_GOLD.p, NOIR_GOLD.a), ['mod-serif']],
-  ['band-noir', 'Noir Band', 'metro', 'executive',
-    'Flat black header with brass detail — the boldest page in the pile, quietly.',
-    ['marketing', 'design', 'sales'], ['Maximum contrast', 'One metal accent', 'Unforgettable header'],
-    NOIR_GOLD, ['mod-band-flat']],
-  ['mono-seal', 'Initials Seal', 'monogram', 'executive',
-    'Boxed initials, tracked serif name, centered rules. Strong without a photo.',
-    ['design', 'marketing', 'hr', 'sales'], ['Personal-brand header', 'Works with no photo', 'Editorial spacing'],
-    mono('#16181d', '#cfd2d8')],
-  ['banner-indigo', 'Indigo Banner', 'banner', 'executive',
-    'Deep indigo banner with a pale rail. Composed, a touch premium.',
-    ['finance', 'hr', 'marketing', 'sales'], ['Premium first impression', 'Quiet colour story', 'Senior-friendly'],
-    INDIGO_STEEL],
-  ['ledger-oxblood', 'Oxblood Ledger', 'ledger', 'executive',
-    'Wine rules and a double date column. Old-school precision for partner tracks.',
-    ['finance', 'sales', 'hr', 'operations'],
-    ['Traditional and confident', 'Reads distinguished', 'Handles a long career'],
-    mono(OXBLOOD.p, OXBLOOD.a)],
+  /* 4 ─ Corporate & Finance ───────────────────────────────────────────────── */
+  ['corp-boardroom', 'Boardroom Grid', 'corporate', 'corporate',
+    'Section labels in a left rail, content on the right, photo in the header.',
+    ['finance', 'operations', 'hr', 'sales'], ['Instant section finding', 'Formal by default', 'ATS-friendly structure'],
+    pal('Ink & White'), { swatch: 'Ink & White' }],
+  ['corp-tint', 'Steel Memo', 'tintsheet', 'corporate',
+    'A pale steel page, one wide-tracked name, boxed competencies in a grid.',
+    ['operations', 'finance', 'hr'], ['One colour story, no noise', 'Skills read in one sweep', 'Great on screen and paper'],
+    TINT['Slate & Pearl'], { swatch: 'Slate & Pearl' }],
 
-  /* ── academic & research ───────────────────────────────────────────────── */
-  ['classic-academic', 'Academic CV', 'classic', 'academic',
-    'Serif throughout, education-and-publications order for research and teaching.',
-    ['education', 'healthcare', 'data'], ['Scholarly structure', 'Room for publications', 'Conference-ready'],
-    mono('#3a2230', '#e0d3d9'), ['mod-serif']],
-  ['ledger-research', 'Research Ledger', 'ledger', 'academic',
-    'Ruled rows with a left date column — grants, papers and teaching in one grid.',
-    ['education', 'data', 'healthcare'], ['Every row aligned', 'Two pages, no drift', 'Prints like a dossier'],
-    mono(PINE.p, PINE.a)],
-  ['editorial-navy', 'Navy Editorial', 'editorial', 'academic',
-    'Serif headings over hairlines with numbered margins. Boardroom magazine.',
-    ['finance', 'operations', 'sales', 'it'], ['Quiet authority', 'Long histories scan fast', 'Prints beautifully'],
-    mono(NAVY.p, NAVY.a), ['mod-serif']],
-  ['tint-scholar', 'Scholar Tint', 'tintsheet', 'academic',
-    'A sage-washed page with one wide-tracked name and boxed research interests.',
-    ['education', 'healthcare', 'data', 'design'], ['Calm, low-glare field', 'Interests as a grid', 'Reads considered'],
-    TINT_SAGE],
-  ['mono-navy', 'Navy Seal', 'monogram', 'academic',
-    'Navy seal and rules — formal, with a little flair for fellowships and grants.',
-    ['education', 'finance', 'hr'], ['Formal yet memorable', 'Clean centred block', 'Works for CV-length files'],
-    NAVY],
+  /* 5 ─ Sales & Marketing ─────────────────────────────────────────────────── */
+  ['sales-panelband', 'Photo Panel CV', 'panelband', 'sales',
+    'Espresso band with a round photo, then a beige rail of numbers and tools.',
+    ['sales', 'marketing', 'hr'], ['Photo-forward, not flashy', 'Rail keeps quota and reach', 'Confident header'],
+    { ...RAMP['Espresso & Beige'] }, { swatch: 'Espresso & Beige' }],
+  ['sales-band', 'Burgundy Band', 'metro', 'sales',
+    'A single burgundy band with cream chips — warm authority, one page.',
+    ['sales', 'marketing', 'operations'], ['Memorable at a glance', 'One accent, used once', 'Prints beautifully in colour'],
+    RAMP['Burgundy & Cream'], { mods: ['mod-band-flat'], swatch: 'Burgundy & Cream' }],
 
-  /* ── healthcare & care ─────────────────────────────────────────────────── */
-  ['split-petrol', 'Petrol Sidebar', 'split', 'healthcare',
-    'Deep teal-blue column. Fresh without looking like a pitch deck.',
-    ['it', 'healthcare', 'data', 'design'], ['Distinct but calm', 'Clear two-zone structure', 'Good in print and on screen'],
-    PETROL],
-  ['soft-slate', 'Slate Panels', 'soft', 'healthcare',
-    'Rounded steel panels and pill skills. Modern, approachable, not playful.',
-    ['it', 'data', 'hr', 'education'], ['Approachable, still professional', 'Pills make skills scannable', 'Great early-career'],
-    STEEL],
-  ['studio-mist', 'Mist Panel', 'studio', 'healthcare',
-    'Pale steel panel, round photo, small-caps sections. Warm but working.',
-    ['hr', 'healthcare', 'education', 'operations'],
-    ['Friendly, still formal', 'Photo front and centre', 'Licences stay visible'],
-    { p: '#243042', p2: '#eaeff5', p3: '#d6dee9', pm: '#7d8da3', a: '#4f6b8c' }],
-  ['grid-pine', 'Pine Grid', 'corporate', 'healthcare',
-    'Deep green labels on a clean grid — grounded, readable for clinical detail.',
-    ['healthcare', 'education', 'operations', 'finance'], ['Trustworthy tone', 'Clear label column', 'Comfortable long read'],
-    mono(PINE.p, '#c6d8cd')],
-  ['bars-slate', 'Slate Skills Panel', 'infographic', 'healthcare',
-    'Graphite panel with level bars — shifts, units and competencies at a glance.',
-    ['it', 'data', 'finance', 'operations', 'healthcare'], ['Neutral corporate tone', 'Bars, not badges', 'Calm palette'],
-    SLATE_INK],
+  /* 6 ─ Healthcare & Care ─────────────────────────────────────────────────── */
+  ['care-sidebar', 'Petrol Sidebar', 'split', 'healthcare',
+    'Deep teal rail for licences, units and photo; clinical detail in the main column.',
+    ['healthcare', 'it', 'operations'], ['Licences never get lost', 'Calm, trustworthy colour', 'One page, dense but kind'],
+    { ...RAMP['Deep Teal & Mist'] }, { swatch: 'Deep Teal & Mist' }],
 
-  /* ── education & teaching ──────────────────────────────────────────────── */
-  ['minimal-quiet', 'Quiet Minimal', 'minimal', 'education',
-    'Small caps over hairlines with a lot of air — the calm teacher CV.',
-    ['design', 'data', 'education'], ['Very legible', 'Works with less content', 'Timeless'],
-    mono('#76839a', '#e0e6ee')],
-  ['tint-chalk', 'Chalk Tint', 'tintsheet', 'education',
-    'Chalkboard-green wash, centred name, boxed subjects. Distinctive but neat.',
-    ['education', 'healthcare', 'hr'], ['One colour story, no noise', 'Subjects read as a grid', 'Prints softly'],
-    TINT_CHALK],
-  ['soft-sand', 'Sand Panels', 'soft', 'education',
-    'Rounded warm panels with taupe ink. The friendly client-facing look.',
-    ['healthcare', 'education', 'design', 'marketing'], ['Low-glare, warm tone', 'Kind and steady', 'Great with a photo'],
-    MOCHA],
-  ['panelband-faculty', 'Faculty Panel Band', 'panelband', 'education',
-    'Navy band with a round photo, then education, skills and languages in a tinted rail.',
-    ['education', 'hr', 'operations'], ['Photo CV done properly', 'Rail keeps credentials up', 'Two clear zones'],
-    RAIL_NAVY],
-  ['spine-sage', 'Sage Spine', 'spine', 'education',
-    'A green spine down the edge with sideways section titles — orderly and calm.',
-    ['education', 'healthcare', 'operations'], ['Strong visual identity', 'Keeps the page edge clean', 'Photo sits in the spine'],
-    PINE],
+  /* 7 ─ Education & Teaching ──────────────────────────────────────────────── */
+  ['edu-chalk', 'Chalk Tint', 'tintsheet', 'education',
+    'Chalkboard-green wash, centred name, boxed subjects and a framed photo.',
+    ['education', 'healthcare', 'hr'], ['Distinctive but neat', 'Subjects as a grid', 'Prints softly, reads sharp'],
+    TINT['Forest & Sand'], { swatch: 'Forest & Sand' }],
 
-  /* ── sales & marketing ─────────────────────────────────────────────────── */
-  ['band-navy', 'Navy Band', 'metro', 'sales',
-    'Full-width navy header with silver section chips. Confident, still corporate.',
-    ['marketing', 'sales', 'it'], ['Memorable header', 'Chips keep it organised', 'Good for startups and agencies'],
-    NAVY],
-  ['banner-steel', 'Steel Banner', 'banner', 'sales',
-    'Full-width steel banner, story left, quotas and reach in a right rail.',
-    ['it', 'operations', 'sales', 'data'], ['Header does the work', 'Rail keeps numbers visible', 'Good on a phone screen'],
-    STEEL],
-  ['panelband-photo', 'Photo Panel CV', 'panelband', 'sales',
-    'Dark band, round photo, warm sand rail. The face-value CV that still reads formal.',
-    ['sales', 'marketing', 'hr', 'operations'],
-    ['Photo-forward, not flashy', 'Tinted rail for facts', 'Confident header'],
-    RAIL_SAND],
-  ['portrait-steel', 'Portrait Steel', 'portrait', 'sales',
-    'Navy ink on a warm white page, square photo. Photo CV, corporate edition.',
-    ['sales', 'operations', 'finance', 'it'], ['Professional and current', 'Photo-friendly', 'Crisp in print'],
-    mono(NAVY.p, '#ccd6e3'), ['mod-square']],
-  ['studio-clay', 'Clay Panel', 'studio', 'sales',
-    'Warm sand panel with taupe ink — approachable for client-facing work.',
-    ['design', 'education', 'healthcare', 'marketing'], ['Warm, human tone', 'Reads gentle, not casual', 'Great with a photo'],
-    { p: '#3c2f24', p2: '#f3ece3', p3: '#e3d7c8', pm: '#8d7a66', a: '#9a7550' }],
+  /* 8 ─ Design & Creative ─────────────────────────────────────────────────── */
+  ['creative-spine', 'Copper Spine', 'spinegradient', 'creative',
+    'Midnight gradient rail carrying the name, copper hairlines in the body.',
+    ['design', 'marketing', 'data'], ['Rail holds the identity', 'Centred headings, calm body', 'Stands out in a stack'],
+    { ...RAMP['Midnight & Copper'] }, { swatch: 'Midnight & Copper' }],
 
-  /* ── fresher & career switch ───────────────────────────────────────────── */
-  ['ats-starter', 'Starter ATS', 'compact', 'fresher',
-    'Education and projects above experience — for freshers and career switchers.',
-    ['education', 'hr', 'it', 'sales'], ['Coursework gets the top slot', 'Still one clean column', 'Honest for a short CV'],
-    mono(STEEL.p, STEEL.a)],
-  ['mast-junior', 'Fresher Masthead', 'masthead', 'fresher',
-    'Big name, role tab, and a skills rail — a first CV that looks intentional.',
-    ['it', 'sales', 'marketing', 'education'], ['Looks senior, reads honest', 'Skills rail carries projects', 'No filler sections'],
-    mono(PETROL.p, '#d7e7ea')],
-  ['portrait-grad', 'Graduate Portrait', 'portrait', 'fresher',
+  /* 9 ─ Leadership & Admin ────────────────────────────────────────────────── */
+  ['lead-serif', 'Executive Serif', 'classic', 'leadership',
+    'Centred serif name with a photo frame over double rules — boardroom formal.',
+    ['finance', 'operations', 'sales', 'hr'], ['Reads authoritative', 'Loved by senior reviewers', 'Nothing to apologise for'],
+    pal('Charcoal & Gold'), { mods: ['mod-serif'], swatch: 'Charcoal & Gold' }],
+
+  /* 10 ─ Fresher & Entry ──────────────────────────────────────────────────── */
+  ['fresher-portrait', 'Graduate Portrait', 'portrait', 'fresher',
     'Photo header, tracked name, education and internships in the side column.',
-    ['hr', 'sales', 'education', 'it'], ['Photo where it belongs', 'Internships up front', 'Clean two-column balance'],
-    mono('#2f4358', '#d5dde8')],
-  ['timeline-first', 'First Role Timeline', 'timeline', 'fresher',
-    'A dotted line from college to your first role — progress, even when it is short.',
-    ['it', 'operations', 'sales', 'marketing'], ['Makes a short history look structured', 'Dates always clear', 'Fresh colour'],
-    SPINE_PETROL],
-  ['spine-grad', 'Graduate Spine', 'spinegradient', 'fresher',
-    'Deep petrol gradient rail with your name in it, body kept to three tight blocks.',
-    ['it', 'design', 'data'], ['Bold rail, disciplined body', 'Name reads from the edge', 'Great with or without a photo'],
-    SPINE_PETROL],
+    ['it', 'sales', 'education', 'hr'], ['Photo where it belongs', 'Internships up front', 'Clean two-column balance'],
+    pal('Royal Blue & Slate'), { mods: ['mod-square'], swatch: 'Royal Blue & Slate' }],
 ];
 
 export const TEMPLATES: Template[] = ROWS.map(
-  ([id, name, layout, category, tagline, bestFor, strengths, pal, mods]) => ({
-    id, name, layout, category, tagline, pal,
-    mods: mods ?? [],
-    bestFor, strengths,
+  ([id, name, layout, category, tagline, bestFor, strengths, palette, opts]) => ({
+    id, name, layout, category, tagline, bestFor, strengths,
+    pal: palette,
+    paletteName: opts?.swatch ?? 'House Ink',
+    // every design in this collection carries a photo frame and the one-page
+    // fit; .mod-tight is what makes "1 page" true rather than aspirational
+    mods: ['mod-tight', ...(opts?.mods ?? [])] as Mod[],
+    photo: true,
+    onePage: true,
   }),
 );
 
