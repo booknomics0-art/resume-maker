@@ -1,6 +1,7 @@
 // Lightweight client-side auth with high-tech security hardening
 // Passwords hashed with SHA-256 + salt, rate limiting, audit logging, XSS protection
 
+import { cloudSignOut } from './cloud';
 import { hashPassword, verifyPassword, checkRateLimit, auditLog, sanitizeInput, validateEmail, validatePassword, validateName } from './security';
 
 export interface User {
@@ -293,6 +294,25 @@ export function logout() {
   const session = localStorage.getItem(SESSION_KEY);
   auditLog('LOGOUT', { email: session });
   localStorage.removeItem(SESSION_KEY);
+  void cloudSignOut();
+}
+
+/**
+ * Mirror a cloud (Supabase) session into the local session store so the
+ * synchronous `currentUser()` keeps working everywhere in the UI.
+ * No password is stored — the cloud owns credentials.
+ */
+export function setLocalSession(name: string, email: string, provider: 'email' | 'google'): void {
+  const cleanEmail = sanitizeInput(email, 254).toLowerCase().trim();
+  const cleanName = sanitizeInput(name, 100).trim() || cleanEmail.split('@')[0];
+  const users = loadUsers();
+  const existing = users[cleanEmail];
+  users[cleanEmail] = {
+    name: cleanName, email: cleanEmail, provider,
+    createdAt: existing?.createdAt ?? Date.now(), failedAttempts: 0,
+  };
+  saveUsers(users);
+  localStorage.setItem(SESSION_KEY, cleanEmail);
 }
 
 export function currentUser(): User | null {

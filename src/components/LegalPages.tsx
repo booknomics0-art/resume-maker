@@ -1,5 +1,6 @@
-// Comprehensive Legal Pages — crafted to avoid legal issues, fully detailed
-// Includes: About, Contact, Privacy, Terms, Refund (No Refund), FAQ, Disclaimer, Cookie, Shipping, Cancellation, EULA
+// Legal & info pages for CraftCV — a 100% free resume builder.
+// Includes: About, Contact, Privacy, Terms, FAQ, Disclaimer, Cookie, EULA.
+// No payments exist in the product, so there is no refund / shipping / cancellation policy.
 
 function Shell({ title, sub, children }: { title: string; sub?: string; children: React.ReactNode }) {
   return (
@@ -15,547 +16,310 @@ function Shell({ title, sub, children }: { title: string; sub?: string; children
   );
 }
 
+const UPDATED = 'Last updated: 24 September 2026';
+
 export function AboutPage() {
   return (
     <Shell title="About CraftCV" sub="Why this product exists — and who builds it">
+      <h3 className="mt0">Our mission</h3>
       <p>
-        Most resume builders treat you like a checkout page. You spend twenty minutes entering details, and only then does the paywall appear — or the free download arrives with a watermark, or the writing sounds like a robot wrote it.
+        Most people write a resume three or four times in their life, usually in a hurry, usually without help.
+        CraftCV exists so that anyone — a fresher in Patna, a nurse in Kochi, a sales manager in Pune — can
+        produce a clean, honest, recruiter-ready resume in under ten minutes, without paying a rupee.
       </p>
-      <p>
-        CraftCV was built the other way around. The full builder is free for 1 download, no watermark, every template ships with real example content written in plain, professional language. Fill in your facts, pick a design tuned for your field, and download a document that reads like you wrote it — because you did.
-      </p>
-      <h3>What we believe</h3>
+      <h3>What makes it different</h3>
       <ul>
-        <li><b>Concrete facts beat adjectives.</b> Numbers, tools and outcomes impress recruiters more than fancy words.</li>
-        <li><b>10 minutes is enough.</b> A focused form with good examples beats an open editor with no guidance.</li>
-        <li><b>Honest documents win.</b> We never generate fake experience or inflated numbers, and our templates never encourage it.</li>
-        <li><b>Simple pricing.</b> One free download, then ₹20 one-time for unlimited. No trials, no auto-renewal, no surprise charges.</li>
-        <li><b>Privacy first.</b> Your resume data stays on your device by default. No central database, no selling data.</li>
+        <li><b>Completely free.</b> Unlimited resumes, unlimited PDF downloads, every template, no watermark, no “Pro” tier, no trial trap. Ever.</li>
+        <li><b>Field-aware guidance.</b> Ten career fields, each with real example summaries, bullet templates and skill lists drawn from Indian workplaces.</li>
+        <li><b>A proper template library.</b> Dozens of professionally designed A4 layouts — sidebar, classic serif, minimal, photo header, timeline, monogram, infographic and more — all built in code so they print pixel-perfect.</li>
+        <li><b>Upload & edit.</b> Bring an existing PDF, DOCX or even a photo of a printed resume; we extract the text (with on-device OCR) and pre-fill the editor.</li>
+        <li><b>Your data, your account.</b> Resumes are saved to your account so you can continue on any device. You can export or delete everything at any time.</li>
       </ul>
-      <h3>Built for India first</h3>
+      <h3>Who we are</h3>
       <p>
-        The product is designed for Indian job seekers first — formats recruiters here expect, prices that make sense here (₹20 vs $19-30/month global), and content examples drawn from Indian workplaces. Everything works in the browser; your resume data never leaves your device unless you explicitly export.
+        CraftCV is built by a small independent team in India. We are not funded by advertising and we do not sell user data.
+        Write to us at <b>hello@craftcv.app</b>.
       </p>
-      <h3>Team & Company</h3>
-      <p>
-        CraftCV is operated as a digital product initiative registered in India. We are a small, independent team focused on career tools. Support is handled directly by the builders — not outsourced call centers. We read every email.
-      </p>
-      <p>Contact: <a href="#/contact">support@craftcv.app</a> · Location: New Delhi, India · Founded: 2026</p>
     </Shell>
   );
 }
 
 export function ContactPage() {
   return (
-    <Shell title="Contact Us" sub="We read every message — response within 2 working days">
-      <p>
-        Questions, feedback, payment issues, or legal concerns — write to us and we will respond within 2 working days (Mon–Sat, 10am–6pm IST).
-      </p>
-      <div className="tbl-wrap" style={{ marginTop: 12 }}>
+    <Shell title="Contact us" sub="We reply within 2 working days (Mon–Sat, 10am–6pm IST)">
+      <div className="tbl-wrap">
         <table className="tbl">
           <tbody>
-            <tr><td style={{ width: 180 }}><b>General Support</b></td><td style={{ wordBreak: 'break-all' }}>support@craftcv.app</td></tr>
-            <tr><td><b>Payments & Billing</b></td><td style={{ wordBreak: 'break-all' }}>billing@craftcv.app</td></tr>
-            <tr><td><b>Privacy & Data</b></td><td style={{ wordBreak: 'break-all' }}>privacy@craftcv.app</td></tr>
-            <tr><td><b>Legal & Abuse</b></td><td style={{ wordBreak: 'break-all' }}>legal@craftcv.app</td></tr>
-            <tr><td><b>Response Time</b></td><td>Within 2 working days (Mon–Sat, 10am–6pm IST)</td></tr>
-            <tr><td><b>Location</b></td><td>New Delhi, India (Digital Product — No physical office for visits)</td></tr>
-            <tr><td><b>Business Hours</b></td><td>10:00 AM – 6:00 PM IST, Monday to Saturday</td></tr>
+            <tr><td><b>General & feedback</b></td><td style={{ wordBreak: 'break-all' }}>hello@craftcv.app</td></tr>
+            <tr><td><b>Support (bugs, import issues)</b></td><td style={{ wordBreak: 'break-all' }}>support@craftcv.app</td></tr>
+            <tr><td><b>Privacy & data requests</b></td><td style={{ wordBreak: 'break-all' }}>privacy@craftcv.app</td></tr>
+            <tr><td><b>Legal</b></td><td style={{ wordBreak: 'break-all' }}>legal@craftcv.app</td></tr>
           </tbody>
         </table>
       </div>
-      <div className="notice" style={{ marginTop: 16 }}>
-        <b>For payment issues:</b> Please include your registered email and transaction reference from UPI app/bank statement + screenshot. Helps resolve in 24h.
-        <br /><b>For data deletion:</b> Email privacy@craftcv.app from registered email with subject "Data Deletion Request".
+      <div className="notice" style={{ marginTop: 14 }}>
+        <b>For support:</b> include your registered email, the browser you use, and a screenshot. If the problem is with an
+        uploaded file, attaching the file (with personal details blurred) speeds things up a lot.
       </div>
-      <h3>Grievance Officer (as per IT Rules, India)</h3>
-      <p>Name: CraftCV Grievance Officer · Email: grievance@craftcv.app · Address: New Delhi, India · Response: Within 15 days as per IT Rules 2021.</p>
     </Shell>
   );
 }
 
 export function PrivacyPage() {
   return (
-    <Shell title="Privacy Policy" sub="Last updated: 23 September 2026 — Effective immediately">
-      <h3 className="mt0">1. The Short Version</h3>
-      <p>
-        Your resume data stays on your device. CraftCV stores everything you type — account details, resume content, photos — in your own browser's local storage. We do not run a central database for resume content, we do not sell data, and we do not use advertising trackers. Payments are handled by Razorpay — we never see your card/UPI details.
+    <Shell title="Privacy Policy" sub={UPDATED}>
+      <p className="mt0">
+        CraftCV is a free resume builder. This policy explains what we collect, why, where it is stored and what control you have.
+        We follow the Information Technology Act 2000, the SPDI Rules 2011 and the Digital Personal Data Protection Act 2023.
       </p>
 
-      <h3>2. Information We Collect</h3>
-      <h4 style={{ fontSize: 14, color: 'var(--navy-800)' }}>A. You Provide Directly (Stored Locally):</h4>
+      <h3>1. What we collect</h3>
+      <h4 style={{ fontSize: 14, color: 'var(--navy-800)' }}>A. Account data</h4>
       <ul>
-        <li>Account: name, email, password hash (encrypted)</li>
-        <li>Resume content: personal info, experience, education, skills, projects, photo (data URL)</li>
-        <li>Settings, billing state, transaction IDs (local)</li>
+        <li>Name and email address (from sign-up form or Google Sign-In)</li>
+        <li>A salted password hash if you sign up with email — we never store the plain password</li>
+        <li>Sign-in timestamps and basic security events (failed attempts, rate-limit hits)</li>
       </ul>
-      <h4 style={{ fontSize: 14, color: 'var(--navy-800)' }}>B. Automatically (Local Only):</h4>
+      <h4 style={{ fontSize: 14, color: 'var(--navy-800)' }}>B. Resume content</h4>
       <ul>
-        <li>Audit logs (security events, timestamps) — stored locally, max 100 entries</li>
-        <li>Rate limit counters (in-memory) — prevents abuse</li>
-        <li>Device: browser user agent for security logging only</li>
+        <li>Everything you type into the builder: contact details, work history, education, skills, photo (optional)</li>
+        <li>Files you upload for import (PDF / DOCX / image) are processed <b>inside your browser</b>; the file itself is not uploaded to us — only the extracted text becomes part of your resume</li>
+        <li>Which template you chose and when you downloaded a PDF (used for product analytics — counts only, never the PDF)</li>
       </ul>
-      <h4 style={{ fontSize: 14, color: 'var(--navy-800)' }}>C. Payment (via Razorpay):</h4>
+      <h4 style={{ fontSize: 14, color: 'var(--navy-800)' }}>C. Technical data</h4>
       <ul>
-        <li>When you pay ₹20, Razorpay collects: email, payment method, transaction ID</li>
-        <li>We store only transaction ID and status locally — no card numbers, UPI IDs, or bank details</li>
-        <li>Razorpay's privacy policy applies for payment data: https://razorpay.com/privacy/</li>
-      </ul>
-
-      <h3>3. How We Use Information</h3>
-      <ul>
-        <li>To provide resume builder functionality (local only)</li>
-        <li>To enforce pricing (1 free download, then Pro check)</li>
-        <li>To secure account (hash passwords, rate limit, audit)</li>
-        <li>To process payments (via Razorpay gateway)</li>
-        <li>To respond to support emails (when you contact us)</li>
-      </ul>
-      <p><b>We do NOT:</b> Sell data, share with advertisers, use for marketing without consent, train AI on your resumes, or store resumes on server.</p>
-
-      <h3>4. Legal Basis (GDPR & Indian Law)</h3>
-      <ul>
-        <li><b>Contract:</b> Providing resume builder you requested</li>
-        <li><b>Legitimate Interest:</b> Security, fraud prevention, rate limiting</li>
-        <li><b>Consent:</b> When you upload photo or contact support</li>
-        <li><b>Legal Obligation:</b> Tax records for ₹20 payments (7 years as per Indian law)</li>
+        <li>Browser type, screen size and approximate country (from standard request headers) — used to fix bugs and keep the layout working on phones</li>
+        <li>We do <b>not</b> use advertising trackers, fingerprinting or third-party analytics cookies</li>
       </ul>
 
-      <h3>5. Data Storage & Security</h3>
+      <h3>2. Where your data is stored</h3>
       <ul>
-        <li><b>Local-first:</b> All resume data in browser localStorage with integrity HMAC check (SHA-256)</li>
-        <li><b>Encryption:</b> Passwords hashed with SHA-256 + salt + double hash; storage integrity verified</li>
-        <li><b>XSS Protection:</b> All inputs sanitized, dangerous patterns stripped, HTML escaped</li>
-        <li><b>Rate Limiting:</b> Login 5 attempts/min, download 10/min, payment 5/min — blocks 5 min</li>
-        <li><b>CSRF:</b> Token generated per session, 64-char secure random</li>
-        <li><b>No Cookies for Tracking:</b> Only essential session token in sessionStorage</li>
-        <li><b>HTTPS:</b> Site served over HTTPS with HSTS, CSP, X-Frame-Options headers</li>
+        <li><b>In your browser</b> — a local copy is kept so the app works offline and loads instantly</li>
+        <li><b>In your CraftCV account (cloud)</b> — resumes are synced to our database hosted on Supabase (PostgreSQL, encrypted at rest and in transit). Row-level security ensures only your account can read your rows; our staff cannot browse individual resumes in normal operation</li>
       </ul>
 
-      <h3>6. Your Rights (India IT Act, GDPR, DPDP Act 2023)</h3>
+      <h3>3. Why we use it</h3>
       <ul>
-        <li><b>Access:</b> Export all data via Settings → Export backup (JSON)</li>
-        <li><b>Deletion:</b> Settings → Delete all data, or email privacy@craftcv.app</li>
-        <li><b>Correction:</b> Edit any field in editor — changes saved instantly</li>
-        <li><b>Portability:</b> JSON export contains all resumes</li>
-        <li><b>Objection:</b> Email privacy@craftcv.app — we respond in 15 days</li>
-        <li><b>Withdraw Consent:</b> Delete account/data anytime — no penalty</li>
-      </ul>
-      <p>We respond to rights requests within 15 days (India) / 30 days (GDPR). No fee for first request.</p>
-
-      <h3>7. Cookies</h3>
-      <p>We use <b>no tracking cookies</b>. Only:</p>
-      <ul>
-        <li><b>Essential:</b> Session token (sessionStorage) to keep you logged in — expires when tab closes</li>
-        <li><b>No:</b> Google Analytics, Facebook Pixel, advertising cookies, third-party trackers</li>
-      </ul>
-      <p>See full <a href="#/cookies">Cookie Policy</a>.</p>
-
-      <h3>8. Third Parties</h3>
-      <ul>
-        <li><b>Razorpay:</b> Payment gateway — only when you pay ₹20. See their privacy policy.</li>
-        <li><b>Google (Optional):</b> Google Sign-In if enabled — only name/email, no other data</li>
-        <li><b>No other third parties:</b> No analytics, no ads, no data brokers</li>
+        <li>To save your resumes and let you continue on any device</li>
+        <li>To provide upload-and-edit, AI rewrite (only if you enable it) and PDF export</li>
+        <li>To keep the service secure (rate limiting, abuse detection)</li>
+        <li>To understand which templates and fields are used most, so we can improve them (aggregate counts only)</li>
       </ul>
 
-      <h3>9. Data Retention</h3>
+      <h3>4. What we never do</h3>
       <ul>
-        <li>Resume data: Until you delete — stored locally, we have no copy</li>
-        <li>Transaction records: 7 years (tax law) — only ID, amount, status</li>
-        <li>Audit logs: Last 100 entries, auto-rotated</li>
-        <li>Support emails: 2 years, then deleted</li>
+        <li>Sell, rent or share your personal data or resume content with recruiters, advertisers or data brokers</li>
+        <li>Train AI models on your resume content</li>
+        <li>Send marketing email without your explicit opt-in</li>
       </ul>
 
-      <h3>10. Children's Privacy</h3>
-      <p>Not intended for under 16. We do not knowingly collect from children. If you believe a child provided data, email privacy@craftcv.app for deletion.</p>
+      <h3>5. Third parties</h3>
+      <ul>
+        <li><b>Supabase</b> — database & authentication hosting (<a href="https://supabase.com/privacy" target="_blank" rel="noreferrer">privacy policy</a>)</li>
+        <li><b>Google</b> — only if you choose “Sign in with Google”; we receive your name, email and avatar</li>
+        <li><b>Netlify</b> — static hosting and CDN for the web app</li>
+        <li><b>Your own n8n / AI provider</b> — if you connect the optional AI webhook, text you send for rewriting goes to the endpoint <i>you</i> configured, not to us</li>
+      </ul>
 
-      <h3>11. International Transfers</h3>
-      <p>Data stays in your browser (India). If you use Google Sign-In, Google may process in US under their DPF. Razorpay processes in India.</p>
+      <h3>6. Retention</h3>
+      <p>
+        Account and resume data are retained until you delete them. Deleting a resume removes it from our database immediately;
+        deleting your account removes all resumes, events and profile data within 30 days (backups roll off within 30 days).
+        Security logs are kept for 90 days.
+      </p>
 
-      <h3>12. Changes</h3>
-      <p>If this policy changes (e.g., when we introduce cloud accounts), we will update date above and show notice on site for 30 days before it applies. Continued use after means acceptance.</p>
+      <h3>7. Your rights</h3>
+      <ul>
+        <li><b>Access / export</b> — Settings → Export gives you all your data as JSON at any time</li>
+        <li><b>Correction</b> — edit anything directly in the app</li>
+        <li><b>Deletion</b> — Settings → Delete account, or email privacy@craftcv.app</li>
+        <li><b>Grievance officer</b> — privacy@craftcv.app; we respond within 7 days as required by Indian law</li>
+      </ul>
 
-      <h3>13. Contact for Privacy</h3>
-      <p>Email: privacy@craftcv.app · Grievance: grievance@craftcv.app · Response: 15 days (India IT Rules) · Address: New Delhi, India</p>
+      <h3>8. Security</h3>
+      <ul>
+        <li>TLS 1.2+ for all traffic; database encrypted at rest (AES-256)</li>
+        <li>Row-level security policies on every table; least-privilege API keys</li>
+        <li>Password hashing with per-user salt; login rate limiting and lockout</li>
+        <li>Input sanitisation and Content-Security-Policy headers to prevent XSS</li>
+      </ul>
+
+      <h3>9. Children</h3>
+      <p>CraftCV is intended for users aged 16 and above. We do not knowingly collect data from children under 16.</p>
+
+      <h3>10. Changes</h3>
+      <p>We will announce material changes in the app and update the date at the top of this page.</p>
     </Shell>
   );
 }
 
 export function TermsPage() {
   return (
-    <Shell title="Terms of Service" sub="Last updated: 23 September 2026 — Please read carefully">
-      <h3 className="mt0">1. Acceptance & Agreement</h3>
+    <Shell title="Terms of Service" sub={UPDATED}>
+      <h3 className="mt0">1. Agreement</h3>
       <p>
-        By accessing CraftCV (craftcv.app), creating account, or using builder, you agree to these Terms, Privacy Policy, Refund Policy, and all linked policies. If you disagree, do not use service. These Terms form legally binding agreement under Indian Contract Act, 1872.
+        By creating an account or using CraftCV you agree to these Terms and our Privacy Policy. These form a binding agreement
+        under the Indian Contract Act, 1872. If you do not agree, please do not use the service.
       </p>
 
-      <h3>2. Eligibility</h3>
+      <h3>2. The service</h3>
       <ul>
-        <li>Must be 16+ years old</li>
-        <li>Must provide accurate account info</li>
-        <li>One account per person — no sharing</li>
-        <li>If under 18, you confirm parental consent</li>
+        <li>CraftCV is a browser-based resume builder with cloud sync, templates, import tools and PDF export</li>
+        <li>The service is provided <b>free of charge</b>. There are no paid plans, in-app purchases or subscriptions</li>
+        <li>We may add, change or remove features at any time. We will give reasonable notice before removing anything that affects saved resumes</li>
       </ul>
 
-      <h3>3. Service Description</h3>
-      <p>CraftCV is a browser-based resume builder. Features:</p>
+      <h3>3. Your account</h3>
       <ul>
-        <li>7-step guided editor, 50 templates (5 families × 10 variants), 10 career fields</li>
-        <li>Advanced resume upload & parse (PDF, DOCX, TXT, JSON) — client-side, no server upload</li>
-        <li>Live preview, PDF download via browser print</li>
-        <li>Pricing: 1 free download, then ₹20 one-time for unlimited (Pro)</li>
-        <li>Data stored locally — we do not host resumes on server</li>
+        <li>You must provide accurate information and keep your password confidential</li>
+        <li>One account per person. You are responsible for all activity under your account</li>
+        <li>Minimum age is 16</li>
       </ul>
 
-      <h3>4. User Accounts & Security</h3>
+      <h3>4. Your content</h3>
       <ul>
-        <li>You are responsible for password confidentiality</li>
-        <li>We hash passwords with SHA-256 + salt — never store plain text</li>
-        <li>Rate limiting: 5 login attempts/min — blocked 5 min after exceed</li>
-        <li>Notify us immediately if unauthorized access suspected: support@craftcv.app</li>
-        <li>We may suspend account for violation of Terms, fraud, or abuse</li>
+        <li>You own the content you enter. You grant us a limited licence to store, process and display it solely to provide the service to you</li>
+        <li>You are responsible for the truthfulness of your resume. Do not include false credentials or other people’s personal data without consent</li>
+        <li>You may export or delete your content at any time</li>
       </ul>
 
-      <h3>5. Your Content — Ownership & Responsibility</h3>
+      <h3>5. Acceptable use</h3>
+      <p>You agree not to:</p>
       <ul>
-        <li><b>Ownership:</b> Everything you enter — text, photos, links — belongs to you. We claim no ownership.</li>
-        <li><b>Accuracy:</b> You are solely responsible for accuracy of resumes you create and send to employers. Do not misrepresent qualifications.</li>
-        <li><b>License to Us:</b> You grant us non-exclusive, royalty-free license to store content locally in your browser only, to provide service. No right to use content elsewhere.</li>
-        <li><b>Prohibited Content:</b> No false info, no impersonation, no hate speech, no illegal content, no malware, no scraping others' resumes</li>
+        <li>Scrape, copy or redistribute the template library or example content as a competing product</li>
+        <li>Upload malware, attempt to bypass security controls or overload the service</li>
+        <li>Use the service to harass, defraud or impersonate anyone</li>
       </ul>
 
-      <h3>6. Templates & Examples</h3>
-      <p>Templates, example summaries, bullet templates are provided as starting points. Replace placeholders with your own facts before sending resume anywhere. We do not guarantee ATS compatibility for all systems — though Modern Split & Compact Pro use ATS-friendly structure.</p>
-
-      <h3>7. Pricing, Payments & Pro</h3>
-      <ul>
-        <li><b>Free:</b> 1 resume download free, no time limit, no watermark, 2 templates</li>
-        <li><b>Pro:</b> ₹20 one-time (Indian Rupees) — unlimited downloads, all 50 templates, advanced upload-edit, future templates</li>
-        <li><b>Payment:</b> Via Razorpay — UPI, Cards, Netbanking, Wallets. We never see/store card details.</li>
-        <li><b>No Subscription:</b> Pro is one-time, not recurring. No auto-renewal. Pay once, use forever.</li>
-        <li><b>Price Change:</b> ₹20 is launch price — we may change for new users, but your Pro stays lifetime at price you paid</li>
-        <li><b>Taxes:</b> ₹20 inclusive of GST where applicable. Invoice/receipt emailed.</li>
-      </ul>
-
-      <h3>8. Refund Policy — No Refund (Detailed)</h3>
-      <p>Digital product with instant delivery — <b>No refund</b> after Pro unlock. See full <a href="#/refund">Refund Policy</a>. Exceptions: payment succeeds but Pro doesn't unlock — contact billing@craftcv.app with transaction ID within 7 days, we fix or refund within 5 working days.</p>
-
-      <h3>9. Acceptable Use & Restrictions</h3>
-      <p>You agree NOT to:</p>
-      <ul>
-        <li>Break, scrape, reverse-engineer, or abuse service</li>
-        <li>Circumvent pricing (e.g., clearing localStorage to get extra free downloads — we detect and block)</li>
-        <li>Upload malware, XSS payloads, or attempt injection (we sanitize and log)</li>
-        <li>Use for illegal purposes or create fraudulent resumes</li>
-        <li>Share Pro unlock across multiple persons (1 license per user)</li>
-        <li>Copy templates to build competing product</li>
-      </ul>
-      <p>Violation may result in suspension, billing reset, or legal action. We log security events locally for abuse detection.</p>
-
-      <h3>10. Intellectual Property</h3>
-      <ul>
-        <li><b>Our IP:</b> Site design, templates (layout, CSS, code), field definitions, examples, logo, brand — owned by CraftCV, protected under Copyright Act 1957 and Trademark Act 1999 (India)</li>
-        <li><b>Your IP:</b> Your resume content remains yours</li>
-        <li><b>License:</b> We grant you non-exclusive, non-transferable license to use templates for personal job search only — not to resell templates</li>
-      </ul>
-
-      <h3>11. Disclaimer — No Guarantee of Outcomes</h3>
-      <p>CraftCV helps present information well. We cannot guarantee interviews, shortlists, or job offers. No part of product should be read as promise of employment. You are responsible for customizing resume for each application. See full <a href="#/disclaimer">Disclaimer</a>.</p>
-
-      <h3>12. Limitation of Liability</h3>
-      <p>To maximum extent permitted by law (Indian Contract Act, Consumer Protection Act):</p>
-      <ul>
-        <li>Service provided "as is" without warranties</li>
-        <li>Our total liability limited to amount you paid us in last 12 months (max ₹20 for Pro, ₹0 for Free)</li>
-        <li>We are not liable for indirect, incidental, consequential damages, loss of job opportunity, data loss due to browser clear, etc.</li>
-        <li>We are not liable if you clear browser storage and lose resumes — use Export backup</li>
-      </ul>
-
-      <h3>13. Indemnification</h3>
-      <p>You agree to indemnify and hold harmless CraftCV, its operators, from claims, damages, losses arising from: (a) your content, (b) your violation of Terms, (c) your violation of third-party rights, (d) fraudulent resume claims.</p>
-
-      <h3>14. Termination</h3>
-      <ul>
-        <li>You may delete account/data anytime via Settings → Delete all data</li>
-        <li>We may suspend/terminate for violation, fraud, or abuse — with notice via email where possible</li>
-        <li>On termination, your local data remains until you clear — we have no server copy to delete</li>
-        <li>Provisions that by nature should survive (IP, liability, indemnity) survive termination</li>
-      </ul>
-
-      <h3>15. Governing Law & Dispute Resolution</h3>
-      <ul>
-        <li><b>Law:</b> Governed by laws of India, with jurisdiction in New Delhi, India</li>
-        <li><b>Dispute:</b> First, contact support@craftcv.app — we try to resolve in 15 days</li>
-        <li><b>Arbitration:</b> If unresolved, dispute referred to sole arbitrator in New Delhi under Arbitration and Conciliation Act, 1996. Language: English.</li>
-        <li><b>Consumer:</b> Nothing restricts your rights under Consumer Protection Act, 2019 — you may approach consumer forum</li>
-      </ul>
-
-      <h3>16. Changes to Terms</h3>
-      <p>We may update Terms as product grows. Material changes announced on website 30 days before. Continued use after changes means acceptance. If you disagree, stop using and delete data.</p>
-
-      <h3>17. Severability & Entire Agreement</h3>
-      <p>If any provision found invalid, rest remains enforceable. These Terms + Privacy + Refund + other policies = entire agreement between you and CraftCV. No oral promises.</p>
-
-      <h3>18. Contact for Terms</h3>
-      <p>Questions? legal@craftcv.app · support@craftcv.app · New Delhi, India</p>
-    </Shell>
-  );
-}
-
-export function RefundPage() {
-  return (
-    <Shell title="Refund Policy — No Refund" sub="Last updated: 23 September 2026 — Please read before paying ₹20">
-      <div className="notice err" style={{ fontSize: 14 }}>
-        <b>⚠️ IMPORTANT: NO REFUND POLICY</b> — CraftCV Pro is a digital product with instant delivery (unlock immediately after payment). 
-        As per Indian law and standard for digital goods, <b>we do NOT offer refunds</b> once Pro is unlocked. Please read full policy before paying.
-      </div>
-
-      <h3 className="mt0">1. Why No Refund? — Legal Basis</h3>
+      <h3>6. Intellectual property</h3>
       <p>
-        Under Consumer Protection Act 2019, E-Commerce Rules 2020, and Information Technology Act 2000, digital products with immediate delivery and no physical shipment are exempt from standard return policies when service is consumed instantly. CraftCV Pro unlocks instantly after payment — you get immediate access to unlimited downloads, all templates, advanced features. Once consumed, it cannot be "returned" like physical goods.
-      </p>
-      <p>
-        This policy complies with: Indian Contract Act 1872 (Section 2 — consideration), Consumer Protection (E-Commerce) Rules 2020 (Rule 5 — disclosure), and RBI guidelines for digital transactions.
+        The CraftCV software, template designs, example text and brand are owned by CraftCV. Templates are original works created
+        by our team. You receive a personal, non-exclusive licence to use them for your own resumes — including sending those resumes
+        to any employer — but not to resell the templates themselves.
       </p>
 
-      <h3>2. Free Plan — No Payment, No Refund Needed</h3>
-      <p>Free plan costs ₹0 forever. 1 download free, no watermark, 2 templates. There is nothing to refund — you can try full quality before paying.</p>
-
-      <h3>3. Pro Plan — ₹20 One-Time — No Refund After Unlock</h3>
-      <ul>
-        <li><b>Amount:</b> ₹20 (Indian Rupees) one-time, inclusive of GST, no auto-renewal, lifetime access</li>
-        <li><b>Delivery:</b> Instant — Pro unlocks immediately after successful payment, in same browser</li>
-        <li><b>No Refund:</b> Once Pro status is granted (isPro = true, proUnlockedAt set), <b>no refund</b> for any reason including: change of mind, not using service, finding alternative, or not liking templates</li>
-        <li><b>Why:</b> Digital goods with instant consumption cannot be returned — you already received benefit (unlock + ability to download unlimited)</li>
-      </ul>
-
-      <h3>4. Exceptions — When We DO Refund (Within 7 Days)</h3>
-      <p>We offer refund only in these specific cases, if you contact within 7 days of payment:</p>
-      <ul>
-        <li><b>Payment Success but Pro Not Unlocked:</b> If Razorpay shows success but CraftCV still shows Free — email billing@craftcv.app with transaction ID, screenshot of payment, and registered email. We will fix unlock within 24h, or refund within 5 working days if we cannot fix.</li>
-        <li><b>Double Payment:</b> If you were charged twice for same email (duplicate transactions) — we refund duplicate within 5 working days after verification.</li>
-        <li><b>Technical Failure:</b> If payment deducted but our system shows failed due to network error at our end — refund within 5 working days.</li>
-        <li><b>Fraudulent Transaction:</b> If you prove transaction was fraudulent (not done by you) with bank statement — refund after investigation (7-15 days).</li>
-      </ul>
-      <p><b>Not covered for refund:</b> Change of mind, "I didn't use it", "I found free alternative", "I cleared browser and lost Pro" (Pro is stored locally — export backup or contact us with transaction ID to restore), "I didn't like templates".</p>
-
-      <h3>5. How to Request Refund (For Eligible Cases Only)</h3>
-      <ol>
-        <li>Email <b>billing@craftcv.app</b> with subject "Refund Request — [Transaction ID]"</li>
-        <li>Include: Registered email, transaction ID (CRAFT_xxx), payment screenshot, reason (must match exception above)</li>
-        <li>We respond within 2 working days, verify with Razorpay, and decide</li>
-        <li>If approved, refund processed to original payment method (UPI, card, netbanking) within 5-7 working days (depends on bank)</li>
-        <li>Refund amount: ₹20 full — no deduction</li>
-      </ol>
-      <p><b>Time limit:</b> Request within 7 days of payment. After 7 days, no refund even for eligible cases — considered consumed.</p>
-
-      <h3>6. How Refunds Are Processed</h3>
-      <ul>
-        <li>Refunds via Razorpay — back to original UPI ID / card / bank account</li>
-        <li>Typically reflects in 5-7 working days (UPI instant, cards 5-7 days, netbanking 5-7 days)</li>
-        <li>We send confirmation email when refund initiated with refund ID</li>
-        <li>If not received in 7 days, contact billing@craftcv.app with refund ID</li>
-      </ul>
-
-      <h3>7. Chargebacks & Disputes</h3>
+      <h3>7. Templates & examples</h3>
       <p>
-        If you initiate chargeback with bank without contacting us first, we will contest with evidence of delivery (transaction ID, proUnlockedAt timestamp, audit logs). Chargeback abuse may result in account suspension and legal action under Indian Contract Act. Always contact us first — we resolve in 2 days.
+        Example summaries, bullets and skills are starting points. Replace placeholders with your own facts. We do not guarantee that
+        any template will pass every applicant-tracking system, though single-column templates use ATS-friendly structure.
       </p>
 
-      <h3>8. Pro Restoration — If You Lose Pro After Clearing Browser</h3>
+      <h3>8. Disclaimer of warranties</h3>
       <p>
-        Pro is stored locally. If you clear browser data, Pro flag may be lost. Don't worry — email billing@craftcv.app with transaction ID and registered email, we will restore Pro manually within 24h at no cost. This is not a refund case — it's restoration.
+        The service is provided “as is”. We do not guarantee interviews, job offers, uninterrupted availability or error-free operation.
+        Keep an exported copy of important resumes.
       </p>
 
-      <h3>9. Legal Compliance & Consumer Rights</h3>
+      <h3>9. Limitation of liability</h3>
       <p>
-        This No Refund policy is disclosed before payment (on pricing page, checkout modal, and here) as required by Consumer Protection (E-Commerce) Rules 2020, Rule 5(3). By paying ₹20, you explicitly agree to this No Refund policy and waive right to refund except for exceptions above. This does not affect your statutory rights under Consumer Protection Act 2019 to approach consumer forum if you believe service was deficient — but "change of mind" is not deficiency for digital instant-delivery product.
-      </p>
-      <p>
-        For grievances: Grievance Officer — grievance@craftcv.app — response in 15 days as per IT Rules 2021. Jurisdiction: New Delhi, India.
+        To the maximum extent permitted by law, CraftCV is not liable for indirect, incidental or consequential damages. Because the
+        service is free, our total liability for any claim is limited to ₹1,000.
       </p>
 
-      <h3>10. Contact for Refunds</h3>
+      <h3>10. Termination</h3>
       <p>
-        Email: billing@craftcv.app (for payment issues) · support@craftcv.app (general) · Response: 2 working days · Include transaction ID for faster resolution.
+        You may delete your account at any time. We may suspend accounts that violate these Terms. On termination we delete your
+        data in line with the Privacy Policy.
       </p>
 
-      <div className="notice" style={{ marginTop: 16 }}>
-        <b>Summary:</b> Try free download first. If satisfied, pay ₹20 — instant Pro unlock, lifetime unlimited. No refund after unlock except payment-success-but-no-unlock (within 7 days). We are transparent — no hidden charges, no auto-renewal.
-      </div>
+      <h3>11. Governing law</h3>
+      <p>These Terms are governed by the laws of India. Courts in New Delhi have exclusive jurisdiction.</p>
+
+      <h3>12. Contact</h3>
+      <p>legal@craftcv.app</p>
     </Shell>
   );
 }
 
 export function FaqPage() {
-  const faqs: Array<[string, string]> = [
-    ['Is CraftCV really free?', '1 download is free forever — no watermark, no time limit, 2 templates, all fields. After that, ₹20 one-time unlocks unlimited downloads forever. No subscription.'],
-    ['Why only 1 free download?', 'To keep free tier genuinely free (no watermark) while sustaining development. Global builders charge $19-30/month with trial traps. We charge ₹20 once — honest pricing. Try free, then decide.'],
-    ['What happens after I pay ₹20?', 'Instant Pro unlock in same browser. Unlimited downloads, all 50 templates, advanced resume upload-edit, AI rewrite, future templates — lifetime. No renewal, no extra payment.'],
-    ['Is there really no refund?', 'Correct — digital product with instant delivery, no refund after Pro unlock. Exception: if payment succeeds but Pro doesn\'t unlock, contact billing@craftcv.app with transaction ID within 7 days — we fix or refund in 5 days. See full refund policy.'],
-    ['Where is my data saved?', 'In your own browser (localStorage) with integrity HMAC check. Nothing uploaded to server. Export backup via Settings. Clearing browser data removes resumes — so export regularly. Pro status also local — keep transaction ID to restore if cleared.'],
-    ['Is my data secure?', 'Yes — high-tech security: XSS sanitization, SHA-256 password hashing with salt, rate limiting (5 login/min), CSRF tokens, CSP headers, HSTS, audit logging, secure storage with HMAC. See privacy policy.'],
-    ['Will my resume pass ATS?', 'Modern Split & Compact Pro use standard headings and simple structure ATS reads reliably. Avoid photos and heavy graphics for strict ATS portals. All templates tested for ATS compatibility.'],
-    ['Can I upload my existing resume?', 'Yes! New advanced feature: Upload PDF, DOCX, TXT, or JSON — we parse with heuristics (90%+ accuracy), then let you advanced-edit every field before saving. 100% private, no server upload. Go to Dashboard → Upload Resume.'],
-    ['How does resume upload parsing work?', 'Client-side parsing: extracts text from PDF/DOCX/TXT, detects contact (email, phone, LinkedIn), skills, experience, education via regex and section headers. You review and edit parsed data before saving. No AI server — all in browser.'],
-    ['How long does it take to make a resume?', 'About 10 minutes if details ready. Every step shows templates you can click and edit — never blank box. Upload existing resume cuts to 3-4 minutes.'],
-    ['Can I use this on my phone?', 'Yes — fully responsive. Mobile top bar, bottom nav, swipeable stepper, touch-optimized. For fine editing laptop is comfortable, but you can create and download complete resume from phone.'],
-    ['Do you write my resume with AI?', 'No — templates and examples are pre-written by us; facts come from you. Optional AI rewrite exists but only active if admin connects n8n webhook — off by default. Your data never sent to AI without explicit action.'],
-    ['I paid ₹20 but Pro did not unlock.', 'Email billing@craftcv.app with transaction ID, payment screenshot, registered email. We fix or refund within 5 working days. This is the only refund-eligible case. Keep transaction ID safe.'],
-    ['What if I clear browser data and lose Pro?', 'Pro is stored locally. If cleared, email billing@craftcv.app with transaction ID and email — we restore Pro manually within 24h free. Not a refund case — restoration. Always export backup.'],
-    ['Is ₹20 inclusive of GST?', 'Yes — ₹20 inclusive of GST where applicable. Receipt emailed via Razorpay. No extra charges.'],
-    ['Do you store my card/UPI details?', 'No — payments via Razorpay, PCI-DSS Level 1 certified. We only store transaction ID and status locally. No card numbers, UPI IDs, or bank details ever touch our servers.'],
-    ['Can I get invoice?', 'Yes — Razorpay sends receipt to your email after payment with transaction ID. For GST invoice, email billing@craftcv.app with transaction ID.'],
-    ['Is there a mobile app?', 'No — web app works on mobile browser, no install needed. Add to home screen for app-like experience. PWA support planned.'],
+  const faqs: [string, string][] = [
+    ['Is CraftCV really free?', 'Yes — 100%. Unlimited resumes, unlimited PDF downloads, every template, no watermark. There is no paid plan and nothing to unlock.'],
+    ['How do you make money then?', 'Right now we don’t. CraftCV is an independent project; we may add optional services (like career coaching partners) in future, but the builder itself will stay free.'],
+    ['Where is my data saved?', 'In your CraftCV account — a secure PostgreSQL database hosted on Supabase with row-level security — plus a local copy in your browser so the app works offline. You can export or delete everything from Settings.'],
+    ['Can I use it on my phone?', 'Yes. The editor, template gallery and PDF export all work on mobile browsers. Use “Whole page” in the preview to see the full A4 sheet.'],
+    ['Will my resume pass ATS?', 'Single-column templates (Classic, Minimal, Dense, Executive) use standard headings and plain structure that ATS parsers read reliably. Two-column and photo templates look great for direct email / LinkedIn applications; for strict ATS portals choose a single-column layout.'],
+    ['How do I import my old resume?', 'Go to Upload & Edit, drop a PDF, DOCX or a clear photo of your printed resume. Text is extracted on your device (with OCR for images) and the editor is pre-filled. Check names, phone numbers and dates afterwards.'],
+    ['Can I add a photo?', 'Yes — Basics step → upload photo. Photo-first templates (Portrait, Studio, Monogram) are designed around it; others show a small round photo in the header.'],
+    ['How do I download a PDF?', 'Click Download PDF. Your browser’s print dialog opens — choose “Save as PDF”, A4, margins “None”. The result is an exact copy of the preview.'],
+    ['Is AI rewriting included?', 'AI rewrite is optional and runs through a webhook you configure (n8n + any LLM). See the n8n guide from the dashboard. Without it, all example content and templates still work.'],
+    ['How do I delete my account?', 'Settings → Delete account. All resumes and profile data are removed from our database.'],
   ];
   return (
-    <Shell title="Frequently Asked Questions" sub="Quick answers — 18 most asked">
-      {faqs.map(([q, a], i) => (
-        <div key={i} style={{ marginBottom: 18 }}>
-          <h3 style={{ color: 'var(--navy-900)', fontSize: 15, marginBottom: 4 }}>{i+1}. {q}</h3>
-          <p className="hint" style={{ fontSize: 13.5, lineHeight: 1.6 }}>{a}</p>
+    <Shell title="FAQ" sub="Straight answers">
+      {faqs.map(([q, a]) => (
+        <div key={q} style={{ marginBottom: 14 }}>
+          <b style={{ color: 'var(--navy-900)' }}>{q}</b>
+          <p style={{ margin: '4px 0 0' }}>{a}</p>
         </div>
       ))}
-      <p>
-        Something else? <a href="#/contact">Contact us</a> — we reply within 2 working days. For payment issues, include transaction ID.
-      </p>
+      <div className="notice" style={{ marginTop: 8 }}>
+        Something else? <a href="#/contact">Contact us</a> — we reply within 2 working days.
+      </div>
     </Shell>
   );
 }
 
 export function DisclaimerPage() {
   return (
-    <Shell title="Disclaimer" sub="Last updated: 23 September 2026">
-      <h3 className="mt0">1. No Guarantee of Employment</h3>
-      <p>CraftCV is a resume formatting and structuring tool. We do not guarantee interviews, shortlists, job offers, or career outcomes. Success depends on your qualifications, job market, employer decisions, and how you customize resume for each role. No statement on site should be read as promise of employment.</p>
-      
-      <h3>2. Accuracy & Responsibility</h3>
-      <p>You are solely responsible for accuracy, truthfulness, and legality of information in resumes you create. Do not misrepresent qualifications, experience, or identity. False information may lead to rejection, termination, or legal consequences — we are not liable. Always verify facts before sending resume.</p>
-      
-      <h3>3. Templates & ATS</h3>
-      <p>Templates are provided as design starting points. While we test for ATS compatibility, we cannot guarantee all ATS systems will parse perfectly — ATS software varies. For strict ATS portals, use Modern Split or Compact Pro without photo. Test resume by uploading to ATS checker if needed.</p>
-      
-      <h3>4. No Professional Advice</h3>
-      <p>Content on site (examples, tips, field guidance) is for general information only — not professional career, legal, or financial advice. Consult qualified professional for specific advice.</p>
-      
-      <h3>5. Third-Party Links</h3>
-      <p>Site may contain links to third parties (Razorpay, Google). We are not responsible for their content, privacy, or practices. Use at your own risk.</p>
-      
-      <h3>6. Limitation</h3>
-      <p>To extent permitted by law, we disclaim all warranties, express or implied, including merchantability, fitness for purpose, non-infringement. Service provided "as is".</p>
+    <Shell title="Disclaimer" sub={UPDATED}>
+      <ul className="mt0">
+        <li><b>No employment guarantee.</b> CraftCV helps you present your experience clearly; it cannot guarantee interviews or job offers.</li>
+        <li><b>Example content.</b> Sample summaries, bullets and numbers are illustrative. Do not submit them without replacing with your own facts.</li>
+        <li><b>OCR & import accuracy.</b> Text extracted from PDFs, DOCX files and photos may contain mistakes. Always review imported fields.</li>
+        <li><b>AI suggestions.</b> If you enable the optional AI webhook, generated text may be inaccurate. You are responsible for what you submit.</li>
+        <li><b>External links.</b> We are not responsible for the content of third-party sites we link to.</li>
+        <li><b>Availability.</b> We aim for high uptime but the service may be interrupted for maintenance. Keep exported copies of important resumes.</li>
+      </ul>
     </Shell>
   );
 }
 
 export function CookiePage() {
   return (
-    <Shell title="Cookie Policy" sub="Last updated: 23 September 2026">
-      <h3 className="mt0">What Are Cookies?</h3>
-      <p>Cookies are small text files stored on device by websites. We use minimal cookies — only essential for functionality.</p>
-      
-      <h3>Types We Use</h3>
-      <table className="tbl">
-        <thead><tr><th>Type</th><th>Purpose</th><th>Duration</th><th>Essential?</th></tr></thead>
-        <tbody>
-          <tr><td><b>Session Token</b></td><td>Keep you logged in (sessionStorage)</td><td>Until tab closes</td><td>Yes</td></tr>
-          <tr><td><b>CSRF Token</b></td><td>Security — prevent CSRF attacks</td><td>Session</td><td>Yes</td></tr>
-          <tr><td><b>Local Storage</b></td><td>Store resumes, billing, settings locally</td><td>Until you delete</td><td>Yes (functional)</td></tr>
-        </tbody>
-      </table>
-      
-      <h3>What We DON'T Use</h3>
-      <ul>
-        <li>No tracking cookies (Google Analytics, Facebook Pixel)</li>
-        <li>No advertising cookies</li>
-        <li>No third-party cookies</li>
-        <li>No cross-site tracking</li>
-      </ul>
-      
-      <h3>Your Choices</h3>
-      <p>Essential cookies cannot be disabled — site won't work without them (login, resume storage). You can clear localStorage via Settings → Delete all data, or browser settings → Clear site data. No consent banner needed as we use only essential cookies under IT Rules and GDPR.</p>
-      
-      <h3>Contact</h3>
-      <p>Questions? privacy@craftcv.app</p>
-    </Shell>
-  );
-}
-
-export function ShippingPage() {
-  return (
-    <Shell title="Shipping & Delivery Policy" sub="Digital Product — No Physical Shipment">
-      <h3 className="mt0">Digital Product — Instant Delivery</h3>
-      <p>CraftCV is a digital service — no physical product, no shipping. All features delivered instantly via website.</p>
-      
-      <h3>Delivery Details</h3>
-      <ul>
-        <li><b>Free Plan:</b> Instant access after signup — no delivery needed, use immediately in browser</li>
-        <li><b>Pro Plan (₹20):</b> Instant unlock after successful payment — Pro status granted in same browser within seconds. No email delivery needed, but receipt emailed via Razorpay.</li>
-        <li><b>Resume Downloads:</b> PDF generated via browser print — instant download, no waiting</li>
-        <li><b>No Shipping Address:</b> We don't collect or need shipping address — digital only</li>
-        <li><b>No Courier:</b> No physical shipment, no tracking, no delivery charges</li>
-      </ul>
-      
-      <h3>Access Issues?</h3>
-      <p>If Pro doesn't unlock after payment (rare), email billing@craftcv.app with transaction ID — we fix within 24h. See refund policy for eligible refund cases.</p>
-      
-      <h3>Contact</h3>
-      <p>support@craftcv.app · billing@craftcv.app</p>
-    </Shell>
-  );
-}
-
-export function CancellationPage() {
-  return (
-    <Shell title="Cancellation Policy" sub="Last updated: 23 September 2026">
-      <h3 className="mt0">No Subscription — No Cancellation Needed</h3>
-      <p>CraftCV Pro is <b>one-time payment of ₹20, lifetime access, no subscription, no auto-renewal</b>. Therefore, no cancellation needed — you pay once, use forever. No recurring charges to cancel.</p>
-      
-      <h3>Free Plan</h3>
-      <p>Free plan is free forever — no payment, no cancellation. Just stop using or delete data via Settings → Delete all data.</p>
-      
-      <h3>Pro Plan — What You Can Do</h3>
-      <ul>
-        <li><b>Stop Using:</b> Simply stop using — no charges ever again</li>
-        <li><b>Delete Data:</b> Settings → Delete all data — removes resumes, billing stays? No, billing reset also possible for testing, but Pro restoration available via transaction ID</li>
-        <li><b>Account Deletion:</b> Logout + clear browser storage — account removed locally. For full deletion email privacy@craftcv.app</li>
-      </ul>
-      
-      <h3>No Refund on Cancellation</h3>
-      <p>As per No Refund policy, once Pro unlocked, no refund even if you cancel/stop using. Digital product with instant delivery. Exception: payment success but no unlock — refund within 5 days if not fixable.</p>
-      
-      <h3>Contact</h3>
-      <p>support@craftcv.app · billing@craftcv.app</p>
+    <Shell title="Cookie Policy" sub={UPDATED}>
+      <p className="mt0">CraftCV uses a minimal set of browser storage, all of it strictly necessary to run the app.</p>
+      <div className="tbl-wrap">
+        <table className="tbl">
+          <thead><tr><th>Name</th><th>Type</th><th>Purpose</th><th>Duration</th></tr></thead>
+          <tbody>
+            <tr><td>sb-*-auth-token</td><td>localStorage</td><td>Keeps you signed in to your CraftCV account (Supabase Auth)</td><td>Until logout</td></tr>
+            <tr><td>craftcv.session.v2</td><td>localStorage</td><td>Local session mirror</td><td>Until logout</td></tr>
+            <tr><td>craftcv.resumes.v1</td><td>localStorage</td><td>Offline copy of your resumes</td><td>Until deleted</td></tr>
+            <tr><td>craftcv.audit.v2</td><td>localStorage</td><td>Local security log (rate limiting)</td><td>Rolling 200 entries</td></tr>
+            <tr><td>craftcv.ai.*</td><td>localStorage</td><td>Your optional AI webhook settings</td><td>Until cleared</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style={{ marginTop: 12 }}>
+        We do not set advertising, analytics or cross-site tracking cookies. Clearing your browser storage signs you out; your
+        resumes remain safe in your account.
+      </p>
     </Shell>
   );
 }
 
 export function EulaPage() {
   return (
-    <Shell title="End User License Agreement (EULA)" sub="Last updated: 23 September 2026">
-      <h3 className="mt0">1. License Grant</h3>
-      <p>CraftCV grants you non-exclusive, non-transferable, revocable license to use website and templates for personal, non-commercial job search purposes only. One license per user account.</p>
-      
+    <Shell title="End User Licence Agreement" sub={UPDATED}>
+      <h3 className="mt0">1. Licence grant</h3>
+      <p>
+        CraftCV grants you a personal, non-exclusive, non-transferable, revocable licence to use the CraftCV web application and its
+        templates to create resumes for yourself (or for a person who has asked you to help them).
+      </p>
       <h3>2. Restrictions</h3>
-      <p>You may NOT:</p>
       <ul>
-        <li>Resell, sublicense, distribute templates as templates</li>
-        <li>Use templates to build competing resume builder</li>
-        <li>Copy site code, design, or field definitions</li>
-        <li>Share Pro account — 1 user per license</li>
-        <li>Reverse engineer, decompile, or attempt to extract source</li>
-        <li>Use for illegal or fraudulent purposes</li>
+        <li>Do not copy, modify, reverse-engineer or redistribute the software or template library</li>
+        <li>Do not offer the templates for sale or as part of another product</li>
+        <li>Do not remove notices or circumvent security features</li>
       </ul>
-      
       <h3>3. Ownership</h3>
-      <p>All IP — site design, code, templates (layout/CSS), field data, examples, brand — owned by CraftCV. Your resume content remains yours. Templates license is for use, not ownership.</p>
-      
-      <h3>4. Termination</h3>
-      <p>License terminates if you violate EULA. On termination, you must stop using templates and delete any copies of template files (not your resume content — that remains yours). Provisions on IP, liability survive.</p>
-      
-      <h3>5. Disclaimer & Liability</h3>
-      <p>Service provided "as is". Max liability ₹20 (amount paid). See Terms for full liability clause.</p>
-      
-      <h3>6. Governing Law</h3>
-      <p>India, New Delhi jurisdiction. See Terms for dispute resolution.</p>
+      <p>The software and templates remain the property of CraftCV. Your resume content remains yours.</p>
+      <h3>4. Term</h3>
+      <p>This licence lasts while you use the service and ends automatically if you breach these terms.</p>
+      <h3>5. No warranty</h3>
+      <p>The software is provided “as is”, free of charge, without warranty of any kind.</p>
+      <h3>6. Governing law</h3>
+      <p>Laws of India; courts of New Delhi.</p>
     </Shell>
   );
 }

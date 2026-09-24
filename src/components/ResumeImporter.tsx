@@ -670,7 +670,7 @@ export default function ResumeImporter() {
 
       <div className="card pad" style={{ marginTop: 18 }}>
         <h4 style={{ margin: '0 0 8px', color: 'var(--navy-900)' }}>🆚 Starting fresh instead?</h4>
-        <p className="hint" style={{ marginBottom: 12 }}>Use the guided 7-step builder — 10 minutes, 50 templates, no watermark, one free download.</p>
+        <p className="hint" style={{ marginBottom: 12 }}>Use the guided 7-step builder — 10 minutes, 80 templates, no watermark, 100% free.</p>
         <div className="row">
           <button className="btn primary" onClick={() => navigate('/editor/new')}>+ Create a new resume</button>
           <button className="btn" onClick={() => navigate('/')}>← Back to dashboard</button>

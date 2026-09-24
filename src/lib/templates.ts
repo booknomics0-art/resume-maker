@@ -1,4 +1,6 @@
-// The 50-template library: 5 layout families × 10 hand-tuned variants each.
+// The 80-template library: 5 core layout families × 10 variants + 6 Canva-style
+// families (portrait, studio, monogram, timeline, infographic, corporate) × 5 variants.
+// All designs are original code — inspired by the most popular resume styles.
 // Every template is one row below — palette, structural mods, copy and fit.
 // Palettes are applied as CSS custom properties (see Preview.tsx + templates.css),
 // so a variant never forks the layout code; it re-skins and re-tunes it.
@@ -18,10 +20,12 @@ export type SectionId =
   | 'achievements'
   | 'hobbies';
 
-export type LayoutId = 'split' | 'classic' | 'minimal' | 'metro' | 'compact';
+export type LayoutId =
+  | 'split' | 'classic' | 'minimal' | 'metro' | 'compact'
+  | 'portrait' | 'studio' | 'monogram' | 'timeline' | 'infographic' | 'corporate';
 
 /** Structural (non-palette) modifier classes applied to the sheet. */
-export type Mod = 'mod-invert' | 'mod-serif' | 'mod-band-flat' | 'mod-band-tint';
+export type Mod = 'mod-invert' | 'mod-serif' | 'mod-band-flat' | 'mod-band-tint' | 'mod-square' | 'mod-dark';
 
 export interface Palette {
   /** primary — headings, rules, title bars, band base */
@@ -53,6 +57,12 @@ export const LAYOUT_META: Record<LayoutId, { label: string; blurb: string }> = {
   minimal: { label: 'Minimal', blurb: 'Hairlines and air, quiet confidence' },
   metro: { label: 'Statement', blurb: 'Bold header band, memorable at a glance' },
   compact: { label: 'Dense', blurb: 'ATS-first, maximum content per page' },
+  portrait: { label: 'Portrait', blurb: 'Photo header, letter-spaced name, airy two columns — the Canva classic' },
+  studio: { label: 'Studio', blurb: 'Soft pastel side panel with a round photo — warm and modern' },
+  monogram: { label: 'Monogram', blurb: 'Centered initials seal, elegant serif, magazine spacing' },
+  timeline: { label: 'Timeline', blurb: 'Dates in the gutter, dotted career line — story at a glance' },
+  infographic: { label: 'Infographic', blurb: 'Dark skills panel with level bars — visual and bold' },
+  corporate: { label: 'Corporate', blurb: 'Label column on the left, content on the right — boardroom clean' },
 };
 
 const SPLIT_FIT = ['it', 'data', 'design', 'marketing'];
@@ -196,7 +206,96 @@ const COMPACT: Spec[] = [
     ['education', 'healthcare', 'hr', 'finance'], ['Soft, readable density', 'Low-contrast, low-fatigue', 'Long-history friendly'], mono('#57493b', '#cfc4b2')],
 ];
 
-export const TEMPLATES: Template[] = [...SPLIT, ...CLASSIC, ...MINIMAL, ...METRO, ...COMPACT].map(
+/* ---------- Canva-style families (original code, inspired by popular styles) ---------- */
+
+// pastel panel tones for Studio: p = ink, p2 = panel bg, p3 = panel border, a = accent
+const PORTRAIT: Spec[] = [
+  ['portrait', 'Portrait Ink', 'Letter-spaced black name, square photo, hairline columns. The Canva classic.',
+    ['design', 'marketing', 'hr', 'education'], ['Instantly recognisable style', 'Photo without heaviness', 'Very readable columns'], mono('#17181c', '#d9dde3')],
+  ['portrait-navy', 'Portrait Navy', 'Navy name and rules, warm white page.',
+    ['finance', 'it', 'operations', 'sales'], ['Professional and current', 'Photo-friendly', 'Prints crisp'], mono(NAVY.p, '#cfd7e2')],
+  ['portrait-taupe', 'Portrait Taupe', 'Warm taupe ink, soft rules. Quiet luxury.',
+    ['design', 'hr', 'education', 'healthcare'], ['Soft and premium', 'Great with a photo', 'Calm for reviewers'], mono('#5a4d42', '#e2dad1')],
+  ['portrait-sage', 'Portrait Sage', 'Muted green headings, airy page. Fresh and calm.',
+    ['healthcare', 'education', 'operations'], ['Calm, natural tone', 'Distinct from gray stacks', 'Readable columns'], mono('#4f6b5a', '#d7e2da')],
+  ['portrait-rose', 'Portrait Rosé', 'Dusty rose accents on ink type. Creative, composed.',
+    ['design', 'marketing', 'hr'], ['Creative without noise', 'Memorable accent', 'Photo-first header'], mono('#2b2a2e', '#e6cdd0')],
+];
+
+const STUDIO: Spec[] = [
+  ['studio', 'Studio Beige', 'Soft beige panel, round photo, small-caps sections. Warm modern.',
+    ['design', 'marketing', 'hr', 'education'], ['Warm and friendly', 'Photo front and center', 'Skills always visible'],
+    { p: '#2b2622', p2: '#f2ece3', p3: '#e3d9cb', pm: '#8a7d6e', a: '#b8977a' }],
+  ['studio-blush', 'Studio Blush', 'Blush panel, charcoal ink. Soft creative.',
+    ['design', 'marketing', 'healthcare'], ['Gentle, creative tone', 'Distinct in a stack', 'Photo-friendly'],
+    { p: '#2d262a', p2: '#f6e9ea', p3: '#ead4d6', pm: '#8f7478', a: '#c2848c' }],
+  ['studio-mint', 'Studio Mint', 'Mint panel, deep green ink. Fresh professional.',
+    ['healthcare', 'education', 'operations'], ['Fresh and calm', 'Great for care roles', 'Readable at a glance'],
+    { p: '#1e3a30', p2: '#e8f2ec', p3: '#d2e4d9', pm: '#6b8a7a', a: '#5f9b7f' }],
+  ['studio-sky', 'Studio Sky', 'Pale blue panel, navy ink. Corporate soft.',
+    ['it', 'finance', 'data', 'sales'], ['Corporate but warm', 'Photo without darkness', 'Prints light'],
+    { p: '#14264a', p2: '#e9eff8', p3: '#d3ddef', pm: '#6d7f9f', a: '#4c6fae' }],
+  ['studio-lavender', 'Studio Lavender', 'Lavender panel, plum ink. Creative calm.',
+    ['design', 'marketing', 'it'], ['Creative, composed', 'Distinct color story', 'Skills column stays visible'],
+    { p: '#2f2340', p2: '#efeaf6', p3: '#ded4ec', pm: '#83729c', a: '#7d5f92' }],
+];
+
+const MONOGRAM: Spec[] = [
+  ['monogram', 'Monogram Black', 'Boxed initials, wide-tracked serif name, centered rules. Editorial.',
+    ['design', 'marketing', 'hr', 'sales'], ['Magazine look', 'Strong personal brand', 'Works without a photo'], mono('#17181c', '#cfd2d8')],
+  ['monogram-navy', 'Monogram Navy', 'Navy seal and rules. Formal with flair.',
+    ['finance', 'sales', 'operations', 'it'], ['Formal yet memorable', 'Great for senior roles', 'Photo optional'], mono(NAVY.p, NAVY.a)],
+  ['monogram-wine', 'Monogram Bordeaux', 'Wine seal, serif elegance. Warm authority.',
+    ['sales', 'hr', 'marketing', 'finance'], ['Warm and distinguished', 'Distinct from black stacks', 'Elegant spacing'], mono(WINE.p, WINE.a)],
+  ['monogram-forest', 'Monogram Forest', 'Deep green seal. Scholarly and calm.',
+    ['education', 'healthcare', 'finance'], ['Scholarly tone', 'Calm authority', 'Clean centered structure'], mono(FOREST.p, FOREST.a)],
+  ['monogram-gold', 'Monogram Gold', 'Black type, gold seal. The premium monogram.',
+    ['design', 'marketing', 'sales', 'finance'], ['Premium single accent', 'Unforgettable header', 'Boardroom-safe'], { p: '#17181c', a: '#c9a227' }],
+];
+
+const TIMELINE: Spec[] = [
+  ['timeline', 'Timeline Navy', 'Dates in the gutter, dotted career line, tinted header. Story at a glance.',
+    ['it', 'sales', 'operations', 'marketing'], ['Career progression is obvious', 'Great for 5+ years', 'Recruiters love the scan'], NAVY],
+  ['timeline-teal', 'Timeline Teal', 'Teal line and dots. Fresh chronology.',
+    ['it', 'data', 'healthcare'], ['Fresh, modern color', 'Clear progression', 'Tidy dates column'], OCEAN],
+  ['timeline-charcoal', 'Timeline Charcoal', 'Charcoal line, warm gray dates. Sober story.',
+    ['finance', 'operations', 'data', 'sales'], ['Serious and clear', 'Neutral for any sector', 'Prints sharp'], CHARCOAL],
+  ['timeline-wine', 'Timeline Bordeaux', 'Wine line and dots. Warm chronology.',
+    ['sales', 'hr', 'marketing'], ['Warm and memorable', 'Progression reads instantly', 'Distinct color'], WINE],
+  ['timeline-cobalt', 'Timeline Cobalt', 'Bright blue line. Energetic, startup-ready.',
+    ['marketing', 'it', 'design', 'sales'], ['High energy', 'Clear scan', 'Modern feel'], COBALT],
+];
+
+const INFOGRAPHIC: Spec[] = [
+  ['infographic', 'Infographic Navy', 'Dark right panel with skill bars and language dots. Visual, bold.',
+    ['it', 'design', 'marketing', 'data'], ['Skills visualised', 'Bold first impression', 'Photo-friendly'], NAVY],
+  ['infographic-onyx', 'Infographic Onyx', 'Black panel, gold bars. Premium visual.',
+    ['design', 'marketing', 'sales'], ['Premium contrast', 'Gold bars pop', 'Memorable in stacks'], ONYX_GOLD],
+  ['infographic-forest', 'Infographic Forest', 'Green panel, sage bars. Grounded visual.',
+    ['operations', 'healthcare', 'education'], ['Trustworthy tone', 'Skills visualised', 'Distinct color'], FOREST],
+  ['infographic-plum', 'Infographic Plum', 'Purple panel, orchid bars. Creative visual.',
+    ['design', 'marketing', 'it'], ['Creative energy', 'Bars read at a glance', 'Strong header'], PLUM],
+  ['infographic-slate', 'Infographic Slate', 'Slate panel, steel bars. Corporate visual.',
+    ['it', 'data', 'finance', 'operations'], ['Neutral corporate', 'Skills visualised', 'Calm palette'], SLATE],
+];
+
+const CORPORATE: Spec[] = [
+  ['corporate', 'Corporate Ink', 'Section labels in a left column, content on the right. Boardroom clean.',
+    ['finance', 'operations', 'hr', 'sales'], ['Extremely scannable', 'Conservative industries', 'ATS-friendly structure'], mono('#17181c', '#d9dde3')],
+  ['corporate-navy', 'Corporate Navy', 'Navy labels and rules. The classic corporate CV.',
+    ['finance', 'it', 'operations', 'data'], ['Classic corporate look', 'Reads authoritative', 'Prints crisp'], mono(NAVY.p, NAVY.a)],
+  ['corporate-graphite', 'Corporate Graphite', 'Graphite labels. Modern corporate.',
+    ['operations', 'data', 'finance', 'sales'], ['Modern and sober', 'Neutral for any sector', 'Clear label column'], mono(GRAPHITE.p, GRAPHITE.a)],
+  ['corporate-forest', 'Corporate Forest', 'Forest labels. Steady and trustworthy.',
+    ['finance', 'healthcare', 'education', 'operations'], ['Trustworthy tone', 'Distinct from navy', 'Very scannable'], mono(FOREST.p, FOREST.a)],
+  ['corporate-bronze', 'Corporate Bronze', 'Bronze labels, warm rules. Heritage corporate.',
+    ['hr', 'operations', 'sales', 'education'], ['Warm and grounded', 'Senior-friendly', 'Clean structure'], mono(BRONZE.p, BRONZE.a)],
+];
+
+export const TEMPLATES: Template[] = [
+  ...SPLIT, ...CLASSIC, ...MINIMAL, ...METRO, ...COMPACT,
+  ...PORTRAIT, ...STUDIO, ...MONOGRAM, ...TIMELINE, ...INFOGRAPHIC, ...CORPORATE,
+].map(
   ([id, name, tagline, bestFor, strengths, pal, mods]) => ({
     id, name, tagline, bestFor, strengths, pal, mods: mods ?? [], layout: layoutOf(id),
   }),
@@ -207,10 +306,24 @@ function layoutOf(id: string): LayoutId {
   if (CLASSIC.some((s) => s[0] === id)) return 'classic';
   if (MINIMAL.some((s) => s[0] === id)) return 'minimal';
   if (METRO.some((s) => s[0] === id)) return 'metro';
+  if (PORTRAIT.some((s) => s[0] === id)) return 'portrait';
+  if (STUDIO.some((s) => s[0] === id)) return 'studio';
+  if (MONOGRAM.some((s) => s[0] === id)) return 'monogram';
+  if (TIMELINE.some((s) => s[0] === id)) return 'timeline';
+  if (INFOGRAPHIC.some((s) => s[0] === id)) return 'infographic';
+  if (CORPORATE.some((s) => s[0] === id)) return 'corporate';
   return 'compact';
 }
 
-export const TEMPLATE_COUNT = TEMPLATES.length; // 50
+export const TEMPLATE_COUNT = TEMPLATES.length; // 80
+
+/** Sections rendered in the side/panel column for two-column layouts. */
+export const SIDE_SECTIONS: Partial<Record<LayoutId, SectionId[]>> = {
+  split: ['skills', 'languages', 'certs', 'hobbies'],
+  portrait: ['education', 'skills', 'languages', 'certs', 'hobbies'],
+  studio: ['skills', 'languages', 'certs', 'hobbies'],
+  infographic: ['skills', 'languages', 'certs', 'hobbies'],
+};
 
 export const templateById = (id: string): Template => TEMPLATES.find((t) => t.id === id) ?? TEMPLATES[0];
 
@@ -222,11 +335,19 @@ export function sectionOrder(tpl: Template, fieldId: string): SectionId[] {
   const tail: SectionId[] = ['achievements', 'hobbies'];
   switch (tpl.layout) {
     case 'split':
+    case 'studio':
+    case 'infographic':
       // sidebar renders skills/languages/certs/hobbies; main column gets the rest
       return tech
-        ? ['summary', 'highlight', 'skills', 'experience', 'projects', 'education', ...tail]
-        : ['summary', 'highlight', 'experience', 'skills', 'education', 'projects', ...tail];
+        ? ['summary', 'highlight', 'skills', 'experience', 'projects', 'education', 'certs', 'languages', ...tail]
+        : ['summary', 'highlight', 'experience', 'skills', 'education', 'projects', 'certs', 'languages', ...tail];
+    case 'portrait':
+      // side column: education, skills, languages, certs, hobbies; main: story
+      return ['summary', 'highlight', 'experience', 'projects', 'education', 'skills', 'languages', 'certs', 'achievements', 'hobbies'];
     case 'metro':
+    case 'timeline':
+    case 'monogram':
+    case 'corporate':
       return tech
         ? ['summary', 'highlight', 'skills', 'experience', 'projects', 'education', 'certs', 'languages', ...tail]
         : ['summary', 'highlight', 'experience', 'skills', 'projects', 'education', 'certs', 'languages', ...tail];

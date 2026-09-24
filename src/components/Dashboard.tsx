@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { completeness } from '../lib/types';
 import {
   deleteResume, duplicateResume, loadResumes, sampleResume, upsertResume,
@@ -6,10 +6,16 @@ import {
 import { fieldById } from '../lib/fields';
 import { navigate } from '../App';
 import { Thumb } from './Preview';
+import { RESUMES_CHANGED_EVENT } from '../lib/cloud';
+import CloudBadge from './CloudBadge';
 
 export default function Dashboard() {
   const [resumes, setResumes] = useState(loadResumes());
   const refresh = () => setResumes(loadResumes());
+  useEffect(() => {
+    window.addEventListener(RESUMES_CHANGED_EVENT, refresh);
+    return () => window.removeEventListener(RESUMES_CHANGED_EVENT, refresh);
+  }, []);
 
   const done = resumes.filter((r) => completeness(r) === 100).length;
   const avg = resumes.length
@@ -29,7 +35,7 @@ export default function Dashboard() {
       <div className="page-head">
         <div>
           <div className="page-title">Dashboard</div>
-          <div className="page-sub">Fill details, pick template, download PDF. About 10 minutes.</div>
+          <div className="page-sub">Fill details, pick template, download PDF. About 10 minutes. <CloudBadge /></div>
         </div>
         <div className="row">
           <button className="btn" onClick={() => navigate('/import')}>📤 Upload & Edit Resume</button>
@@ -42,7 +48,7 @@ export default function Dashboard() {
         <div className="stat"><b>{resumes.length}</b><span>Resumes created</span></div>
         <div className="stat"><b>{done}</b><span>Ready to send</span></div>
         <div className="stat silver"><b>{avg}%</b><span>Average completion</span></div>
-        <div className="stat silver"><b>500</b><span>Field × template combos</span></div>
+        <div className="stat silver"><b>800</b><span>Field × template combos</span></div>
       </div>
 
       {resumes.length === 0 ? (

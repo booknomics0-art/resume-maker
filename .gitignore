@@ -11,3 +11,8 @@ public/ocr/
 
 # test build output (tests/_harness.mjs bundles src/lib here)
 tests/.tmp/
+
+# local env (Supabase keys)
+.env
+.env.local
+.env.*.local

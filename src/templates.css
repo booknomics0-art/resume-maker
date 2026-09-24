@@ -1,5 +1,5 @@
 /* Resume sheet: A4 at 96dpi = 794 x 1123px.
-   50-template library: 5 layout families x 10 palette/structural variants.
+   80-template library: 5 core families x 10 variants + 6 Canva-style families x 5 variants.
    Each template sets CSS custom properties on .sheet (see Preview.tsx):
      --p  primary (headings, rules, title bars, band)   --p2/--p3 gradient mid/end
      --pm mid tone on dark surfaces                     --a  accent (silver line / gold detail)
@@ -221,6 +221,189 @@
 .tpl-metro.mod-band-tint .s-contact { color: #3d475c; }
 .tpl-metro.mod-band-tint .s-contact span:not(:first-child)::before { color: var(--p); }
 .tpl-metro.mod-band-tint .s-photo { border-color: #fff; box-shadow: 0 0 0 3px var(--p); }
+
+/* ====================================================================== */
+/* ============ Canva-style families (original code) ==================== */
+/* ====================================================================== */
+
+/* ============ 6. Portrait — letter-spaced name, square photo, hairline columns ============ */
+.tpl-portrait { padding: 40px 46px 36px; font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif; color: #2a2d33; }
+.tpl-portrait .head {
+  display: flex; justify-content: space-between; align-items: flex-end; gap: 24px;
+  padding-bottom: 22px; margin-bottom: 22px; border-bottom: 1px solid var(--a);
+}
+.tpl-portrait .s-name {
+  font-size: 24px; font-weight: 700; letter-spacing: 5px; text-transform: uppercase; color: var(--p); line-height: 1.25;
+}
+.tpl-portrait .s-headline { font-weight: 400; letter-spacing: 1.6px; color: #6b7280; font-size: 13px; margin-top: 8px; }
+.tpl-portrait .s-photo {
+  width: 118px; height: 118px; border-radius: 6px; border: none; box-shadow: none; object-fit: cover;
+}
+.tpl-portrait .s-photo.ph {
+  display: grid; place-items: center; background: #f1f2f4; color: var(--p); font-size: 34px; font-weight: 700;
+  letter-spacing: 2px; font-family: Georgia, serif;
+}
+.tpl-portrait.mod-square .s-photo { border-radius: 50%; }
+.tpl-portrait .cols { display: flex; gap: 30px; flex: 1; }
+.tpl-portrait .side { width: 210px; flex: 0 0 210px; padding-right: 26px; border-right: 1px solid var(--a); }
+.tpl-portrait .main { flex: 1; min-width: 0; }
+.tpl-portrait .s-sec-title { font-size: 11px; letter-spacing: 3.2px; font-weight: 700; color: var(--p); margin-bottom: 10px; }
+.tpl-portrait .sec { margin-bottom: 20px; }
+.tpl-portrait .contact-line { font-size: 11.6px; color: #3d4451; margin-bottom: 4px; word-break: break-word; }
+.tpl-portrait .side .s-table, .tpl-portrait .side .s-table tbody, .tpl-portrait .side .s-table tr { display: block; width: 100%; }
+.tpl-portrait .side .s-table td { display: block; width: 100%; padding: 0; border: none; text-align: left; font-size: 12px; }
+.tpl-portrait .side .s-table tr { margin-bottom: 10px; }
+.tpl-portrait .side .edu-year { color: #6b7280; font-size: 11.5px; }
+.tpl-portrait .side .s-skillset { flex-direction: column; gap: 3px; }
+.tpl-portrait .side .s-skill { border: none; background: none; padding: 0; font-size: 12px; color: #3d4451; }
+.tpl-portrait .side .s-skill::before { content: '– '; color: var(--p); }
+.tpl-portrait .s-item-head b { font-size: 13px; }
+.tpl-portrait li { margin-bottom: 3px; }
+
+/* ============ 7. Studio — pastel side panel, round photo, small-caps ============ */
+.tpl-studio { flex-direction: row; }
+.tpl-studio .side {
+  width: 250px; flex: 0 0 250px; background: var(--p2); border-right: 1px solid var(--p3);
+  padding: 34px 24px; color: #2f2f33;
+}
+.tpl-studio .avatar {
+  width: 128px; height: 128px; border-radius: 50%; object-fit: cover; display: block; margin: 0 auto 24px;
+  box-shadow: 0 0 0 4px #fff, 0 0 0 6px var(--a);
+}
+.tpl-studio .avatar.ph {
+  display: grid; place-items: center; background: #fff; color: var(--p); font-size: 38px; font-weight: 700; font-family: Georgia, serif;
+}
+.tpl-studio .side .s-sec-title {
+  font-size: 11px; letter-spacing: 2.6px; color: var(--p); margin-bottom: 8px; padding-bottom: 6px; position: relative;
+}
+.tpl-studio .side .s-sec-title::after { content: ''; position: absolute; left: 0; bottom: 0; width: 28px; height: 2px; background: var(--a); }
+.tpl-studio .side .sec { margin-bottom: 20px; }
+.tpl-studio .side .contact-line { font-size: 11.6px; margin-bottom: 5px; word-break: break-word; }
+.tpl-studio .side .s-skill { background: #fff; border-color: var(--p3); color: #2f2f33; }
+.tpl-studio .main { flex: 1; min-width: 0; padding: 38px 34px 34px; }
+.tpl-studio .head { margin-bottom: 20px; padding-bottom: 14px; border-bottom: 2px solid var(--p2); }
+.tpl-studio .s-name { font-size: 30px; font-weight: 800; color: var(--p); letter-spacing: .4px; line-height: 1.15; }
+.tpl-studio .s-headline { color: var(--a); font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; font-size: 12px; margin-top: 6px; }
+.tpl-studio .main .s-sec-title {
+  font-size: 11.5px; letter-spacing: 2.6px; color: var(--p); margin-bottom: 9px; padding-bottom: 6px; position: relative;
+}
+.tpl-studio .main .s-sec-title::after { content: ''; position: absolute; left: 0; bottom: 0; width: 34px; height: 2px; background: var(--a); }
+.tpl-studio .main .sec { margin-bottom: 16px; }
+.tpl-studio .sec-experience.tl .s-item { position: relative; padding-left: 16px; border-left: 2px solid var(--p3); margin-left: 3px; }
+.tpl-studio .sec-experience.tl .s-item::before {
+  content: ''; position: absolute; left: -6px; top: 4px; width: 8px; height: 8px; border-radius: 50%; background: var(--a);
+}
+
+/* ============ 8. Monogram — boxed initials, tracked serif name, centered rules ============ */
+.tpl-monogram { padding: 40px 50px 36px; font-family: Georgia, "Times New Roman", serif; color: #26282d; }
+.tpl-monogram .head { text-align: center; margin-bottom: 24px; }
+.tpl-monogram .seal {
+  width: 64px; height: 64px; margin: 0 auto 14px; border: 2px solid var(--p);
+  display: grid; place-items: center; font-size: 24px; letter-spacing: 3px; padding-left: 3px; color: var(--p);
+  font-weight: 700;
+}
+.tpl-monogram .seal-photo { object-fit: cover; padding: 0; border-radius: 50%; width: 84px; height: 84px; }
+.tpl-monogram .s-name { font-size: 28px; font-weight: 400; letter-spacing: 7px; text-transform: uppercase; color: var(--p); }
+.tpl-monogram .s-headline { font-family: "Segoe UI", Arial, sans-serif; font-weight: 500; letter-spacing: 3px; text-transform: uppercase; font-size: 11px; color: #6b7280; margin-top: 8px; }
+.tpl-monogram .s-contact { justify-content: center; margin-top: 12px; font-family: "Segoe UI", Arial, sans-serif; color: #4b5563; font-size: 11.4px; }
+.tpl-monogram .s-contact span:not(:first-child)::before { content: '|'; margin-right: 14px; color: var(--a); }
+.tpl-monogram .s-sec-title {
+  font-family: "Segoe UI", Arial, sans-serif; text-align: center; font-size: 11px; letter-spacing: 4px; color: var(--p);
+  display: flex; align-items: center; gap: 14px; margin-bottom: 12px;
+}
+.tpl-monogram .s-sec-title::before, .tpl-monogram .s-sec-title::after { content: ''; flex: 1; border-bottom: 1px solid var(--a); }
+.tpl-monogram .sec { margin-bottom: 18px; }
+.tpl-monogram .sec-summary p, .tpl-monogram .sec-highlight p { text-align: center; padding: 0 30px; font-style: italic; color: #3d4451; }
+.tpl-monogram .s-skillset { justify-content: center; }
+.tpl-monogram .s-skill { border-radius: 0; font-family: "Segoe UI", Arial, sans-serif; background: #fff; border-color: var(--a); }
+.tpl-monogram .s-item-head b { font-size: 13.8px; }
+.tpl-monogram .s-dates { font-family: "Segoe UI", Arial, sans-serif; }
+.tpl-monogram.mod-dark .seal { background: var(--p); color: var(--a); border-color: var(--p); }
+
+/* ============ 9. Timeline — tinted header, dates in the gutter, dotted line ============ */
+.tpl-timeline { font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif; }
+.tpl-timeline .head {
+  background: #f3f5f8; border-bottom: 3px solid var(--p); padding: 30px 38px 22px;
+}
+.tpl-timeline .head-inner { display: flex; justify-content: space-between; align-items: center; gap: 18px; }
+.tpl-timeline .s-name { font-size: 28px; color: var(--p); font-weight: 800; }
+.tpl-timeline .s-headline { color: #55617a; font-size: 14px; }
+.tpl-timeline .s-contact { margin-top: 10px; color: #3d475c; }
+.tpl-timeline .s-contact span:not(:first-child)::before { content: '·'; margin-right: 14px; color: var(--p); }
+.tpl-timeline .s-photo { border-color: #fff; box-shadow: 0 0 0 3px var(--p); }
+.tpl-timeline .body { padding: 24px 38px 30px; }
+.tpl-timeline .s-sec-title {
+  color: var(--p); letter-spacing: 2.2px; display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+}
+.tpl-timeline .s-sec-title::after { content: ''; flex: 1; height: 1px; background: var(--a); }
+.tpl-timeline .sec { margin-bottom: 16px; }
+.tpl-timeline .tl-list { position: relative; }
+.tpl-timeline .tl-row { display: grid; grid-template-columns: 92px 22px 1fr; gap: 0 8px; margin-bottom: 12px; position: relative; }
+.tpl-timeline .tl-date { font-size: 11.4px; color: #55617a; text-align: right; line-height: 1.4; padding-top: 2px; }
+.tpl-timeline .tl-dot { position: relative; }
+.tpl-timeline .tl-dot::before {
+  content: ''; position: absolute; left: 50%; top: 4px; width: 11px; height: 11px; margin-left: -5.5px;
+  border-radius: 50%; background: #fff; border: 3px solid var(--p); z-index: 1;
+}
+.tpl-timeline .tl-dot::after {
+  content: ''; position: absolute; left: 50%; top: 14px; bottom: -14px; width: 0; border-left: 2px dotted var(--pm, var(--p));
+}
+.tpl-timeline .tl-row:last-child .tl-dot::after { display: none; }
+.tpl-timeline .tl-body b { font-size: 13.4px; color: #1c2434; }
+.tpl-timeline .tl-body ul { margin-top: 4px; }
+
+/* ============ 10. Infographic — main left, dark right panel with skill bars ============ */
+.tpl-infographic { flex-direction: row; }
+.tpl-infographic .main { flex: 1; min-width: 0; padding: 34px 30px 30px 36px; }
+.tpl-infographic .head { margin-bottom: 18px; padding-bottom: 14px; border-bottom: 3px solid var(--p); }
+.tpl-infographic .s-name { font-size: 30px; font-weight: 800; color: var(--p); text-transform: uppercase; letter-spacing: 1px; line-height: 1.1; }
+.tpl-infographic .s-headline { color: #55617a; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; font-size: 12px; margin-top: 6px; }
+.tpl-infographic .main .s-sec-title {
+  color: #fff; background: var(--p); display: inline-block; padding: 4px 12px; letter-spacing: 2px; font-size: 11px; margin-bottom: 10px;
+}
+.tpl-infographic .main .sec { margin-bottom: 16px; }
+.tpl-infographic .sec-experience.tl .s-item { position: relative; padding-left: 16px; border-left: 2px solid var(--a); margin-left: 4px; }
+.tpl-infographic .sec-experience.tl .s-item::before {
+  content: ''; position: absolute; left: -6px; top: 3px; width: 8px; height: 8px; border-radius: 50%; background: var(--p);
+}
+.tpl-infographic .side {
+  width: 240px; flex: 0 0 240px; background: linear-gradient(180deg, var(--p) 0%, var(--p2) 100%);
+  color: #e4e9f0; padding: 30px 22px;
+}
+.tpl-infographic .avatar {
+  width: 120px; height: 120px; border-radius: 50%; object-fit: cover; display: block; margin: 0 auto 22px;
+  box-shadow: 0 0 0 4px var(--pm), 0 0 0 6px var(--a);
+}
+.tpl-infographic .avatar.ph { display: grid; place-items: center; background: var(--p2); color: var(--a); font-size: 36px; font-weight: 800; font-family: Georgia, serif; }
+.tpl-infographic .side .s-sec-title { color: var(--a); letter-spacing: 2.4px; border-bottom: 1px solid var(--pm); padding-bottom: 5px; margin-bottom: 10px; }
+.tpl-infographic .side .sec { margin-bottom: 18px; }
+.tpl-infographic .side .contact-line { font-size: 11.6px; margin-bottom: 6px; word-break: break-word; }
+.tpl-infographic .side .s-skill { background: var(--p2); border-color: var(--pm); color: #e4e9f0; }
+.tpl-infographic .bar { margin-bottom: 8px; }
+.tpl-infographic .bar span { display: block; font-size: 11.6px; margin-bottom: 3px; }
+.tpl-infographic .bar i { display: block; height: 5px; background: var(--pm); border-radius: 3px; overflow: hidden; }
+.tpl-infographic .bar i b { display: block; height: 100%; background: var(--a); border-radius: 3px; }
+.tpl-infographic .dots { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 11.8px; }
+.tpl-infographic .dots i { display: inline-flex; gap: 4px; }
+.tpl-infographic .dots b { width: 8px; height: 8px; border-radius: 50%; background: var(--pm); display: inline-block; }
+.tpl-infographic .dots b.on { background: var(--a); }
+
+/* ============ 11. Corporate — label column left, content right ============ */
+.tpl-corporate { padding: 36px 44px; font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif; }
+.tpl-corporate .head {
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 20px;
+  padding-bottom: 16px; margin-bottom: 20px; border-bottom: 2px solid var(--p);
+}
+.tpl-corporate .s-name { font-size: 28px; font-weight: 700; color: var(--p); letter-spacing: .6px; font-family: Georgia, "Times New Roman", serif; }
+.tpl-corporate .s-headline { color: #55617a; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; font-size: 11.5px; margin-top: 5px; }
+.tpl-corporate .head-right { display: flex; align-items: center; gap: 14px; }
+.tpl-corporate .head-right .s-contact { flex-direction: column; gap: 2px; align-items: flex-end; text-align: right; color: #3d475c; font-size: 11.5px; }
+.tpl-corporate .crow { display: grid; grid-template-columns: 148px 1fr; gap: 0 22px; padding: 12px 0; border-bottom: 1px solid var(--a); margin: 0; }
+.tpl-corporate .crow:last-child { border-bottom: none; }
+.tpl-corporate .label .s-sec-title { color: var(--p); letter-spacing: 2.2px; font-size: 11px; margin: 2px 0 0; }
+.tpl-corporate .content { min-width: 0; }
+.tpl-corporate .content .s-item:last-child { margin-bottom: 0; }
+.tpl-corporate .s-skill { border-radius: 2px; }
 
 /* ---------- print ---------- */
 .print-root { display: none; }

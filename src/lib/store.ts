@@ -3,6 +3,21 @@
 
 import { emptyResume, uid, type Resume } from './types';
 import { sanitizeResumeData, isSafeString, auditLog } from './security';
+import { pushResume, removeResume, syncAll } from './cloud';
+
+// Debounced cloud push — the editor saves on every keystroke; we upload at most
+// once per resume every 1.2s and always flush the latest version.
+const pending = new Map<string, ReturnType<typeof setTimeout>>();
+function schedulePush(r: Resume) {
+  const t = pending.get(r.id);
+  if (t) clearTimeout(t);
+  pending.set(r.id, setTimeout(() => { pending.delete(r.id); void pushResume(r); }, 1200));
+}
+
+/** Merge local + cloud copies (newest wins). Call once after sign-in / on boot. */
+export async function syncWithCloud(): Promise<Resume[]> {
+  return syncAll(loadResumes(), saveResumes);
+}
 
 const KEY = 'craftcv.resumes.v1';
 const KEY_V2 = 'craftcv.resumes.v2'; // Secure version with integrity
@@ -113,6 +128,7 @@ export function upsertResume(r: Resume) {
   else list.unshift(next);
   saveResumes(list);
   auditLog('RESUME_UPSERT', { id: r.id, name: r.name?.slice(0, 50) });
+  schedulePush(next);
   return next;
 }
 
@@ -123,6 +139,9 @@ export function deleteResume(id: string) {
   }
   saveResumes(loadResumes().filter((r) => r.id !== id));
   auditLog('RESUME_DELETED', { id });
+  const t = pending.get(id);
+  if (t) { clearTimeout(t); pending.delete(id); }
+  void removeResume(id);
 }
 
 export function duplicateResume(id: string): Resume | null {

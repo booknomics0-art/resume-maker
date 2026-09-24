@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
-import { login, signup, loginWithGoogle } from '../lib/auth';
+import { login, signup, loginWithGoogle, setLocalSession } from '../lib/auth';
+import { cloudEnabled } from '../lib/supabase';
+import { cloudSignIn, cloudSignUp, cloudSignInWithGoogle, touchProfile } from '../lib/cloud';
+import { syncWithCloud } from '../lib/store';
 import { GOOGLE_CLIENT_ID } from '../config';
 import Footer from './Footer';
 
@@ -27,6 +30,8 @@ export default function AuthPage({ onAuth }: { onAuth: () => void }) {
   const [pass, setPass] = useState('');
   const [error, setError] = useState('');
   const [googleNote, setGoogleNote] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [info, setInfo] = useState('');
 
   useEffect(() => {
     if (!GOOGLE_CLIENT_ID) return;
@@ -36,9 +41,17 @@ export default function AuthPage({ onAuth }: { onAuth: () => void }) {
     s.onload = () => {
       window.google?.accounts?.id?.initialize({
         client_id: GOOGLE_CLIENT_ID,
-        callback: (resp: any) => {
+        callback: async (resp: any) => {
           const data = JSON.parse(atob(resp.credential.split('.')[1]));
-          loginWithGoogle(data.name || data.email, data.email);
+          if (cloudEnabled()) {
+            const res = await cloudSignInWithGoogle(resp.credential);
+            if (!res.ok) { setError(res.error || 'Google sign-in failed.'); return; }
+            setLocalSession(res.user?.name || data.name || data.email, res.user?.email || data.email, 'google');
+            void touchProfile();
+            void syncWithCloud();
+          } else {
+            loginWithGoogle(data.name || data.email, data.email);
+          }
           onAuth();
         },
       });
@@ -47,12 +60,42 @@ export default function AuthPage({ onAuth }: { onAuth: () => void }) {
     return () => { document.body.removeChild(s); };
   }, [onAuth]);
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setInfo('');
+    if (cloudEnabled()) {
+      // Cloud account (Supabase Auth) — resumes sync across devices.
+      setBusy(true);
+      try {
+        const cleanEmail = email.trim().toLowerCase();
+        if (mode === 'signup') {
+          if (!name.trim()) { setError('Please enter your name.'); return; }
+          const res = await cloudSignUp(name.trim(), cleanEmail, pass);
+          if (!res.ok) { setError(res.error || 'Sign up failed.'); return; }
+          if (res.needsConfirm) {
+            setInfo('Account created! Check your email for a confirmation link, then log in.');
+            setMode('login');
+            return;
+          }
+          setLocalSession(name.trim(), cleanEmail, 'email');
+        } else {
+          const res = await cloudSignIn(cleanEmail, pass);
+          if (!res.ok) { setError(res.error || 'Login failed.'); return; }
+          setLocalSession(res.user?.name || cleanEmail, cleanEmail, 'email');
+        }
+        void touchProfile();
+        void syncWithCloud();
+        onAuth();
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
+    // Offline / demo mode — local account in this browser only.
     const res = mode === 'signup' ? signup(name, email, pass) : login(email, pass);
     if (res.ok) onAuth();
-    else setError(res.error || 'Kuch galat ho gaya.');
+    else setError(res.error || 'Something went wrong.');
   };
 
   const googleClick = () => {
@@ -82,9 +125,9 @@ export default function AuthPage({ onAuth }: { onAuth: () => void }) {
         </h1>
         <ul style={{ color: 'var(--silver-300)', fontSize: 14, lineHeight: 1.9, paddingLeft: 18, margin: 0 }}>
           <li>📤 Upload existing resume (PDF, DOCX, TXT, JSON) & advanced edit</li>
-          <li>🎨 50 templates, 10 career fields — navy & silver design</li>
-          <li>💳 1 free download, then ₹20 one-time Pro lifetime</li>
-          <li>📜 Detailed legal pages — No Refund policy, Privacy, Terms</li>
+          <li>🎨 80 templates (incl. Canva-style photo, monogram, timeline), 10 career fields</li>
+          <li>🎁 100% free — unlimited downloads, no watermark, no payment</li>
+          <li>☁️ Cloud-saved resumes — continue on any device</li>
         </ul>
       </div>
 
@@ -119,10 +162,16 @@ export default function AuthPage({ onAuth }: { onAuth: () => void }) {
             </div>
 
             {error && <div className="notice err" style={{ margin: 0 }}>{error}</div>}
+            {info && <div className="notice" style={{ margin: 0 }}>{info}</div>}
 
-            <button className="btn primary" type="submit" style={{ justifyContent: 'center', padding: '11px 16px' }}>
-              {mode === 'login' ? 'Login →' : 'Create account →'}
+            <button className="btn primary" type="submit" disabled={busy} style={{ justifyContent: 'center', padding: '11px 16px' }}>
+              {busy ? 'Please wait…' : mode === 'login' ? 'Login →' : 'Create account →'}
             </button>
+            {!cloudEnabled() && (
+              <div className="hint" style={{ fontSize: 11.5, textAlign: 'center' }}>
+                Offline mode — account & resumes stay in this browser. Cloud sync turns on once Supabase is configured.
+              </div>
+            )}
 
             <div className="row" style={{ gap: 12, color: 'var(--silver-400)', fontSize: 12 }}>
               <div style={{ flex: 1, height: 1, background: 'var(--silver-200)' }} /> or <div style={{ flex: 1, height: 1, background: 'var(--silver-200)' }} />
@@ -134,7 +183,7 @@ export default function AuthPage({ onAuth }: { onAuth: () => void }) {
             {googleNote && <div className="notice warn" style={{ margin: 0, fontSize: 12.5 }}>{googleNote}</div>}
 
             <div className="hint" style={{ textAlign: 'center', fontSize: 11.5, lineHeight: 1.5 }}>
-              By continuing, you agree to <a href="#/terms">Terms</a>, <a href="#/privacy">Privacy</a>, and <a href="#/refund">No Refund Policy</a>.
+              By continuing, you agree to our <a href="#/terms">Terms</a> and <a href="#/privacy">Privacy Policy</a>.
             </div>
           </div>
         </form>
