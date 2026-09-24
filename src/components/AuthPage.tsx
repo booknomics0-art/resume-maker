@@ -18,6 +18,8 @@ function GoogleIcon() {
   );
 }
 
+import { LAYOUT_META, TEMPLATE_COUNT } from '../lib/templates';
+
 export default function AuthPage({ onAuth, notice }: { onAuth: () => void; notice?: GoogleAuthIssue | null }) {
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [name, setName] = useState('');
@@ -158,7 +160,7 @@ export default function AuthPage({ onAuth, notice }: { onAuth: () => void; notic
         </h1>
         <ul style={{ color: 'var(--silver-300)', fontSize: 14, lineHeight: 1.9, paddingLeft: 18, margin: 0 }}>
           <li>📤 Upload existing resume (PDF, DOCX, TXT, JSON) & advanced edit</li>
-          <li>🎨 80 templates (incl. Canva-style photo, monogram, timeline), 10 career fields</li>
+          <li>🎨 {TEMPLATE_COUNT} templates in {Object.keys(LAYOUT_META).length} families (photo, monogram, timeline, editorial…), 10 career fields</li>
           <li>🎁 100% free — unlimited downloads, no watermark, no payment</li>
           <li>☁️ Cloud-saved resumes — continue on any device</li>
         </ul>

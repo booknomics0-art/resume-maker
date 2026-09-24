@@ -1,4 +1,4 @@
-// Renders a resume in one of the 80 templates (11 layout families).
+// Renders a resume in one of the 105 templates (16 layout families).
 // Used at full size in the editor, scaled down for thumbnails.
 // The template's palette is applied as CSS custom properties on .sheet;
 // structural variants (mod-invert, mod-serif, mod-band-flat, mod-band-tint)
@@ -182,10 +182,23 @@ function SectionBody({ r, id }: { r: Resume; id: SectionId }) {
   }
 }
 
-function Section({ r, id, timeline }: { r: Resume; id: SectionId; timeline?: boolean }) {
+function Section({
+  r, id, timeline, index, ledger,
+}: {
+  r: Resume;
+  id: SectionId;
+  /** experience gets a dot-and-line timeline */
+  timeline?: boolean;
+  /** 1-based number rendered in the margin (Editorial family) */
+  index?: number;
+  /** ruled rows with the dates pushed into a left column (Ledger family) */
+  ledger?: boolean;
+}) {
   if (!hasSection(r, id)) return null;
+  const cls = `sec sec-${id}${timeline ? ' tl' : ''}${index !== undefined ? ' numbered' : ''}${ledger ? ' led' : ''}`;
   return (
-    <section className={`sec sec-${id}${timeline ? ' tl' : ''}`} style={{ marginBottom: 13 }}>
+    <section className={cls} style={{ marginBottom: 13 }}>
+      {index !== undefined && <span className="sec-no" aria-hidden="true">{String(index).padStart(2, '0')}</span>}
       <h3 className="s-sec-title">{SECTION_LABELS[id]}</h3>
       <SectionBody r={r} id={id} />
     </section>
@@ -227,6 +240,21 @@ function TimelineExperience({ r }: { r: Resume }) {
     </section>
   );
 }
+
+/** Short section names for the vertical Spine strip — the full labels
+ *  ("Hobbies & Interests") would make the strip taller than the page. */
+const SPINE_LABELS: Record<SectionId, string> = {
+  summary: 'Profile',
+  highlight: 'Highlights',
+  experience: 'Experience',
+  education: 'Education',
+  skills: 'Skills',
+  projects: 'Projects',
+  certs: 'Certificates',
+  languages: 'Languages',
+  achievements: 'Awards',
+  hobbies: 'Interests',
+};
 
 /** Deterministic pseudo-level so bars look intentional without asking users for a % — Infographic family. */
 function barWidth(i: number, total: number) {
@@ -275,6 +303,8 @@ export default function Preview({ r, tpl }: { r: Resume; tpl?: Template }) {
   const t = tpl ?? templateById(r.templateId);
   const order = sectionOrder(t, r.fieldId);
   const sideSet = SIDE_SECTIONS[t.layout] ?? [];
+  /** Every rendered section, in order — used by the Spine labels. */
+  const orderedSections = order.filter((s) => hasSection(r, s));
   const mainSections = order.filter((s) => !sideSet.includes(s));
   const sideSections: SectionId[] = sideSet.filter((s) => order.includes(s));
   const p = r.personal;
@@ -482,6 +512,120 @@ export default function Preview({ r, tpl }: { r: Resume; tpl?: Template }) {
                 : <Section r={r} id={s} key={s} />
           ))}
         </aside>
+      </div>
+    );
+  }
+
+  // ---------- second wave of studio families ----------
+
+  if (t.layout === 'editorial') {
+    let n = 0;
+    return (
+      <div className={sheetClass(t)} style={sheetVars(t)}>
+        <div className="head">
+          <h1 className="s-name">{name}</h1>
+          <div className="s-headline">{headline}</div>
+          <ContactBits r={r} />
+        </div>
+        {mainSections.map((s) => {
+          n += 1;
+          return <Section r={r} id={s} key={s} index={n} />;
+        })}
+      </div>
+    );
+  }
+
+  if (t.layout === 'spine') {
+    return (
+      <div className={sheetClass(t)} style={sheetVars(t)}>
+        <aside className="spine">
+          {p.photo ? <img className="spine-photo" src={p.photo} alt="" /> : <div className="spine-mono">{initials(name)}</div>}
+          {orderedSections.map((s) => (
+            <div className="spine-label" key={s}>{SPINE_LABELS[s]}</div>
+          ))}
+        </aside>
+        <div className="spine-body">
+          <div className="head">
+            <h1 className="s-name">{name}</h1>
+            <div className="s-headline">{headline}</div>
+            <ContactBits r={r} />
+          </div>
+          {orderedSections.map((s) => <Section r={r} id={s} key={s} />)}
+        </div>
+      </div>
+    );
+  }
+
+  if (t.layout === 'soft') {
+    return (
+      <div className={sheetClass(t)} style={sheetVars(t)}>
+        <div className="head">
+          <div>
+            <h1 className="s-name">{name}</h1>
+            <div className="s-headline">{headline}</div>
+          </div>
+          {p.photo ? <img className="s-photo" src={p.photo} alt="" /> : <div className="s-photo ph">{initials(name)}</div>}
+        </div>
+        <div className="soft-panels">
+          <div className="panel">
+            <section className="sec soft-contact">
+              <h3 className="s-sec-title">Contact</h3>
+              {contactLines.map((c, i) => <div className="contact-line" key={i}>{c}</div>)}
+            </section>
+            {sideSections.map((s) => (
+              <div className="panel" key={s}><Section r={r} id={s} /></div>
+            ))}
+          </div>
+          <div className="main">
+            {mainSections.map((s) => <Section r={r} id={s} key={s} />)}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (t.layout === 'banner') {
+    return (
+      <div className={sheetClass(t)} style={sheetVars(t)}>
+        <div className="band">
+          <div className="band-inner">
+            <div>
+              <h1 className="s-name">{name}</h1>
+              <div className="s-headline">{headline}</div>
+            </div>
+            <HeaderPhoto r={r} size={92} />
+          </div>
+        </div>
+        <div className="rails">
+          <div className="main">
+            {mainSections.map((s) => <Section r={r} id={s} key={s} />)}
+          </div>
+          <aside className="rail">
+            <section className="sec">
+              <h3 className="s-sec-title">Contact</h3>
+              {contactLines.map((c, i) => <div className="contact-line" key={i}>{c}</div>)}
+            </section>
+            {sideSections.map((s) => <Section r={r} id={s} key={s} />)}
+          </aside>
+        </div>
+      </div>
+    );
+  }
+
+  if (t.layout === 'ledger') {
+    return (
+      <div className={sheetClass(t)} style={sheetVars(t)}>
+        <div className="head">
+          <div>
+            <h1 className="s-name">{name}</h1>
+            <div className="s-headline">{headline}</div>
+          </div>
+          <div className="head-right">
+            <HeaderPhoto r={r} size={68} />
+            <div className="s-contact">{contactLines.map((c, i) => <span key={i}>{c}</span>)}</div>
+          </div>
+        </div>
+        {mainSections.map((s) => <Section r={r} id={s} key={s} ledger />)}
       </div>
     );
   }

@@ -148,6 +148,9 @@ export default function Editor({ id }: { id: string }) {
     dirtyRef.current = true;
     setR((prev) => ({ ...prev, ...patch }));
   };
+  // The design step is a full-width gallery: every card is already a live
+  // preview of this resume, so the side preview pane is not shown there.
+  const isDesignStep = STEPS[step].id === 'design';
   const errs = touched ? stepValid(step, r) : [];
   const canNext = stepValid(step, r).length === 0;
   const pct = completeness(r);
@@ -237,13 +240,15 @@ export default function Editor({ id }: { id: string }) {
         </div>
       </div>
 
-      <div className="editor-mobile-tabs no-print" role="tablist" aria-label="Editor view">
-        <button role="tab" aria-selected={mobileTab === 'form'} className={mobileTab === 'form' ? 'active' : ''} onClick={() => setMobileTab('form')}>✎ Edit</button>
-        <button role="tab" aria-selected={mobileTab === 'preview'} className={mobileTab === 'preview' ? 'active' : ''} onClick={() => setMobileTab('preview')}>👁 Preview</button>
-      </div>
+      {!isDesignStep && (
+        <div className="editor-mobile-tabs no-print" role="tablist" aria-label="Editor view">
+          <button role="tab" aria-selected={mobileTab === 'form'} className={mobileTab === 'form' ? 'active' : ''} onClick={() => setMobileTab('form')}>✎ Edit</button>
+          <button role="tab" aria-selected={mobileTab === 'preview'} className={mobileTab === 'preview' ? 'active' : ''} onClick={() => setMobileTab('preview')}>👁 Preview</button>
+        </div>
+      )}
 
-      <div className="editor-grid">
-        <div className={`card pad no-print editor-form ${mobileTab === 'preview' ? 'editor-pane-hidden' : ''}`}>
+      <div className={`editor-grid ${isDesignStep ? 'editor-grid-design' : ''}`}>
+        <div className={`card pad no-print editor-form ${!isDesignStep && mobileTab === 'preview' ? 'editor-pane-hidden' : ''}`}>
           <h3 style={{ color: 'var(--navy-900)', marginBottom: 4, fontSize: 16 }}>{STEPS[step].title}</h3>
           <div className="hint" style={{ marginBottom: 14 }}>Step {step + 1} of {STEPS.length} · ~{STEPS[step].minutes} min</div>
 
@@ -272,45 +277,47 @@ export default function Editor({ id }: { id: string }) {
           )}
         </div>
 
-        <div className={`preview-pane panel no-print editor-preview ${mobileTab === 'form' ? 'editor-pane-hidden' : ''}`}>
-          <div className="preview-toolbar">
-            <b style={{ color: 'var(--navy-900)', fontSize: 13 }}>Live preview</b>
-            <div className="row" style={{ gap: 8 }}>
-              <div className="chips" style={{ gap: 4 }}>
-                <button
-                  className={`chip ${fitMode === 'width' ? 'on' : ''}`}
-                  style={{ padding: '5px 11px', minHeight: 30, fontSize: 12 }}
-                  onClick={() => setFitMode('width')}
-                >Fit width</button>
-                <button
-                  className={`chip ${fitMode === 'page' ? 'on' : ''}`}
-                  style={{ padding: '5px 11px', minHeight: 30, fontSize: 12 }}
-                  onClick={() => setFitMode('page')}
-                >Whole page</button>
-              </div>
-              <span className="hint" style={{ fontSize: 12 }}>A4 · updates as you type</span>
-            </div>
-          </div>
-          <div className="sheet-holder" ref={scaleRef} style={{ width: '100%' }}>
-            <div className="sheet-frame" style={{ width: A4.w * scale, height: contentH * scale }}>
-              <div ref={sheetRef} className="sheet-scale" style={{ width: A4.w, transform: `scale(${scale})` }}>
-                <Preview r={r} />
-                {/* on-screen guides only — where the printed A4 page ends */}
-                {Array.from({ length: Math.floor((contentH - 4) / A4.h) }).map((_, i) => (
-                  <div className="page-break" key={i} style={{ top: (i + 1) * A4.h }} />
-                ))}
+        {!isDesignStep && (
+          <div className={`preview-pane panel no-print editor-preview ${mobileTab === 'form' ? 'editor-pane-hidden' : ''}`}>
+            <div className="preview-toolbar">
+              <b style={{ color: 'var(--navy-900)', fontSize: 13 }}>Live preview</b>
+              <div className="row" style={{ gap: 8 }}>
+                <div className="chips" style={{ gap: 4 }}>
+                  <button
+                    className={`chip ${fitMode === 'width' ? 'on' : ''}`}
+                    style={{ padding: '5px 11px', minHeight: 30, fontSize: 12 }}
+                    onClick={() => setFitMode('width')}
+                  >Fit width</button>
+                  <button
+                    className={`chip ${fitMode === 'page' ? 'on' : ''}`}
+                    style={{ padding: '5px 11px', minHeight: 30, fontSize: 12 }}
+                    onClick={() => setFitMode('page')}
+                  >Whole page</button>
+                </div>
+                <span className="hint" style={{ fontSize: 12 }}>A4 · updates as you type</span>
               </div>
             </div>
+            <div className="sheet-holder" ref={scaleRef} style={{ width: '100%' }}>
+              <div className="sheet-frame" style={{ width: A4.w * scale, height: contentH * scale }}>
+                <div ref={sheetRef} className="sheet-scale" style={{ width: A4.w, transform: `scale(${scale})` }}>
+                  <Preview r={r} />
+                  {/* on-screen guides only — where the printed A4 page ends */}
+                  {Array.from({ length: Math.floor((contentH - 4) / A4.h) }).map((_, i) => (
+                    <div className="page-break" key={i} style={{ top: (i + 1) * A4.h }} />
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="row" style={{ justifyContent: 'center', marginTop: 6 }}>
+              <button className="btn small primary" disabled={pct < 100} onClick={handleDownload} style={{ flex: '0 0 auto' }}>
+                ⬇ Download PDF
+              </button>
+            </div>
+            <div className="hint" style={{ textAlign: 'center', fontSize: 11.5 }}>
+              Exact A4 page — what you see here is what prints{contentH > A4.h + 4 ? ` · ${Math.ceil(contentH / A4.h)} pages` : ''}
+            </div>
           </div>
-          <div className="row" style={{ justifyContent: 'center', marginTop: 6 }}>
-            <button className="btn small primary" disabled={pct < 100} onClick={handleDownload} style={{ flex: '0 0 auto' }}>
-              ⬇ Download PDF
-            </button>
-          </div>
-          <div className="hint" style={{ textAlign: 'center', fontSize: 11.5 }}>
-            Exact A4 page — what you see here is what prints{contentH > A4.h + 4 ? ` · ${Math.ceil(contentH / A4.h)} pages` : ''}
-          </div>
-        </div>
+        )}
       </div>
 
       <div className="print-root" aria-hidden="true"><Preview r={r} /></div>

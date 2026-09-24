@@ -16,3 +16,6 @@ tests/.tmp/
 .env
 .env.local
 .env.*.local
+
+# local visual-check harness (puppeteer screenshots), never shipped
+.scratch/

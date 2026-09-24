@@ -26,7 +26,7 @@ import { sanitizeInput, sanitizeURL } from '../lib/security';
 import { completeness, emptyResume, missingRequirements, uid, type Resume } from '../lib/types';
 import { upsertResume } from '../lib/store';
 import { FIELDS, fieldById } from '../lib/fields';
-import { LAYOUT_META, TEMPLATES } from '../lib/templates';
+import { LAYOUT_META, TEMPLATES, TEMPLATE_COUNT } from '../lib/templates';
 import { ocrAssetMode, type OcrAssetMode } from '../lib/ocr';
 import { navigate } from '../App';
 import LiveSheet from './LiveSheet';
@@ -461,8 +461,12 @@ export default function ResumeImporter() {
                 onChange={(e) => set({ templateId: e.target.value })}
                 aria-label="Template"
               >
-                {TEMPLATE_OPTIONS.map((t) => (
-                  <option key={t.id} value={t.id}>{t.name} · {t.layoutLabel}</option>
+                {TEMPLATE_GROUPS.map((g) => (
+                  <optgroup key={g.layout} label={g.label}>
+                    {g.items.map((t) => (
+                      <option key={t.id} value={t.id}>{t.name}</option>
+                    ))}
+                  </optgroup>
                 ))}
               </select>
               <select
@@ -670,7 +674,7 @@ export default function ResumeImporter() {
 
       <div className="card pad" style={{ marginTop: 18 }}>
         <h4 style={{ margin: '0 0 8px', color: 'var(--navy-900)' }}>🆚 Starting fresh instead?</h4>
-        <p className="hint" style={{ marginBottom: 12 }}>Use the guided 7-step builder — 10 minutes, 80 templates, no watermark, 100% free.</p>
+        <p className="hint" style={{ marginBottom: 12 }}>Use the guided 7-step builder — 10 minutes, {TEMPLATE_COUNT} templates, no watermark, 100% free.</p>
         <div className="row">
           <button className="btn primary" onClick={() => navigate('/editor/new')}>+ Create a new resume</button>
           <button className="btn" onClick={() => navigate('/')}>← Back to dashboard</button>
@@ -680,9 +684,15 @@ export default function ResumeImporter() {
   );
 }
 
-/** Template list for the preview dropdown. */
+/** Template list for the preview dropdown, grouped by design family so a
+ *  100+ entry menu stays navigable. */
 const TEMPLATE_OPTIONS = TEMPLATES.map((t) => ({
   id: t.id,
   name: t.name,
   layoutLabel: LAYOUT_META[t.layout]?.label || t.layout,
+}));
+const TEMPLATE_GROUPS = (Object.keys(LAYOUT_META) as (keyof typeof LAYOUT_META)[]).map((layout) => ({
+  layout,
+  label: LAYOUT_META[layout].label,
+  items: TEMPLATES.filter((t) => t.layout === layout),
 }));
