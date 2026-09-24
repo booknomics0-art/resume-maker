@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "CraftCV \u2014 free professional resume studio. 80 templates (11 families incl. Canva-style), 10 career fields, Supabase cloud sync, n8n AI webhook, offline PDF + photo OCR import.",
+  "description": "CraftCV — free professional resume studio. 165 templates across 16 families (including 36 Resume.io and 24 Canva designs), 10 career fields, Supabase cloud sync, n8n AI webhook, offline PDF + photo OCR import.",
   "scripts": {
     "predev": "node scripts/copy-ocr-assets.mjs",
     "dev": "vite",

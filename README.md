@@ -1,8 +1,8 @@
 # CraftCV — Professional Resume Studio
 
 A resume builder for India with a navy-blue & silver theme. Login, fill your
-details in 7 short steps (~10 minutes), pick from **105 templates across 16
-layout families, tuned for each of 10 career fields**, and download a clean,
+details in 7 short steps (~10 minutes), pick from **165 templates across 16
+layout families (including 36 Resume.io templates and 24 Canva designs), tuned for each of 10 career fields**, and download a clean,
 human-written-looking PDF. **100% free — no plans, no watermark, unlimited downloads.**
 Resumes are stored in your own **Supabase** database (see `docs/SUPABASE.md`).
 
@@ -13,10 +13,14 @@ Resumes are stored in your own **Supabase** database (see `docs/SUPABASE.md`).
 - **Dashboard** — resumes with live thumbnails, completion %, duplicate/delete, sample resume.
 - **Import an existing resume — PDF, DOCX, TXT, JSON, and photos (JPG/PNG)** — real PDF text extraction with **pdf.js** (compressed streams, correct line & paragraph reconstruction). Pages without a text layer (scans, photos, image-only PDFs) are detected automatically and read by a **bundled, fully offline OCR engine** (Tesseract worker + wasm core + English model served from `/ocr/`, so no CDN and no CSP problems). Photos get desk-cropped, contrast-stretched and thresholded before recognition. A line-aware parser then pulls out contact info, headline, summary, experience (role / company / location / dates / bullets), education, skills, projects, certifications, achievements, languages and hobbies — and **fills every one of them straight into the form**, with the A4 resume rendered live beside it: type in the form, the resume changes with you. Nothing is uploaded — the file never leaves the tab. Pipeline: `src/lib/pdfExtract.ts` + `src/lib/ocr.ts` → `src/lib/resumeParser.ts` → `src/components/ResumeImporter.tsx` (draft bridge: `src/lib/importDraft.ts`).
 - **7-step wizard** — Basics → Summary → Experience → Education → Skills → Extras → Design, autosave + live A4 preview.
-- **Profile photo upload** — shown on all 105 templates (auto-resized in-browser).
+- **Profile photo upload** — shown on all templates (auto-resized in-browser).
 - **Mandatory fields enforced** — name, title, email, phone, city, summary, 1 job (or fresher toggle), 1 education entry, 3+ skills. Download unlocks at 100%.
 - **10 career fields** — each ships 3 summary templates, 6 bullet templates, suggested skills (Communication & Decision Making in every field), project ideas.
-- **105 templates × 10 fields = 1,050 combos** — 5 core families (Sidebar, Classic, Minimal, Statement, Dense) × 10 variants, plus 11 **studio families** (Portrait, Studio, Monogram, Timeline, Infographic, Corporate, Editorial, Spine, Soft, Banner, Ledger) × 5 variants. All original code, print-perfect A4. Section order/emphasis re-tunes per field; best picks ★ starred.
+- **165 templates across 16 families**:
+  - **36 official Resume.io templates** (London, Santiago, Dublin, Helsinki, Seoul, Specialist, Berlin, Athens, New York, Vienna, Prague, Brussels, Sydney, Shanghai, Stockholm, Paris, Madrid, Rome, Milan, Toronto, Singapore, Amsterdam, Barcelona, Oslo, Chicago, Copenhagen, Boston, Geneva, Tokyo, Lisbon, Moscow, Rio, Vancouver, Cape Town, Academic, Entry Level).
+  - **24 Canva-style resume templates** (White Modern Business Admin, B&W Corporate, Clean Minimalist, Gray & White Clean, Freelancer, Elegant Classic, Monogrammed, Blue Professional, Student Simple, White Gold Luxury, Abu-Abu Minimalist, Dark Orange Banner, Copywriter Editorial, Science & Engineering Ledger, White Beige Studio, Blue Minimal ATS, Pink Pastel Creative, Blue & Gray Split, Green & Black Metro, Orange Gray Spine, Minimalist Photographer, Infographic Skills, Navy Modern, Teal Engineer).
+  - **105 Core & Studio templates** across 16 layout families (Sidebar, Classic, Minimal, Statement, Dense, Portrait, Studio, Monogram, Timeline, Infographic, Corporate, Editorial, Spine, Soft, Banner, Ledger).
+  - Offline catalog and schema exported in `downloaded_templates/` (`resume_io_templates.json`, `canva_templates.json`, `README.md`).
 - **Hobbies & Best Experience sections** — human touches that make the resume feel written, not generated.
 - **PDF export** — print-perfect A4 via browser print.
 - **AI assist (optional, hidden by default)** — can run through an n8n webhook; if not configured, no AI surfaces appear anywhere. Blueprint kept in `docs/N8N-INTEGRATION.md` for the owner.

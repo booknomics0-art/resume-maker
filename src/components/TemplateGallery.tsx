@@ -4,7 +4,7 @@ import type { Resume } from '../lib/types';
 import { fieldById, type Field } from '../lib/fields';
 import { Thumb } from './Preview';
 
-type Filter = 'all' | LayoutId;
+type Filter = 'all' | 'resume-io' | 'canva' | LayoutId;
 
 /** The five original families keep their own group; everything else is a
  *  studio family and is listed first. Derived from the library, so adding a
@@ -15,11 +15,17 @@ const FAMILY_ORDER: LayoutId[] = [
   ...ALL_FAMILIES.filter((l) => !CORE_FAMILIES.includes(l)),
   ...ALL_FAMILIES.filter((l) => CORE_FAMILIES.includes(l)),
 ];
-const FILTERS: Filter[] = ['all', ...FAMILY_ORDER];
+const FILTERS: Filter[] = ['all', 'resume-io', 'canva', ...FAMILY_ORDER];
 const STUDIO_FAMILIES = new Set<LayoutId>(ALL_FAMILIES.filter((l) => !CORE_FAMILIES.includes(l)));
 
-const countByLayout: Record<string, number> = TEMPLATES.reduce(
-  (acc, t) => ({ ...acc, [t.layout]: (acc[t.layout] ?? 0) + 1 }),
+const countByFilter: Record<string, number> = TEMPLATES.reduce(
+  (acc, t) => {
+    acc[t.layout] = (acc[t.layout] ?? 0) + 1;
+    if (t.collection) {
+      acc[t.collection] = (acc[t.collection] ?? 0) + 1;
+    }
+    return acc;
+  },
   {} as Record<string, number>,
 );
 
@@ -65,7 +71,7 @@ function TplCard({
       role="button"
       tabIndex={0}
       aria-pressed={selected}
-      aria-label={`Use the ${t.name} template — ${LAYOUT_META[t.layout].label} family`}
+      aria-label={`Use the ${t.name} template — ${LAYOUT_META[t.layout]?.label || t.layout} family`}
       onClick={() => onSelect(t.id)}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(t.id); }
@@ -83,11 +89,17 @@ function TplCard({
       <div className="tpl-body">
         <div className="tpl-name">
           <h4 title={t.name}>{t.name}</h4>
+          {t.collection === 'resume-io' && (
+            <span className="tpl-origin tpl-origin-resume-io" title="Official Resume.io template design">Resume.io</span>
+          )}
+          {t.collection === 'canva' && (
+            <span className="tpl-origin tpl-origin-canva" title="Canva resume style design">Canva</span>
+          )}
           {selected && <span className="tpl-applied">✓ Applied</span>}
         </div>
         <p className="tpl-tag">{t.tagline}</p>
         <div className="tpl-foot">
-          <span className="tpl-fam">{LAYOUT_META[t.layout].label}</span>
+          <span className="tpl-fam">{LAYOUT_META[t.layout]?.label || t.layout}</span>
           <span className="tpl-strength" title={t.strengths.join(' · ')}>{t.strengths[0]}</span>
         </div>
       </div>
@@ -110,10 +122,13 @@ export default function TemplateGallery({
     const needle = q.trim().toLowerCase();
     const words = needle ? needle.split(/\s+/) : [];
     const base = TEMPLATES.filter((t) => {
-      if (filter !== 'all' && t.layout !== filter) return false;
+      if (filter === 'resume-io' && t.collection !== 'resume-io') return false;
+      if (filter === 'canva' && t.collection !== 'canva') return false;
+      if (filter !== 'all' && filter !== 'resume-io' && filter !== 'canva' && t.layout !== filter) return false;
       if (bestOnly && !t.bestFor.includes(r.fieldId)) return false;
       if (!words.length) return true;
-      const hay = `${t.name} ${t.tagline} ${LAYOUT_META[t.layout].label} ${t.strengths.join(' ')}`.toLowerCase();
+      const col = t.collection === 'resume-io' ? 'resume.io resumeio' : t.collection === 'canva' ? 'canva' : '';
+      const hay = `${t.name} ${t.tagline} ${col} ${LAYOUT_META[t.layout]?.label || ''} ${t.strengths.join(' ')}`.toLowerCase();
       return words.every((w) => hay.includes(w));
     });
     // Best fit for the chosen field first, everything else in catalogue order.
@@ -128,35 +143,62 @@ export default function TemplateGallery({
   const active = TEMPLATES.find((t) => t.id === r.templateId);
   const filtersOn = filter !== 'all' || bestOnly || q.trim().length > 0;
 
+  const filterLabel = filter === 'all'
+    ? 'All'
+    : filter === 'resume-io'
+    ? 'Resume.io'
+    : filter === 'canva'
+    ? 'Canva'
+    : LAYOUT_META[filter as LayoutId]?.label || filter;
+
+  const filterBlurb = filter === 'resume-io'
+    ? 'All 36 official templates from resume.io/resume-templates (London, Dublin, Santiago, Helsinki, Berlin, Vienna…)'
+    : filter === 'canva'
+    ? '24 top modern, corporate, and minimalist resume designs from Canva'
+    : (LAYOUT_META[filter as LayoutId]?.blurb ? `${LAYOUT_META[filter as LayoutId].blurb}.` : '');
+
   return (
     <div className="tpl-shell">
       <div className="tpl-bar">
         <div className="chips tpl-chips" role="group" aria-label="Template families">
-          {FILTERS.map((fl) => (
-            <Fragment key={fl}>
-              {/* hairline separator: studio families above, the five core ones below */}
-              {fl === CORE_FAMILIES[0] && <span className="tpl-chip-sep" aria-hidden="true" />}
-              <button
-                type="button"
-                title={fl === 'all'
-                  ? `Show all ${TEMPLATE_COUNT} designs`
-                  : `${LAYOUT_META[fl as LayoutId].label} — ${LAYOUT_META[fl as LayoutId].blurb}`}
-                className={`chip tpl-chip ${fl !== 'all' && STUDIO_FAMILIES.has(fl as LayoutId) ? 'tpl-chip-new' : ''} ${filter === fl ? 'on' : ''}`}
-                aria-pressed={filter === fl}
-                onClick={() => setFilter(fl)}
-              >
-                {fl === 'all'
-                  ? `All ${TEMPLATE_COUNT}`
-                  : `${LAYOUT_META[fl as LayoutId].label} ${countByLayout[fl] ?? 0}`}
-              </button>
-            </Fragment>
-          ))}
+          {FILTERS.map((fl) => {
+            const isOrigin = fl === 'resume-io' || fl === 'canva';
+            const count = countByFilter[fl] ?? 0;
+            return (
+              <Fragment key={fl}>
+                {fl === 'resume-io' && <span className="tpl-chip-sep" aria-hidden="true" />}
+                {fl === FAMILY_ORDER[0] && <span className="tpl-chip-sep" aria-hidden="true" />}
+                {fl === CORE_FAMILIES[0] && <span className="tpl-chip-sep" aria-hidden="true" />}
+                <button
+                  type="button"
+                  title={fl === 'all'
+                    ? `Show all ${TEMPLATE_COUNT} designs`
+                    : fl === 'resume-io'
+                    ? `Resume.io Collection — all 36 templates from resume.io/resume-templates`
+                    : fl === 'canva'
+                    ? `Canva Collection — 24 top Canva resume templates`
+                    : `${LAYOUT_META[fl as LayoutId]?.label} — ${LAYOUT_META[fl as LayoutId]?.blurb}`}
+                  className={`chip tpl-chip ${isOrigin ? `tpl-chip-${fl}` : ''} ${!isOrigin && fl !== 'all' && STUDIO_FAMILIES.has(fl as LayoutId) ? 'tpl-chip-new' : ''} ${filter === fl ? 'on' : ''}`}
+                  aria-pressed={filter === fl}
+                  onClick={() => setFilter(fl)}
+                >
+                  {fl === 'all'
+                    ? `All ${TEMPLATE_COUNT}`
+                    : fl === 'resume-io'
+                    ? `Resume.io ${count}`
+                    : fl === 'canva'
+                    ? `Canva ${count}`
+                    : `${LAYOUT_META[fl as LayoutId]?.label} ${count}`}
+                </button>
+              </Fragment>
+            );
+          })}
         </div>
 
         <div className="tpl-tools">
           <span className="tpl-count">
             {total === 1 ? '1 template' : `${total} templates`}
-            {filter !== 'all' && ` · ${LAYOUT_META[filter as LayoutId].label}`}
+            {filter !== 'all' && ` · ${filterLabel}`}
             {bestOnly && ` · best fit`}
             {q.trim() && ` · “${q.trim()}”`}
           </span>
@@ -199,11 +241,7 @@ export default function TemplateGallery({
 
       {(filter !== 'all' || bestOnly) && (
         <p className="hint tpl-blurb">
-          {filter !== 'all' && (
-            <>
-              {LAYOUT_META[filter as LayoutId].blurb}.
-            </>
-          )}
+          {filterBlurb}
           {bestOnly && <> Showing only the designs that suit <b>{f.label}</b> best.</>}
         </p>
       )}
@@ -211,7 +249,7 @@ export default function TemplateGallery({
       {total === 0 ? (
         <div className="tpl-empty">
           <div className="tpl-empty-ico" aria-hidden="true">⌕</div>
-          <h4>No template matches “{q.trim() || LAYOUT_META[filter as LayoutId]?.label}”</h4>
+          <h4>No template matches “{q.trim() || filterLabel}”</h4>
           <p className="hint">Try a different word — or clear the filters to see all {TEMPLATE_COUNT} designs.</p>
           <button type="button" className="btn small" onClick={() => { setQ(''); setFilter('all'); setBestOnly(false); }}>
             Clear filters
