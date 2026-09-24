@@ -1,76 +1,245 @@
 /**
- * CraftCV Advanced Resume Importer
- * Upload existing resume (PDF, DOCX, TXT, JSON) -> Parse -> Advanced Edit -> Save
- * Features: drag-drop, live extraction progress (pdf.js + OCR), field mapping,
- * full review form, security validation.
+ * CraftCV Resume Importer — upload → auto-fill → edit → live preview → save.
+ *
+ * What happens when a file is dropped in:
+ *   1. the file is read in the browser (pdf.js text layer, or the built-in OCR
+ *      engine for scans and photos — see lib/pdfExtract.ts + lib/ocr.ts),
+ *   2. the text is structured into resume fields (lib/resumeParser.ts),
+ *   3. every extracted value is written straight into the form on the left
+ *      *and* into the draft store, so the A4 sheet on the right is already
+ *      showing the imported resume,
+ *   4. from then on the form and the preview are the same object: every
+ *      keystroke re-renders the sheet instantly (and survives a page reload
+ *      through sessionStorage),
+ *   5. "Save & open in editor" persists it and hands the same resume to the
+ *      full editor, which picks the draft up if it is still unsaved.
+ *
+ * Nothing is uploaded anywhere — extraction and OCR both run on the device.
  */
 
-import { useState, useRef } from 'react';
-import { parseResumeFile, type SupportedFormat, type ParseMeta } from '../lib/resumeParser';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  parseResumeFile, parseResumeText, parsedToResume,
+  type ParseMeta, type SupportedFormat,
+} from '../lib/resumeParser';
 import { sanitizeInput, sanitizeURL } from '../lib/security';
-import { emptyResume, uid, type Resume } from '../lib/types';
+import { completeness, emptyResume, missingRequirements, uid, type Resume } from '../lib/types';
 import { upsertResume } from '../lib/store';
+import { FIELDS, fieldById } from '../lib/fields';
+import { LAYOUT_META, TEMPLATES } from '../lib/templates';
+import { ocrAssetMode, type OcrAssetMode } from '../lib/ocr';
 import { navigate } from '../App';
+import LiveSheet from './LiveSheet';
+import {
+  StepBasics, StepDesign, StepEducation, StepExperience, StepExtras, StepSkills, StepSummary,
+} from './Steps';
+import {
+  clearImportDraft, loadImportDraft, rememberImportInfo, saveImportDraft, type ImportDraft,
+} from '../lib/importDraft';
 
-type ImportStep = 'upload' | 'parsing' | 'review' | 'success';
+type ImportStep = 'upload' | 'parsing' | 'review' | 'saved';
 
 const METHOD_LABEL: Record<string, string> = {
-  text: 'Text layer (pdf.js) — accurate',
-  ocr: 'OCR — scanned PDF read via image recognition',
+  text: 'Text layer (pdf.js) — exact',
+  ocr: 'Built-in OCR — scanned image read on your device',
   mixed: 'Text layer + OCR (some pages were images)',
 };
 
+const ACCEPT = '.pdf,.docx,.doc,.txt,.json,.jpg,.jpeg,.png,.webp,.bmp,image/*';
+
+const TABS = [
+  { id: 'basics', label: '👤 Basics' },
+  { id: 'summary', label: '📝 Summary' },
+  { id: 'experience', label: '💼 Experience' },
+  { id: 'education', label: '🎓 Education' },
+  { id: 'skills', label: '🛠 Skills' },
+  { id: 'extras', label: '➕ Extras' },
+  { id: 'design', label: '🎨 Template' },
+];
+
+/** Sanitize everything before it can reach the store / the DOM. */
+function sanitizeResume(r: Resume): Resume {
+  const clean = {
+    ...r,
+    name: r.personal.fullName ? `${r.personal.fullName} — ${r.personal.headline || 'Resume'}` : r.name,
+    personal: {
+      fullName: sanitizeInput(r.personal.fullName, 100),
+      headline: sanitizeInput(r.personal.headline, 100),
+      email: sanitizeInput(r.personal.email, 100),
+      phone: sanitizeInput(r.personal.phone, 30),
+      city: sanitizeInput(r.personal.city, 50),
+      linkedin: sanitizeURL(r.personal.linkedin),
+      website: sanitizeURL(r.personal.website),
+      photo: r.personal.photo,
+    },
+    summary: sanitizeInput(r.summary, 2000),
+    bestExperience: sanitizeInput(r.bestExperience, 1000),
+    skills: r.skills.map((s) => sanitizeInput(s, 50)).filter(Boolean),
+    hobbies: r.hobbies.map((h) => sanitizeInput(h, 50)).filter(Boolean),
+    achievements: r.achievements.map((a) => sanitizeInput(a, 220)).filter(Boolean),
+    experience: r.experience.map((e) => ({
+      ...e,
+      role: sanitizeInput(e.role, 100),
+      company: sanitizeInput(e.company, 100),
+      location: sanitizeInput(e.location, 60),
+      start: sanitizeInput(e.start, 20),
+      end: sanitizeInput(e.end, 20),
+      bullets: e.bullets.map((b) => sanitizeInput(b, 250)).filter(Boolean).slice(0, 8),
+    })),
+    education: r.education.map((ed) => ({
+      ...ed,
+      degree: sanitizeInput(ed.degree, 100),
+      school: sanitizeInput(ed.school, 100),
+      location: sanitizeInput(ed.location, 60),
+      year: sanitizeInput(ed.year, 30),
+      note: sanitizeInput(ed.note, 80),
+    })),
+    projects: r.projects.map((p) => ({
+      id: p.id || uid(),
+      name: sanitizeInput(p.name, 80),
+      link: sanitizeURL(p.link),
+      points: sanitizeInput(p.points, 1200),
+    })),
+    certs: r.certs.map((c) => ({
+      id: c.id || uid(),
+      name: sanitizeInput(c.name, 90),
+      issuer: sanitizeInput(c.issuer, 60),
+      year: sanitizeInput(c.year, 20),
+    })),
+    languages: r.languages.map((l) => ({
+      id: l.id || uid(),
+      name: sanitizeInput(l.name, 40),
+      level: sanitizeInput(l.level, 40),
+    })).filter((l) => l.name),
+  };
+  return clean;
+}
+
+/** Human summary of everything the parser managed to pull out. */
+function detectedFields(r: Resume): Array<{ label: string; tab: number }> {
+  const p = r.personal;
+  const out: Array<{ label: string; tab: number }> = [];
+  if (p.fullName) out.push({ label: `Name · ${p.fullName}`, tab: 0 });
+  if (p.headline) out.push({ label: `Role · ${p.headline}`, tab: 0 });
+  if (p.email) out.push({ label: `Email · ${p.email}`, tab: 0 });
+  if (p.phone) out.push({ label: `Phone · ${p.phone}`, tab: 0 });
+  if (p.city) out.push({ label: `City · ${p.city}`, tab: 0 });
+  if (p.linkedin) out.push({ label: 'LinkedIn', tab: 0 });
+  if (p.website) out.push({ label: 'Website', tab: 0 });
+  if (r.summary) out.push({ label: `Summary · ${r.summary.length} chars`, tab: 1 });
+  if (r.experience.length) out.push({ label: `Experience · ${r.experience.length}`, tab: 2 });
+  if (r.education.length) out.push({ label: `Education · ${r.education.length}`, tab: 3 });
+  if (r.skills.length) out.push({ label: `Skills · ${r.skills.length}`, tab: 4 });
+  if (r.projects.length) out.push({ label: `Projects · ${r.projects.length}`, tab: 5 });
+  if (r.certs.length) out.push({ label: `Certificates · ${r.certs.length}`, tab: 5 });
+  if (r.achievements.length) out.push({ label: `Achievements · ${r.achievements.length}`, tab: 5 });
+  if (r.languages.length) out.push({ label: `Languages · ${r.languages.length}`, tab: 5 });
+  if (r.hobbies.length) out.push({ label: `Hobbies · ${r.hobbies.length}`, tab: 5 });
+  return out;
+}
+
 export default function ResumeImporter() {
-  const [step, setStep] = useState<ImportStep>('upload');
-  const [file, setFile] = useState<File | null>(null);
-  const [format, setFormat] = useState<SupportedFormat>('unknown');
-  const [meta, setMeta] = useState<ParseMeta | null>(null);
-  const [parsedResume, setParsedResume] = useState<Resume | null>(null);
-  const [rawText, setRawText] = useState('');
+  const [step, setStep] = useState<ImportStep>(() => (loadImportDraft() ? 'review' : 'upload'));
+  const [draft, setDraft] = useState<ImportDraft | null>(() => loadImportDraft());
+  const [format, setFormat] = useState<SupportedFormat>(() => loadImportDraft()?.format ?? 'unknown');
   const [error, setError] = useState('');
   const [progress, setProgress] = useState<{ stage: string; pct: number } | null>(null);
   const [dragActive, setDragActive] = useState(false);
-  const [editData, setEditData] = useState<Resume>(emptyResume());
+  const [tab, setTab] = useState(0);
+  const [mobileTab, setMobileTab] = useState<'form' | 'preview'>('form');
+  const [showReport, setShowReport] = useState(false);
+  const [textDraft, setTextDraft] = useState('');
+  const [elapsed, setElapsed] = useState(0);
+  // Which copy of the OCR engine this build will actually use — worth showing,
+  // because a CDN fallback is exactly what used to make scans fail on the live site.
+  const [engineMode, setEngineMode] = useState<OcrAssetMode | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const runIdRef = useRef(0);
+  const lastFileRef = useRef<File | null>(null);
 
+  const r = draft?.resume ?? emptyResume();
+  const meta: ParseMeta | null = draft?.meta ?? null;
+  const pct = completeness(r);
+  const missing = missingRequirements(r);
+  const detected = useMemo(() => detectedFields(r), [r]);
+
+  // keep the raw-text editor in sync when a new import lands
+  useEffect(() => {
+    setTextDraft(draft?.rawText ?? '');
+  }, [draft?.rawText]);
+
+  useEffect(() => {
+    let alive = true;
+    ocrAssetMode()
+      .then((m) => { if (alive) setEngineMode(m); })
+      .catch(() => { if (alive) setEngineMode('cdn'); });
+    return () => { alive = false; };
+  }, []);
+
+  // a visible clock while parsing: scanned PDFs legitimately take 10–30s
+  useEffect(() => {
+    if (step !== 'parsing') return;
+    setElapsed(0);
+    const t = setInterval(() => setElapsed((s) => s + 1), 1000);
+    return () => clearInterval(t);
+  }, [step]);
+
+  // ── reading a file ────────────────────────────────────────────────────────
   const handleFile = async (f: File, forceOcr = false) => {
     setError('');
-    if (f.size > 10 * 1024 * 1024) {
-      setError('File too large. Max 10MB allowed.');
+    if (f.size > 25 * 1024 * 1024) {
+      setError('That file is larger than 25MB. Please upload a smaller file (or compress the PDF).');
       return;
     }
-    setFile(f);
+    const runId = ++runIdRef.current;
+    lastFileRef.current = f;
+    setFormat(f.name.toLowerCase().endsWith('.pdf') ? 'pdf' : 'unknown');
     setProgress({ stage: 'Starting…', pct: 0 });
     setStep('parsing');
 
     const result = await parseResumeFile(f, {
-      onProgress: p => setProgress({ stage: p.stage, pct: p.pct }),
+      onProgress: (p) => { if (runId === runIdRef.current) setProgress({ stage: p.stage, pct: p.pct }); },
       forceOcr,
     });
-    setFormat(result.format);
-    setMeta(result.meta || null);
+    if (runId !== runIdRef.current) return; // a newer upload took over
 
-    if (result.error) {
-      setError(result.error);
+    setFormat(result.format);
+    if (result.error || !result.resume) {
+      setError(result.error || 'Could not read that file. Try another format, or copy-paste the text.');
       setStep('upload');
       return;
     }
+    const next: ImportDraft = {
+      resume: result.resume,
+      fileName: f.name,
+      fileSize: f.size,
+      format: result.format,
+      meta: result.meta ?? null,
+      rawText: result.text,
+      updatedAt: Date.now(),
+    };
+    saveImportDraft(next);
+    rememberImportInfo(next.resume.id, { fileName: f.name, format: result.format, meta: result.meta ?? null });
+    setDraft(next);
+    setTab(0);
+    setStep('review');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
-    if (result.resume) {
-      setParsedResume(result.resume);
-      setEditData(result.resume);
-      setRawText(result.text);
-      setStep('review');
-    } else {
-      setError('Could not parse resume. Try manual entry.');
-      setStep('upload');
-    }
+  /** Every form edit lands here: update state, autosave the draft. */
+  const set = (patch: Partial<Resume>) => {
+    setDraft((prev) => {
+      if (!prev) return prev;
+      const next = { ...prev, resume: { ...prev.resume, ...patch } };
+      saveImportDraft(next);
+      return next;
+    });
   };
 
   const onDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setDragActive(false);
-    const f = e.dataTransfer.files[0];
+    const f = e.dataTransfer.files?.[0];
     if (f) handleFile(f);
   };
 
@@ -80,375 +249,328 @@ export default function ResumeImporter() {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const handleSave = () => {
-    if (!editData.personal.fullName.trim()) {
-      setError('Full name is required');
-      return;
-    }
-    if (!editData.personal.email.trim()) {
-      setError('Email is required');
-      return;
-    }
-    // Sanitize before save
-    const sanitized: Resume = {
-      ...editData,
-      personal: {
-        fullName: sanitizeInput(editData.personal.fullName, 100),
-        headline: sanitizeInput(editData.personal.headline, 100),
-        email: sanitizeInput(editData.personal.email, 100),
-        phone: sanitizeInput(editData.personal.phone, 30),
-        city: sanitizeInput(editData.personal.city, 50),
-        linkedin: sanitizeURL(editData.personal.linkedin),
-        website: sanitizeURL(editData.personal.website),
-        photo: editData.personal.photo, // data URL already validated
+  const reparseFromText = () => {
+    if (!draft) return;
+    if (!confirm('Re-read the structured fields from the text below?\n\nThis replaces the values currently in the form (your template, photo and template choice stay).')) return;
+    const parsed = parseResumeText(textDraft, { ocr: draft.meta?.method !== 'text' });
+    const fresh = parsedToResume(parsed);
+    // one atomic draft write: the edited text and the re-read fields together,
+    // so neither can overwrite the other
+    const next: ImportDraft = {
+      ...draft,
+      rawText: textDraft,
+      resume: {
+        ...fresh,
+        id: draft.resume.id,
+        name: draft.resume.name,
+        templateId: draft.resume.templateId,
+        fieldId: draft.resume.fieldId,
+        personal: { ...fresh.personal, photo: draft.resume.personal.photo },
       },
-      summary: sanitizeInput(editData.summary, 2000),
-      bestExperience: sanitizeInput(editData.bestExperience, 1000),
-      skills: editData.skills.map(s => sanitizeInput(s, 50)).filter(Boolean),
-      hobbies: editData.hobbies.map(h => sanitizeInput(h, 50)).filter(Boolean),
-      achievements: editData.achievements.map(a => sanitizeInput(a, 220)).filter(Boolean),
-      experience: editData.experience.map(e => ({
-        ...e,
-        role: sanitizeInput(e.role, 100),
-        company: sanitizeInput(e.company, 100),
-        location: sanitizeInput(e.location, 60),
-        start: sanitizeInput(e.start, 20),
-        end: sanitizeInput(e.end, 20),
-        bullets: e.bullets.map(b => sanitizeInput(b, 250)).filter(Boolean).slice(0, 8),
-      })),
-      education: editData.education.map(ed => ({
-        ...ed,
-        degree: sanitizeInput(ed.degree, 100),
-        school: sanitizeInput(ed.school, 100),
-        location: sanitizeInput(ed.location, 60),
-        year: sanitizeInput(ed.year, 30),
-        note: sanitizeInput(ed.note, 80),
-      })),
-      projects: editData.projects.map(p => ({
-        id: p.id || uid(),
-        name: sanitizeInput(p.name, 80),
-        link: sanitizeURL(p.link),
-        points: sanitizeInput(p.points, 1200),
-      })),
-      certs: editData.certs.map(c => ({
-        id: c.id || uid(),
-        name: sanitizeInput(c.name, 90),
-        issuer: sanitizeInput(c.issuer, 60),
-        year: sanitizeInput(c.year, 20),
-      })),
+      updatedAt: Date.now(),
     };
-
-    const saved = upsertResume(sanitized);
-    setStep('success');
-    setTimeout(() => navigate(`/editor/${saved.id}`), 1200);
+    saveImportDraft(next);
+    setDraft(next);
+    setTab(0);
   };
 
-  const updatePersonal = (field: keyof Resume['personal'], value: string) => {
-    setEditData(prev => ({
-      ...prev,
-      personal: { ...prev.personal, [field]: value }
-    }));
+  const handleSave = () => {
+    if (!draft) return;
+    if (!r.personal.fullName.trim()) {
+      setTab(0);
+      setError('Please add the full name — it is the one field every resume needs.');
+      return;
+    }
+    if (!/^\S+@\S+\.\S+$/.test(r.personal.email.trim())) {
+      setTab(0);
+      setError('Please add a valid email address.');
+      return;
+    }
+    setError('');
+    rememberImportInfo(r.id, { fileName: draft.fileName, format: draft.format, meta: draft.meta });
+    const saved = upsertResume(sanitizeResume(r));
+    clearImportDraft();
+    setDraft(null);
+    setStep('saved');
+    setTimeout(() => navigate(`/editor/${saved.id}`), 900);
   };
 
-  const updateExperience = (idx: number, patch: Partial<Resume['experience'][number]>) => {
-    setEditData(prev => {
-      const experience = [...prev.experience];
-      experience[idx] = { ...experience[idx], ...patch };
-      return { ...prev, experience };
-    });
-  };
+  // ── parsing screen ────────────────────────────────────────────────────────
+  if (step === 'parsing') {
+    return (
+      <div className="card pad" style={{ maxWidth: 620, margin: '40px auto', textAlign: 'center' }}>
+        <div style={{ fontSize: 34, marginBottom: 10 }}>🧠</div>
+        <h3 style={{ color: 'var(--navy-900)', marginBottom: 6 }}>Reading your resume…</h3>
+        <p className="hint" style={{ minHeight: 34 }}>{progress?.stage || 'Extracting text…'}</p>
+        <div className="progress" style={{ marginTop: 14, height: 8 }}>
+          <div style={{ width: `${Math.max(4, Math.min(100, progress?.pct || 0))}%`, transition: 'width .25s ease' }} />
+        </div>
+        <div className="row" style={{ justifyContent: 'space-between', marginTop: 10 }}>
+          <span className="hint" style={{ fontSize: 12 }}>{format.toUpperCase()} · {Math.round((lastFileRef.current?.size || 0) / 1024)}KB</span>
+          <span className="hint" style={{ fontSize: 12 }}>{elapsed}s</span>
+        </div>
+        <div className="notice" style={{ marginTop: 18, textAlign: 'left', fontSize: 12.5 }}>
+          <b>Why this can take a moment:</b> text-based PDFs are instant. Scanned pages and photos are read
+          with the built-in OCR engine — first run loads a 3MB English model (cached in your browser
+          afterwards, so a second import is much faster). Everything stays on your device.
+        </div>
+        <button
+          className="btn small"
+          style={{ marginTop: 14 }}
+          onClick={() => { runIdRef.current++; setStep(loadImportDraft() ? 'review' : 'upload'); }}
+        >
+          Cancel
+        </button>
+      </div>
+    );
+  }
 
-  if (step === 'success') {
+  if (step === 'saved') {
     return (
       <div className="card pad" style={{ maxWidth: 600, margin: '40px auto', textAlign: 'center' }}>
-        <div style={{ fontSize: 48, marginBottom: 12 }}>✅</div>
-        <h3 style={{ color: 'var(--navy-900)' }}>Resume Imported Successfully!</h3>
-        <p className="hint">Redirecting to advanced editor...</p>
+        <div style={{ fontSize: 46, marginBottom: 10 }}>✅</div>
+        <h3 style={{ color: 'var(--navy-900)' }}>Imported &amp; saved</h3>
+        <p className="hint">Opening the full editor so you can finish the details and download the PDF…</p>
         <div className="progress" style={{ marginTop: 16 }}><div style={{ width: '100%' }} /></div>
       </div>
     );
   }
 
-  if (step === 'parsing') {
-    return (
-      <div className="card pad" style={{ maxWidth: 600, margin: '40px auto', textAlign: 'center' }}>
-        <div style={{ fontSize: 32, marginBottom: 16 }}>⏳</div>
-        <h3>Parsing {file?.name}...</h3>
-        <p className="hint">{progress?.stage || 'Extracting text and structuring your resume…'}</p>
-        <div className="progress" style={{ marginTop: 20, height: 8 }}>
-          <div style={{ width: `${Math.max(4, Math.min(100, progress?.pct || 0))}%`, transition: 'width .3s ease' }} />
-        </div>
-        <p className="hint" style={{ marginTop: 12, fontSize: 12 }}>
-          Format detected: {format.toUpperCase()} · Size: {file ? Math.round(file.size / 1024) : 0}KB
-          {progress?.stage?.toLowerCase().includes('ocr') ? ' · ☕ OCR runs fully in your browser (first run downloads the engine)' : ''}
-        </p>
-      </div>
-    );
-  }
+  // ── review screen: form (left) ⇄ live resume (right) ──────────────────────
+  if (step === 'review' && draft) {
+    const body = [
+      <StepBasics key="b" r={r} set={set} />,
+      <StepSummary key="s" r={r} set={set} />,
+      <StepExperience key="e" r={r} set={set} />,
+      <StepEducation key="ed" r={r} set={set} />,
+      <StepSkills key="sk" r={r} set={set} />,
+      <StepExtras key="x" r={r} set={set} />,
+      <StepDesign key="d" r={r} set={set} />,
+    ][tab];
 
-  if (step === 'review' && parsedResume) {
     return (
-      <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+      <div className="editor-root">
         <div className="page-head">
-          <div>
-            <div className="page-title">Review & Edit Imported Resume</div>
-            <div className="page-sub">We parsed {file?.name} ({format.toUpperCase()}) — verify and enhance before saving. Advanced editing enabled.</div>
+          <div style={{ minWidth: 0, flex: '1 1 260px' }}>
+            <div className="page-title" style={{ fontSize: 20 }}>📥 Imported — check &amp; edit</div>
+            <div className="page-sub">
+              <b>{draft.fileName}</b> · {draft.format.toUpperCase()} · {METHOD_LABEL[meta?.method || 'text'] || meta?.method}
+              {meta?.ocrConfidence ? ` · ${meta.ocrConfidence}% OCR confidence` : ''} · <b>{pct}%</b> complete
+            </div>
           </div>
-          <div className="row">
+          <div className="row" style={{ flexWrap: 'wrap' }}>
             <button className="btn" onClick={() => setStep('upload')}>← Upload different</button>
-            <button className="btn primary" onClick={handleSave}>💾 Save & Open in Editor →</button>
+            {draft.format === 'pdf' && (
+              <button className="btn" onClick={() => lastFileRef.current && handleFile(lastFileRef.current, true)}>
+                🔁 Re-run OCR
+              </button>
+            )}
+            <button className="btn primary" onClick={handleSave}>💾 Save &amp; open in editor →</button>
           </div>
         </div>
 
         {error && <div className="notice err">{error}</div>}
+
         {meta?.warning && (
           <div className="notice" style={{ borderColor: 'var(--amber-500, #d97706)', background: '#fffbeb' }}>
             ⚠️ {meta.warning}
-            {format === 'pdf' && (
-              <button
-                className="btn small"
-                style={{ marginLeft: 10 }}
-                onClick={() => file && handleFile(file, true)}
-                disabled={!file}
-              >🖼️ Re-extract with OCR</button>
-            )}
           </div>
         )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 20 }} className="import-grid">
-          {/* Editable form */}
-          <div className="card pad">
-            <h3 style={{ color: 'var(--navy-900)', marginBottom: 16 }}>📝 Advanced Editor — Verify Parsed Data</h3>
+        {/* auto-fill summary — click a chip to jump to that section */}
+        <div className="card pad" style={{ marginBottom: 16, padding: '14px 16px' }}>
+          <div className="row" style={{ justifyContent: 'space-between', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
+            <b style={{ color: 'var(--navy-900)', fontSize: 14 }}>
+              🎯 {detected.length ? `${detected.length} groups auto-filled from your file` : 'Nothing could be auto-filled'}
+            </b>
+            <span className="hint" style={{ fontSize: 12 }}>
+              {missing.length ? `${missing.length} required item${missing.length > 1 ? 's' : ''} still missing: ${missing.slice(0, 3).map((m) => m.label).join(', ')}${missing.length > 3 ? '…' : ''}` : 'All mandatory fields are filled ✓'}
+            </span>
+          </div>
+          <div className="chips" style={{ marginTop: 10 }}>
+            {detected.map((d) => (
+              <button key={d.label} className="chip" style={{ cursor: 'pointer' }} onClick={() => setTab(d.tab)}>
+                {d.label}
+              </button>
+            ))}
+            {!detected.length && <span className="hint">Fill the sections manually on the left — the preview updates as you type.</span>}
+          </div>
+        </div>
 
-            <div className="form-grid">
-              <div>
-                <label className="f">Full Name *</label>
-                <input className="input" value={editData.personal.fullName} onChange={e => updatePersonal('fullName', e.target.value)} placeholder="e.g. Aarav Sharma" />
-              </div>
-              <div>
-                <label className="f">Headline / Target Role</label>
-                <input className="input" value={editData.personal.headline} onChange={e => updatePersonal('headline', e.target.value)} placeholder="e.g. Frontend Developer" />
-              </div>
-              <div>
-                <label className="f">Email *</label>
-                <input className="input" value={editData.personal.email} onChange={e => updatePersonal('email', e.target.value)} placeholder="you@example.com" />
-              </div>
-              <div>
-                <label className="f">Phone</label>
-                <input className="input" value={editData.personal.phone} onChange={e => updatePersonal('phone', e.target.value)} placeholder="+91 98765 43210" />
-              </div>
-              <div>
-                <label className="f">City</label>
-                <input className="input" value={editData.personal.city} onChange={e => updatePersonal('city', e.target.value)} placeholder="Pune" />
-              </div>
-              <div>
-                <label className="f">LinkedIn</label>
-                <input className="input" value={editData.personal.linkedin} onChange={e => updatePersonal('linkedin', e.target.value)} placeholder="linkedin.com/in/..." />
-              </div>
-              <div className="full">
-                <label className="f">Website / Portfolio</label>
-                <input className="input" value={editData.personal.website} onChange={e => updatePersonal('website', e.target.value)} placeholder="yoursite.dev" />
-              </div>
-              <div className="full">
-                <label className="f">Professional Summary</label>
-                <textarea className="textarea" rows={4} value={editData.summary} onChange={e => setEditData(prev => ({ ...prev, summary: e.target.value }))} placeholder="Summary..." />
-              </div>
-              <div className="full">
-                <label className="f">Skills ({editData.skills.length})</label>
-                <div className="chips" style={{ marginBottom: 8 }}>
-                  {editData.skills.map((s, i) => (
-                    <span key={i} className="chip on">
-                      {s} <button onClick={() => setEditData(prev => ({ ...prev, skills: prev.skills.filter((_, idx) => idx !== i) }))} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', marginLeft: 6 }}>✕</button>
-                    </span>
-                  ))}
-                </div>
-                <div className="row">
-                  <input className="input" style={{ flex: 1 }} placeholder="Add skill + Enter" onKeyDown={e => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      const val = (e.target as HTMLInputElement).value.trim();
-                      if (val) {
-                        setEditData(prev => ({ ...prev, skills: [...prev.skills, val] }));
-                        (e.target as HTMLInputElement).value = '';
-                      }
-                    }
-                  }} />
-                </div>
-              </div>
+        <div className="editor-mobile-tabs" role="tablist" aria-label="Import view">
+          <button role="tab" aria-selected={mobileTab === 'form'} className={mobileTab === 'form' ? 'active' : ''} onClick={() => setMobileTab('form')}>✎ Edit fields</button>
+          <button role="tab" aria-selected={mobileTab === 'preview'} className={mobileTab === 'preview' ? 'active' : ''} onClick={() => setMobileTab('preview')}>👁 Resume</button>
+        </div>
 
-              <div className="full">
-                <label className="f">Experience ({editData.experience.length} entries)</label>
-                {editData.experience.map((exp, idx) => (
-                  <div key={exp.id} className="entry-card">
-                    <div className="entry-head"><b>Job {idx + 1}</b><button className="btn small danger" onClick={() => setEditData(prev => ({ ...prev, experience: prev.experience.filter(e => e.id !== exp.id) }))}>Remove</button></div>
-                    <div className="form-grid">
-                      <input className="input" value={exp.role} placeholder="Role" onChange={e => updateExperience(idx, { role: e.target.value })} />
-                      <input className="input" value={exp.company} placeholder="Company" onChange={e => updateExperience(idx, { company: e.target.value })} />
-                      <input className="input" value={exp.location} placeholder="Location" onChange={e => updateExperience(idx, { location: e.target.value })} />
-                      <div className="row">
-                        <input className="input" style={{ flex: 1 }} value={exp.start} placeholder="Start (e.g. Mar 2022)" onChange={e => updateExperience(idx, { start: e.target.value })} />
-                        <input className="input" style={{ flex: 1 }} value={exp.current ? 'Present' : exp.end} placeholder="End" disabled={exp.current} onChange={e => updateExperience(idx, { end: e.target.value })} />
-                        <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, whiteSpace: 'nowrap' }}>
-                          <input type="checkbox" checked={exp.current} onChange={e => updateExperience(idx, { current: e.target.checked, end: e.target.checked ? 'Present' : exp.end })} /> Current
-                        </label>
-                      </div>
-                      <div className="full">
-                        <textarea className="textarea" rows={3} value={exp.bullets.join('\n')} placeholder="Bullets (one per line)" onChange={e => updateExperience(idx, { bullets: e.target.value.split('\n') })} />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                <button className="btn small" onClick={() => setEditData(prev => ({ ...prev, experience: [...prev.experience, { id: uid(), role: '', company: '', location: '', start: '', end: '', current: false, bullets: [''] }] }))}>+ Add Experience</button>
-              </div>
-
-              <div className="full">
-                <label className="f">Education ({editData.education.length})</label>
-                {editData.education.map((edu, idx) => (
-                  <div key={edu.id} className="entry-card">
-                    <div className="entry-head"><b>Education {idx + 1}</b><button className="btn small danger" onClick={() => setEditData(prev => ({ ...prev, education: prev.education.filter(e => e.id !== edu.id) }))}>Remove</button></div>
-                    <div className="form-grid">
-                      <input className="input" value={edu.degree} placeholder="Degree" onChange={e => {
-                        const newEdu = [...editData.education]; newEdu[idx] = { ...newEdu[idx], degree: e.target.value }; setEditData(prev => ({ ...prev, education: newEdu }));
-                      }} />
-                      <input className="input" value={edu.school} placeholder="School / College" onChange={e => {
-                        const newEdu = [...editData.education]; newEdu[idx] = { ...newEdu[idx], school: e.target.value }; setEditData(prev => ({ ...prev, education: newEdu }));
-                      }} />
-                      <input className="input" value={edu.year} placeholder="Year (e.g. 2024)" onChange={e => {
-                        const newEdu = [...editData.education]; newEdu[idx] = { ...newEdu[idx], year: e.target.value }; setEditData(prev => ({ ...prev, education: newEdu }));
-                      }} />
-                      <input className="input" value={edu.note} placeholder="CGPA / Percentage (optional)" onChange={e => {
-                        const newEdu = [...editData.education]; newEdu[idx] = { ...newEdu[idx], note: e.target.value }; setEditData(prev => ({ ...prev, education: newEdu }));
-                      }} />
-                    </div>
-                  </div>
-                ))}
-                <button className="btn small" onClick={() => setEditData(prev => ({ ...prev, education: [...prev.education, { id: uid(), degree: '', school: '', location: '', year: '', note: '' }] }))}>+ Add Education</button>
-              </div>
-
-              <div className="full">
-                <label className="f">Projects ({editData.projects.length})</label>
-                {editData.projects.map((p, idx) => (
-                  <div key={p.id} className="entry-card">
-                    <div className="entry-head"><b>Project {idx + 1}</b><button className="btn small danger" onClick={() => setEditData(prev => ({ ...prev, projects: prev.projects.filter(x => x.id !== p.id) }))}>Remove</button></div>
-                    <div className="form-grid">
-                      <input className="input" value={p.name} placeholder="Project name" onChange={e => {
-                        const projects = [...editData.projects]; projects[idx] = { ...projects[idx], name: e.target.value }; setEditData(prev => ({ ...prev, projects }));
-                      }} />
-                      <input className="input" value={p.link} placeholder="Link (optional)" onChange={e => {
-                        const projects = [...editData.projects]; projects[idx] = { ...projects[idx], link: e.target.value }; setEditData(prev => ({ ...prev, projects }));
-                      }} />
-                      <div className="full">
-                        <textarea className="textarea" rows={2} value={p.points} placeholder="Points (one per line)" onChange={e => {
-                          const projects = [...editData.projects]; projects[idx] = { ...projects[idx], points: e.target.value }; setEditData(prev => ({ ...prev, projects }));
-                        }} />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                <button className="btn small" onClick={() => setEditData(prev => ({ ...prev, projects: [...prev.projects, { id: uid(), name: '', link: '', points: '' }] }))}>+ Add Project</button>
-              </div>
-
-              <div className="full">
-                <label className="f">Certifications ({editData.certs.length})</label>
-                {editData.certs.map((c, idx) => (
-                  <div key={c.id} className="entry-card">
-                    <div className="entry-head"><b>Certificate {idx + 1}</b><button className="btn small danger" onClick={() => setEditData(prev => ({ ...prev, certs: prev.certs.filter(x => x.id !== c.id) }))}>Remove</button></div>
-                    <div className="form-grid">
-                      <input className="input" value={c.name} placeholder="Certificate name" onChange={e => {
-                        const certs = [...editData.certs]; certs[idx] = { ...certs[idx], name: e.target.value }; setEditData(prev => ({ ...prev, certs }));
-                      }} />
-                      <input className="input" value={c.issuer} placeholder="Issuer (e.g. Coursera)" onChange={e => {
-                        const certs = [...editData.certs]; certs[idx] = { ...certs[idx], issuer: e.target.value }; setEditData(prev => ({ ...prev, certs }));
-                      }} />
-                      <input className="input" value={c.year} placeholder="Year" onChange={e => {
-                        const certs = [...editData.certs]; certs[idx] = { ...certs[idx], year: e.target.value }; setEditData(prev => ({ ...prev, certs }));
-                      }} />
-                    </div>
-                  </div>
-                ))}
-                <button className="btn small" onClick={() => setEditData(prev => ({ ...prev, certs: [...prev.certs, { id: uid(), name: '', issuer: '', year: '' }] }))}>+ Add Certification</button>
-              </div>
-
-              <div className="full">
-                <label className="f">Achievements ({editData.achievements.length})</label>
-                <textarea
-                  className="textarea"
-                  rows={3}
-                  value={editData.achievements.join('\n')}
-                  placeholder="One achievement per line"
-                  onChange={e => setEditData(prev => ({ ...prev, achievements: e.target.value.split('\n').filter(l => l.trim()) }))}
-                />
-              </div>
+        <div className="editor-grid">
+          {/* ── the auto-filled form ── */}
+          <div className={`card pad editor-form ${mobileTab === 'preview' ? 'editor-pane-hidden' : ''}`}>
+            <div className="chips" style={{ marginBottom: 14 }}>
+              {TABS.map((t, i) => (
+                <button
+                  key={t.id}
+                  className={`chip ${i === tab ? 'on' : ''}`}
+                  onClick={() => { setTab(i); setMobileTab('form'); }}
+                  style={{ cursor: 'pointer' }}
+                >
+                  {t.label}
+                </button>
+              ))}
             </div>
 
-            <div className="notice" style={{ marginTop: 20 }}>
-              <b>🔒 Security:</b> All data stays in your browser. No upload to server. Parsed content sanitized for XSS.
-              <br /><b>✨ Advanced Edit:</b> You can fully edit every field before saving. After saving, open in main editor for templates & design.
+            <div className="hint" style={{ marginBottom: 12 }}>
+              Everything below was filled automatically — edit any field and watch the resume on the right change.
             </div>
 
-            <div className="row" style={{ marginTop: 16 }}>
-              <button className="btn primary" style={{ flex: 1, justifyContent: 'center' }} onClick={handleSave}>💾 Save & Open in Advanced Editor →</button>
+            {body}
+
+            <div className="step-foot">
+              <button className="btn" disabled={tab === 0} onClick={() => setTab((t) => Math.max(0, t - 1))}>← Back</button>
+              <div className="row" style={{ flex: '1 1 auto', justifyContent: 'flex-end' }}>
+                {tab < TABS.length - 1 ? (
+                  <button className="btn" onClick={() => setTab((t) => Math.min(TABS.length - 1, t + 1))}>Next: {TABS[tab + 1].label} →</button>
+                ) : null}
+                <button className="btn primary" onClick={handleSave}>💾 Save &amp; open in editor →</button>
+              </div>
             </div>
           </div>
 
-          {/* Raw preview */}
-          <div>
-            <div className="card pad">
-              <h4 style={{ margin: '0 0 10px', color: 'var(--navy-900)' }}>📄 Extracted Text Preview</h4>
-              <div style={{ background: 'var(--silver-100)', borderRadius: 8, padding: 12, maxHeight: 400, overflow: 'auto', fontSize: 12.5, lineHeight: 1.5, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                {rawText.slice(0, 3000)}{rawText.length > 3000 ? '...\n[truncated]' : ''}
-              </div>
-              <div className="hint" style={{ marginTop: 8 }}>Showing first 3000 chars · Total: {rawText.length} chars</div>
+          {/* ── the live resume ── */}
+          <div className={`preview-pane panel ${mobileTab === 'form' ? 'editor-pane-hidden' : ''}`}>
+            <div className="preview-toolbar">
+              <b style={{ color: 'var(--navy-900)', fontSize: 13 }}>Live resume · updates as you type</b>
+              <span className="hint" style={{ fontSize: 12 }}>A4 · {Math.ceil(1)} page view</span>
+            </div>
+            <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+              <select
+                className="select"
+                style={{ flex: '1 1 150px', minWidth: 130, padding: '8px 10px' }}
+                value={r.templateId}
+                onChange={(e) => set({ templateId: e.target.value })}
+                aria-label="Template"
+              >
+                {TEMPLATE_OPTIONS.map((t) => (
+                  <option key={t.id} value={t.id}>{t.name} · {t.layoutLabel}</option>
+                ))}
+              </select>
+              <select
+                className="select"
+                style={{ flex: '1 1 130px', minWidth: 120, padding: '8px 10px' }}
+                value={r.fieldId}
+                onChange={(e) => set({ fieldId: e.target.value })}
+                aria-label="Career field"
+              >
+                {FIELDS.map((f) => <option key={f.id} value={f.id}>{f.icon} {f.label}</option>)}
+              </select>
             </div>
 
-            <div className="card pad" style={{ marginTop: 16 }}>
-              <h4 style={{ margin: '0 0 8px' }}>🛡️ Parsing Details</h4>
-              <table className="tbl" style={{ fontSize: 12.5 }}>
-                <tbody>
-                  <tr><td><b>File</b></td><td>{file?.name}</td></tr>
-                  <tr><td><b>Format</b></td><td>{format.toUpperCase()}</td></tr>
-                  <tr><td><b>Size</b></td><td>{file ? (file.size / 1024).toFixed(1) : 0} KB</td></tr>
-                  {meta?.pages ? <tr><td><b>Pages</b></td><td>{meta.pages}</td></tr> : null}
-                  {meta?.method ? <tr><td><b>Extraction</b></td><td>{METHOD_LABEL[meta.method] || meta.method}</td></tr> : null}
-                  <tr><td><b>Skills Found</b></td><td>{parsedResume?.skills.length || 0}</td></tr>
-                  <tr><td><b>Experience</b></td><td>{parsedResume?.experience.length || 0} entries</td></tr>
-                  <tr><td><b>Education</b></td><td>{parsedResume?.education.length || 0} entries</td></tr>
-                  <tr><td><b>Projects</b></td><td>{parsedResume?.projects.length || 0}</td></tr>
-                  <tr><td><b>Certifications</b></td><td>{parsedResume?.certs.length || 0}</td></tr>
-                  <tr><td><b>Achievements</b></td><td>{parsedResume?.achievements.length || 0}</td></tr>
-                </tbody>
-              </table>
-              <div className="notice" style={{ marginTop: 12, fontSize: 12 }}>
-                💡 <b>Tip:</b> If parsing missed something, manually add it on left. Our advanced editor lets you refine everything.
-              </div>
+            <LiveSheet r={r} />
+
+            <div className="row" style={{ justifyContent: 'center' }}>
+              <button className="btn small primary" onClick={handleSave}>💾 Save &amp; open in editor →</button>
+            </div>
+            <div className="hint" style={{ textAlign: 'center', fontSize: 11.5 }}>
+              {fieldById(r.fieldId).label} layout · {completeness(r)}% complete · changes save automatically
             </div>
           </div>
         </div>
 
+        {/* ── import report ── */}
+        <div className="card pad" style={{ marginTop: 18 }}>
+          <div className="row" style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+            <b style={{ color: 'var(--navy-900)', fontSize: 14 }}>📄 Extracted text &amp; import report</b>
+            <button className="btn small" onClick={() => setShowReport((s) => !s)}>
+              {showReport ? 'Hide' : 'Show'} details
+            </button>
+          </div>
+          {showReport && (
+            <div style={{ marginTop: 14, display: 'grid', gridTemplateColumns: 'minmax(0, 1.4fr) minmax(0, 1fr)', gap: 18 }} className="import-report">
+              <div>
+                <label className="f">Text we read from the file (editable)</label>
+                <textarea
+                  className="textarea"
+                  style={{ minHeight: 260, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontSize: 12.5 }}
+                  value={textDraft}
+                  onChange={(e) => setTextDraft(e.target.value)}
+                  onBlur={() => {
+                    // merge into whatever the latest draft is (a field may have
+                    // been edited in this same tick) instead of the stale copy
+                    const current = loadImportDraft() ?? draft;
+                    saveImportDraft({ ...current, rawText: textDraft });
+                  }}
+                />
+                <div className="row" style={{ marginTop: 8, gap: 8, flexWrap: 'wrap' }}>
+                  <button className="btn small" onClick={reparseFromText}>🔄 Re-read fields from this text</button>
+                  <span className="hint" style={{ fontSize: 12 }}>{textDraft.length} characters · fix a line here if OCR misread it, then re-read.</span>
+                </div>
+              </div>
+              <div>
+                <label className="f">How it was read</label>
+                <table className="tbl" style={{ fontSize: 12.5 }}>
+                  <tbody>
+                    <tr><td><b>File</b></td><td style={{ wordBreak: 'break-all' }}>{draft.fileName}</td></tr>
+                    <tr><td><b>Format</b></td><td>{draft.format.toUpperCase()}</td></tr>
+                    <tr><td><b>Size</b></td><td>{(draft.fileSize / 1024).toFixed(1)} KB</td></tr>
+                    {meta?.pages ? <tr><td><b>Pages</b></td><td>{meta.pages}</td></tr> : null}
+                    <tr><td><b>Extraction</b></td><td>{METHOD_LABEL[meta?.method || ''] || meta?.method || 'text layer'}</td></tr>
+                    {meta?.ocrPages ? <tr><td><b>Pages needing OCR</b></td><td>{meta.ocrPages}</td></tr> : null}
+                    {meta?.ocrConfidence ? <tr><td><b>OCR confidence</b></td><td>{meta.ocrConfidence}%</td></tr> : null}
+                    <tr><td><b>Auto-filled</b></td><td>{detected.length} field groups</td></tr>
+                    <tr><td><b>Skills found</b></td><td>{r.skills.length}</td></tr>
+                    <tr><td><b>Experience</b></td><td>{r.experience.length} entries</td></tr>
+                    <tr><td><b>Education</b></td><td>{r.education.length} entries</td></tr>
+                  </tbody>
+                </table>
+                <div className="notice" style={{ marginTop: 12, fontSize: 12 }}>
+                  🔒 <b>Private by design:</b> the file is parsed and OCR-ed inside this browser tab — it is never
+                  uploaded to a server. Content is sanitised before it is saved.
+                </div>
+                <div className="notice" style={{ marginTop: 10, fontSize: 12 }}>
+                  💡 <b>OCR tip:</b> scanned text is 90–98% accurate. Always eyeball the name, phone number and dates —
+                  those are the three fields recruiters check first.
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
         <style>{`
           @media (max-width: 900px) {
-            .import-grid { grid-template-columns: 1fr !important; }
+            .import-report { grid-template-columns: 1fr !important; }
           }
         `}</style>
       </div>
     );
   }
 
-  // Upload step
+  // ── upload screen ─────────────────────────────────────────────────────────
+  const pending = loadImportDraft();
   return (
-    <div style={{ maxWidth: 800, margin: '0 auto' }}>
+    <div style={{ maxWidth: 860, margin: '0 auto' }}>
       <div className="page-head">
         <div>
-          <div className="page-title">📤 Upload & Edit Resume — Advanced</div>
-          <div className="page-sub">Upload your existing resume (PDF, DOCX, TXT, JSON). Real PDF parsing (pdf.js) with automatic OCR for scanned files — everything stays in your browser.</div>
+          <div className="page-title">📤 Upload &amp; Edit Resume</div>
+          <div className="page-sub">
+            PDF, DOCX, TXT, JSON — and photos (JPG/PNG). Text-based files are read instantly; scanned pages and
+            photos are read by the OCR engine that runs inside your browser. Extracted details are filled into the
+            form automatically, with the resume live beside it.
+          </div>
         </div>
       </div>
 
+      {pending && (
+        <div className="notice" style={{ marginBottom: 14, display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+          <span>📝 You have an unsaved import (<b>{pending.fileName}</b>).</span>
+          <button className="btn small primary" onClick={() => { setDraft(pending); setStep('review'); }}>Continue editing it →</button>
+        </div>
+      )}
+
       <div className="card pad">
         <div
-          onDragOver={e => { e.preventDefault(); setDragActive(true); }}
+          onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
           onDragLeave={() => setDragActive(false)}
           onDrop={onDrop}
+          onClick={() => fileInputRef.current?.click()}
           style={{
             border: `2px dashed ${dragActive ? 'var(--navy-600)' : 'var(--silver-300)'}`,
             borderRadius: 12,
@@ -458,72 +580,97 @@ export default function ResumeImporter() {
             transition: 'all .2s',
             cursor: 'pointer',
           }}
-          onClick={() => fileInputRef.current?.click()}
         >
           <div style={{ fontSize: 48, marginBottom: 12 }}>📄</div>
           <h3 style={{ color: 'var(--navy-900)', marginBottom: 6 }}>
-            {dragActive ? 'Drop your resume here' : 'Drag & Drop your resume'}
+            {dragActive ? 'Drop your resume here' : 'Drag &amp; drop your resume'}
           </h3>
           <p className="hint" style={{ marginBottom: 16 }}>
-            Supports PDF, DOCX, TXT, JSON · Max 10MB · 100% private — stays in browser
+            PDF · DOCX · TXT · JSON · photo of a page (JPG/PNG) · Max 25MB · parsed on your device
           </p>
-          <button className="btn primary" onClick={e => { e.stopPropagation(); fileInputRef.current?.click(); }}>
-            📁 Browse Files
+          <button className="btn primary" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}>
+            📁 Choose a file
           </button>
-          <input ref={fileInputRef} type="file" accept=".pdf,.docx,.doc,.txt,.json" style={{ display: 'none' }} onChange={onFileChange} />
+          <input ref={fileInputRef} type="file" accept={ACCEPT} style={{ display: 'none' }} onChange={onFileChange} />
         </div>
 
         {error && <div className="notice err" style={{ marginTop: 16 }}>{error}</div>}
 
-        <div style={{ marginTop: 24, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
+        <div style={{ marginTop: 22, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
           <div style={{ background: 'var(--navy-50)', borderRadius: 10, padding: 16, border: '1px solid var(--navy-100)' }}>
-            <b style={{ color: 'var(--navy-800)', fontSize: 14 }}>🔒 100% Secure & Private</b>
-            <p className="hint" style={{ marginTop: 6, fontSize: 12.5 }}>No server upload. All parsing happens locally in your browser. Your data never leaves device.</p>
+            <b style={{ color: 'var(--navy-800)', fontSize: 14 }}>🔒 Nothing leaves your device</b>
+            <p className="hint" style={{ marginTop: 6, fontSize: 12.5 }}>
+              No server upload. PDF parsing and OCR both run locally in this tab.
+            </p>
           </div>
           <div style={{ background: 'var(--silver-100)', borderRadius: 10, padding: 16, border: '1px solid var(--silver-200)' }}>
-            <b style={{ color: 'var(--navy-800)', fontSize: 14 }}>⚙️ Real PDF Engine + OCR</b>
-            <p className="hint" style={{ marginTop: 6, fontSize: 12.5 }}>Text PDFs are read with pdf.js. Scanned/image PDFs are auto-read with in-browser OCR (tesseract).</p>
+            <b style={{ color: 'var(--navy-800)', fontSize: 14 }}>🖼 Scanned &amp; photographed files</b>
+            <p className="hint" style={{ marginTop: 6, fontSize: 12.5 }}>
+              Image-only PDFs and phone photos are read by the built-in OCR engine — the English model is bundled
+              with the app, so it works offline and even on restricted networks.
+            </p>
+            <div className="hint" style={{ marginTop: 8, fontSize: 11.5 }}>
+              Engine:&nbsp;
+              {engineMode === 'local' && <b style={{ color: 'var(--navy-700)' }}>bundled · works offline ✓</b>}
+              {engineMode === 'cdn' && <b style={{ color: 'var(--err)' }}>not bundled — scans may fail on strict networks</b>}
+              {engineMode === null && <span>checking…</span>}
+            </div>
           </div>
           <div style={{ background: 'var(--silver-100)', borderRadius: 10, padding: 16, border: '1px solid var(--silver-200)' }}>
-            <b style={{ color: 'var(--navy-800)', fontSize: 14 }}>✏️ Full Advanced Edit</b>
-            <p className="hint" style={{ marginTop: 6, fontSize: 12.5 }}>After import, edit everything — dates, projects, certificates, photo, template — then download PDF.</p>
+            <b style={{ color: 'var(--navy-800)', fontSize: 14 }}>⚡ Auto-filled, then live</b>
+            <p className="hint" style={{ marginTop: 6, fontSize: 12.5 }}>
+              Name, email, phone, jobs, dates, skills and more drop straight into the form — edit anything and the
+              resume preview changes as you type.
+            </p>
           </div>
         </div>
 
         <div className="notice" style={{ marginTop: 20 }}>
-          <b>How it works:</b>
+          <b>How it works</b>
           <ol style={{ margin: '8px 0 0 18px', padding: 0 }}>
-            <li>Upload existing resume (any format)</li>
-            <li>We extract the real text (line & paragraph structure preserved) and structure it into fields</li>
-            <li>You review & advanced-edit in our editor (add missing info, fix parsing)</li>
-            <li>Choose from 50 templates & download professional PDF</li>
+            <li>Upload your existing resume — text PDF, DOCX, TXT, or a scan/photo.</li>
+            <li>We read it (text layer first, OCR only where it is needed) and structure it into fields.</li>
+            <li>The form on the left is filled automatically and the resume shows beside it, live.</li>
+            <li>Fix anything, pick a template, save — then download a clean PDF from the editor.</li>
           </ol>
         </div>
 
         <div style={{ marginTop: 20 }}>
-          <h4 style={{ color: 'var(--navy-900)', fontSize: 14, marginBottom: 8 }}>💡 Supported Formats & Tips</h4>
-          <table className="tbl">
-            <thead><tr><th>Format</th><th>Best For</th><th>Accuracy</th></tr></thead>
-            <tbody>
-              <tr><td><b>PDF (text-based)</b></td><td>Most resumes (Word, Google Docs, Canva exports)</td><td>95%+</td></tr>
-              <tr><td><b>PDF (scanned/image)</b></td><td>Photo/scanned resumes — auto OCR</td><td>70-85%</td></tr>
-              <tr><td><b>DOCX</b></td><td>Word resumes</td><td>90-95%</td></tr>
-              <tr><td><b>TXT</b></td><td>Plain text</td><td>95%+ (cleanest)</td></tr>
-              <tr><td><b>JSON</b></td><td>Our backup</td><td>100% (perfect)</td></tr>
-            </tbody>
-          </table>
-          <p className="hint" style={{ marginTop: 8, fontSize: 12 }}>All files sanitized for security. OCR runs offline in your browser — nothing is uploaded anywhere.</p>
+          <h4 style={{ color: 'var(--navy-900)', fontSize: 14, marginBottom: 8 }}>💡 What reads best</h4>
+          <div className="tbl-wrap">
+            <table className="tbl">
+              <thead><tr><th>Your file</th><th>What we do</th><th>Typical result</th></tr></thead>
+              <tbody>
+                <tr><td><b>PDF (text-based)</b></td><td>Exact text layer via pdf.js — no OCR</td><td>95%+ · instant</td></tr>
+                <tr><td><b>PDF (scanned/image)</b></td><td>Auto-detected → built-in OCR, page by page</td><td>90–98% · few seconds</td></tr>
+                <tr><td><b>Photo of a resume</b></td><td>Desk cropped, contrast fixed, then OCR</td><td>90–97% · few seconds</td></tr>
+                <tr><td><b>DOCX</b></td><td>Word XML text runs, paragraph structure kept</td><td>90–95%</td></tr>
+                <tr><td><b>TXT / JSON</b></td><td>Direct read (JSON restores a previous export)</td><td>100%</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p className="hint" style={{ marginTop: 8, fontSize: 12 }}>
+            Blurry or dark scans are the one weak spot — a straight, well-lit photo usually reads better than a
+            faded photocopy. You can always fix any line in the extracted-text panel and re-read the fields.
+          </p>
         </div>
       </div>
 
       <div className="card pad" style={{ marginTop: 18 }}>
-        <h4 style={{ margin: '0 0 8px', color: 'var(--navy-900)' }}>🆚 Don't have a resume? Create new</h4>
-        <p className="hint" style={{ marginBottom: 12 }}>Start from scratch with our guided 7-step builder — 10 minutes, 50 templates, no watermark.</p>
+        <h4 style={{ margin: '0 0 8px', color: 'var(--navy-900)' }}>🆚 Starting fresh instead?</h4>
+        <p className="hint" style={{ marginBottom: 12 }}>Use the guided 7-step builder — 10 minutes, 50 templates, no watermark, one free download.</p>
         <div className="row">
-          <button className="btn primary" onClick={() => navigate('/editor/new')}>+ Create New Resume</button>
-          <button className="btn" onClick={() => navigate('/')}>← Back to Dashboard</button>
+          <button className="btn primary" onClick={() => navigate('/editor/new')}>+ Create a new resume</button>
+          <button className="btn" onClick={() => navigate('/')}>← Back to dashboard</button>
         </div>
       </div>
     </div>
   );
 }
+
+/** Template list for the preview dropdown. */
+const TEMPLATE_OPTIONS = TEMPLATES.map((t) => ({
+  id: t.id,
+  name: t.name,
+  layoutLabel: LAYOUT_META[t.layout]?.label || t.layout,
+}));

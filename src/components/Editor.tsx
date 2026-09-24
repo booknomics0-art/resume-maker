@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { STEPS, completeness, emptyResume, type Resume } from '../lib/types';
 import { loadResumes, sampleResume, upsertResume } from '../lib/store';
+import {
+  clearImportDraft, draftResumeFor, forgetImportInfo, importInfoFor, isDraftResume, subscribeImportDraft,
+} from '../lib/importDraft';
 import { fieldById } from '../lib/fields';
 import { navigate } from '../App';
 import Preview, { A4 } from './Preview';
@@ -64,6 +67,10 @@ export default function Editor({ id }: { id: string }) {
   const initial = useMemo<Resume>(() => {
     if (id === 'new') return emptyResume();
     if (id === 'sample') return sampleResume();
+    // An unsaved import draft always wins: nothing the user typed on the
+    // import screen may be lost by opening the editor.
+    const draft = draftResumeFor(id);
+    if (draft) return draft;
     const found = loadResumes().find((r) => r.id === id);
     return found ?? emptyResume();
   }, [id]);
@@ -117,9 +124,27 @@ export default function Editor({ id }: { id: string }) {
   useEffect(() => {
     const isNew = id === 'new' || id === 'sample';
     if (isNew && !dirtyRef.current) return;
-    const t = setTimeout(() => upsertResume({ ...r, step: Math.max(r.step, maxVisited) }), 350);
+    const t = setTimeout(() => {
+      upsertResume({ ...r, step: Math.max(r.step, maxVisited) });
+      // the draft and the saved copy are identical now — retire the draft
+      if (isDraftResume(id)) clearImportDraft();
+    }, 350);
     return () => clearTimeout(t);
   }, [r, maxVisited, id]);
+
+  // Keep following the import screen if it is still open for this resume:
+  // edits made over there appear here immediately (and vice-versa).
+  useEffect(() => {
+    if (!isDraftResume(id)) return;
+    return subscribeImportDraft((d) => {
+      if (d && d.resume.id === id) {
+        dirtyRef.current = true;
+        setR(d.resume);
+      }
+    });
+  }, [id]);
+
+  const [importInfo, setImportInfo] = useState(() => importInfoFor(id));
 
   const set = (patch: Partial<Resume>) => {
     dirtyRef.current = true;
@@ -173,6 +198,20 @@ export default function Editor({ id }: { id: string }) {
 
   return (
     <div className="editor-root">
+      {importInfo && (
+        <div className="notice no-print" style={{ marginBottom: 14, display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          <span>
+            📥 <b>Imported from {importInfo.fileName}</b> ({importInfo.format.toUpperCase()}
+            {importInfo.meta?.method === 'ocr' || importInfo.meta?.method === 'mixed' ? ` · OCR${importInfo.meta?.ocrConfidence ? ` ${importInfo.meta.ocrConfidence}%` : ''}` : ' · text layer'})
+            — fields were auto-filled. Double-check the name, phone number and dates.
+          </span>
+          <button
+            className="btn small"
+            onClick={() => { forgetImportInfo(id); setImportInfo(null); }}
+          >Got it</button>
+        </div>
+      )}
+
       <div className="page-head no-print">
         <div style={{ minWidth: 0, flex: '1 1 260px' }}>
           <div className="page-title" style={{ fontSize: 20, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
