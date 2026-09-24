@@ -1,4 +1,4 @@
-// Renders a resume in one of the 105 templates (16 layout families).
+// Renders a resume in one of the layout families of the Professional collection.
 // Used at full size in the editor, scaled down for thumbnails.
 // The template's palette is applied as CSS custom properties on .sheet;
 // structural variants (mod-invert, mod-serif, mod-band-flat, mod-band-tint)
@@ -404,7 +404,7 @@ export default function Preview({ r, tpl }: { r: Resume; tpl?: Template }) {
     );
   }
 
-  // ---------- Canva-style families ----------
+  // ---------- photo / panel / margin families ----------
 
   if (t.layout === 'portrait') {
     return (

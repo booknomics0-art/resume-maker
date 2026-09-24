@@ -107,7 +107,7 @@ export function emptyResume(): Resume {
     id: uid(),
     name: 'Untitled resume',
     fieldId: 'it',
-    templateId: 'modern',
+    templateId: 'ats-sterling', // DEFAULT_TEMPLATE_ID (kept as a literal to avoid an import cycle)
     createdAt: now,
     updatedAt: now,
     step: 0,

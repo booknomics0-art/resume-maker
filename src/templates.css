@@ -1,5 +1,5 @@
 /* Resume sheet: A4 at 96dpi = 794 x 1123px.
-   80-template library: 5 core families x 10 variants + 6 Canva-style families x 5 variants.
+   One row per template in src/lib/templates.ts picks a family + palette;
    Each template sets CSS custom properties on .sheet (see Preview.tsx):
      --p  primary (headings, rules, title bars, band)   --p2/--p3 gradient mid/end
      --pm mid tone on dark surfaces                     --a  accent (silver line / gold detail)
@@ -55,7 +55,7 @@
 .s-table .edu-school { width: 38%; color: #3d475c; font-size: 12.6px; }
 .s-table .edu-year { width: 18%; text-align: right; white-space: nowrap; color: #55617a; font-size: 12.2px; }
 
-/* timeline experience (Canva best-seller style) — used by Sidebar & Minimal */
+/* timeline experience — used by Sidebar & Minimal */
 .tpl-split .sec-experience.tl .s-item,
 .tpl-minimal .sec-experience.tl .s-item {
   position: relative; padding-left: 16px; border-left: 2px solid #c9d2de; margin-left: 4px;
@@ -66,7 +66,7 @@
   border-radius: 50%; background: #fff; border: 2.5px solid var(--p);
 }
 
-/* ============ 1. Sidebar — gradient side column (Canva's #1 style) ============ */
+/* ============ 1. Sidebar — gradient side column ============ */
 .tpl-split { flex-direction: row; }
 .tpl-split .side {
   width: 258px; flex: 0 0 258px;
@@ -223,7 +223,7 @@
 .tpl-metro.mod-band-tint .s-photo { border-color: #fff; box-shadow: 0 0 0 3px var(--p); }
 
 /* ====================================================================== */
-/* ============ Canva-style families (original code) ==================== */
+/* ============ photo / panel / margin families (original code) ========== */
 /* ====================================================================== */
 
 /* ============ 6. Portrait — letter-spaced name, square photo, hairline columns ============ */

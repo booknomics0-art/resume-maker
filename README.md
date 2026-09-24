@@ -1,8 +1,8 @@
 # CraftCV — Professional Resume Studio
 
 A resume builder for India with a navy-blue & silver theme. Login, fill your
-details in 7 short steps (~10 minutes), pick from **165 templates across 16
-layout families (including 36 Resume.io templates and 24 Canva designs), tuned for each of 10 career fields**, and download a clean,
+details in 7 short steps (~10 minutes), pick from **43 professional templates across
+16 layout families**, tuned for each of 10 career fields, and download a clean,
 human-written-looking PDF. **100% free — no plans, no watermark, unlimited downloads.**
 Resumes are stored in your own **Supabase** database (see `docs/SUPABASE.md`).
 
@@ -16,11 +16,18 @@ Resumes are stored in your own **Supabase** database (see `docs/SUPABASE.md`).
 - **Profile photo upload** — shown on all templates (auto-resized in-browser).
 - **Mandatory fields enforced** — name, title, email, phone, city, summary, 1 job (or fresher toggle), 1 education entry, 3+ skills. Download unlocks at 100%.
 - **10 career fields** — each ships 3 summary templates, 6 bullet templates, suggested skills (Communication & Decision Making in every field), project ideas.
-- **165 templates across 16 families**:
-  - **36 official Resume.io templates** (London, Santiago, Dublin, Helsinki, Seoul, Specialist, Berlin, Athens, New York, Vienna, Prague, Brussels, Sydney, Shanghai, Stockholm, Paris, Madrid, Rome, Milan, Toronto, Singapore, Amsterdam, Barcelona, Oslo, Chicago, Copenhagen, Boston, Geneva, Tokyo, Lisbon, Moscow, Rio, Vancouver, Cape Town, Academic, Entry Level).
-  - **24 Canva-style resume templates** (White Modern Business Admin, B&W Corporate, Clean Minimalist, Gray & White Clean, Freelancer, Elegant Classic, Monogrammed, Blue Professional, Student Simple, White Gold Luxury, Abu-Abu Minimalist, Dark Orange Banner, Copywriter Editorial, Science & Engineering Ledger, White Beige Studio, Blue Minimal ATS, Pink Pastel Creative, Blue & Gray Split, Green & Black Metro, Orange Gray Spine, Minimalist Photographer, Infographic Skills, Navy Modern, Teal Engineer).
-  - **105 Core & Studio templates** across 16 layout families (Sidebar, Classic, Minimal, Statement, Dense, Portrait, Studio, Monogram, Timeline, Infographic, Corporate, Editorial, Spine, Soft, Banner, Ledger).
-  - Offline catalog and schema exported in `downloaded_templates/` (`resume_io_templates.json`, `canva_templates.json`, `README.md`).
+- **43 professional templates across 16 layout families** — one original design
+  per row in `src/lib/templates.ts`. The catalogue is grouped by how the page is
+  organised, not by where the design came from:
+  - **Dense (ATS)** — Sterling, Executive, Technical, Entry Level: single column, plain
+    headings, tracker-safe.
+  - **Sidebar** — Navy, Graphite, Petrol, Ivory: facts in a tinted column, story beside it.
+  - **Classic** — Executive Serif, Hairline, Academic CV, Gold Rule: centred serif headers.
+  - **Minimal, Statement, Corporate, Timeline, Portrait, Studio, Monogram, Infographic,
+    Editorial, Spine, Soft, Banner, Ledger** — the same content, re-structured.
+  - Palettes are ink-led and restrained (navy, graphite, steel, petrol, pine, oxblood,
+    mocha, brass); a variant only re-skins a family, it never forks the layout code.
+  - Seeded into `public.template_catalog` by `npm run seed:templates`.
 - **Hobbies & Best Experience sections** — human touches that make the resume feel written, not generated.
 - **PDF export** — print-perfect A4 via browser print.
 - **AI assist (optional, hidden by default)** — can run through an n8n webhook; if not configured, no AI surfaces appear anywhere. Blueprint kept in `docs/N8N-INTEGRATION.md` for the owner.
@@ -51,13 +58,19 @@ parsing code in Node (esbuild bundles `src/lib/*.ts`; `@napi-rs/canvas` stands i
 for the browser canvas, and the tests skip politely if it is missing):
 
 ```bash
-npm test              # all four suites (Google auth, OCR, PDF, autofill)
+npm test              # all five suites (Google auth, templates, OCR, PDF, autofill)
+npm run test:templates # catalogue shape + every design rendered in all 10 fields
 npm run test:ocr      # photo of a resume → OCR → fields   (tests/scan-resume.jpg)
 npm run test:pdf      # text PDF (no OCR) + image-only PDF (the reported bug)
 npm run test:autofill # extracted data → form → live resume → editor hand-over
 npm run test:auth     # Google callback parsing, error mapping, provider probe, redirect flow
 node tests/test-image-ocr.mjs path/to/your-scan.jpg   # try any file
 ```
+
+`npm run test:templates` renders every template with `react-dom/server` in each career
+field, and fails if the catalogue and `supabase/seed/template_catalog.sql` drift, or if a
+template row ever claims to be a copy of someone else's product — every design in
+`src/lib/templates.ts` is written for CraftCV.
 
 `@napi-rs/canvas` is a dev-only dependency for these tests
 (`npm i -D @napi-rs/canvas`); the app itself never imports it.

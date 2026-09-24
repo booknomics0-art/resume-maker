@@ -263,7 +263,6 @@ label.f .req { color: var(--err); margin-left: 2px; }
 }
 .tpl-chips { min-width: 0; }
 .tpl-chip { padding: 5px 11px; min-height: 30px; font-size: 12.4px; font-weight: 600; }
-.tpl-chip-sep { align-self: center; width: 1px; height: 20px; margin: 5px 3px; background: var(--silver-300); flex: 0 0 1px; }
 .tpl-tools { display: flex; align-items: center; gap: 8px 10px; flex-wrap: wrap; }
 .tpl-count { flex: 1 1 auto; min-width: 0; font-size: 12.5px; color: var(--silver-500); }
 .tpl-search { position: relative; display: flex; align-items: center; flex: 0 1 auto; }
@@ -279,14 +278,6 @@ label.f .req { color: var(--err); margin-left: 2px; }
   background: none; color: var(--silver-500); font-size: 11px; line-height: 1; padding: 0;
 }
 .tpl-search-x:hover { color: var(--navy-800); background: var(--silver-200); }
-/* gold dot marks the Canva-style families — a drawn dot renders everywhere,
-   unlike an emoji glyph which depends on the device font */
-.tpl-chip-new { padding-left: 10px; }
-.chip.tpl-chip-new::before {
-  content: ''; width: 6px; height: 6px; border-radius: 50%; margin-right: 7px;
-  background: linear-gradient(135deg, #f3d27a, #c9a227); flex: 0 0 6px;
-}
-.chip.tpl-chip-new.on::before { background: #f3d27a; }
 .chip.tpl-best { border-style: dashed; color: var(--navy-600); }
 .chip.tpl-best.on { border-style: solid; color: #fff; }
 .chip.tpl-best::before { content: '★'; margin-right: 6px; color: #c9a227; font-size: 12px; line-height: 1; }
@@ -353,17 +344,7 @@ label.f .req { color: var(--err); margin-left: 2px; }
   flex: 0 0 auto; padding: 2px 7px; border-radius: 99px; background: var(--ok); color: #fff;
   font-size: 10px; font-weight: 800; letter-spacing: .4px; text-transform: uppercase;
 }
-.tpl-origin {
-  flex: 0 0 auto; padding: 2px 7px; border-radius: 99px;
-  font-size: 9.5px; font-weight: 800; letter-spacing: .4px; text-transform: uppercase;
-}
-.tpl-origin-resume-io { background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; }
-.tpl-origin-canva { background: #fae8ff; color: #9333ea; border: 1px solid #f5d0fe; }
 
-.tpl-chip-resume-io { border-color: #38bdf8 !important; color: #0284c7 !important; }
-.tpl-chip-resume-io.on { background: #0284c7 !important; color: #fff !important; border-color: #0284c7 !important; }
-.tpl-chip-canva { border-color: #c084fc !important; color: #9333ea !important; }
-.tpl-chip-canva.on { background: #9333ea !important; color: #fff !important; border-color: #9333ea !important; }
 .tpl-tag {
   margin: 0; min-height: 2.84em; font-size: 12.3px; line-height: 1.42; color: var(--silver-500);
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;

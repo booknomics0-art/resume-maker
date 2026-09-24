@@ -162,7 +162,7 @@ export function sampleResume(): Resume {
   const r = emptyResume();
   r.name = 'Aarav Sharma — Frontend Developer';
   r.fieldId = 'it';
-  r.templateId = 'modern';
+  r.templateId = 'ats-sterling';
   r.personal = {
     fullName: 'Aarav Sharma',
     headline: 'Frontend Developer',
