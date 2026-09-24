@@ -161,6 +161,39 @@ export function adaptiveThreshold(src: GrayImage, radius = 16, k = 0.32): GrayIm
   return { data: out, width: w, height: h };
 }
 
+/**
+ * Faded photocopy / "white paper" rescue. The ink sits only a few levels below
+ * the paper, so a normal stretch clips it away. Pull the top of the histogram
+ * down to white and sharpen what remains.
+ */
+export function enhanceFaintInk(src: GrayImage): GrayImage {
+  return unsharpMask(contrastStretch(src, 0.002, 0.9), 1.15);
+}
+
+/** Negative of the page — some scanner drivers store the scan inverted. */
+export function invertGray(src: GrayImage): GrayImage {
+  const out = new Uint8ClampedArray(src.data.length);
+  for (let i = 0; i < out.length; i++) out[i] = 255 - src.data[i];
+  return { data: out, width: src.width, height: src.height };
+}
+
+/**
+ * A render that failed (or a truly empty page) is almost entirely white.
+ * Real paper, even a light scan, has a few percent of pixels darker than the
+ * paper. Used to decide "don't OCR this blank canvas, read the embedded image".
+ */
+export function isMostlyBlank(src: GrayImage): boolean {
+  if (!src?.data?.length) return true;
+  const step = Math.max(1, Math.floor(src.data.length / 50000));
+  let dark = 0;
+  let n = 0;
+  for (let i = 0; i < src.data.length; i += step) {
+    n++;
+    if (src.data[i] < 226) dark++;
+  }
+  return n === 0 || dark / n < 0.005;
+}
+
 /** 3×3 unsharp mask — brings back edges that JPEG compression smeared. */
 export function unsharpMask(src: GrayImage, amount = 0.8): GrayImage {
   const { width: w, height: h } = src;
@@ -273,6 +306,8 @@ export function cropToPage(src: GrayImage, brightThr = 110, minKeepRatio = 0.35)
 
   const nw = x1 - x0 + 1;
   const nh = y1 - y0 + 1;
+  const cropped = x0 > 2 || y0 > 2 || x1 < w - 3 || y1 < h - 3;
+  if (!cropped) return { ...src, cropped: false, box: [0, 0, w - 1, h - 1] };
   const out = new Uint8ClampedArray(nw * nh);
   for (let y = 0; y < nh; y++) {
     for (let x = 0; x < nw; x++) out[y * nw + x] = data[(y + y0) * w + x + x0];

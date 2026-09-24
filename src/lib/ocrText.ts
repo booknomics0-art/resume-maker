@@ -128,6 +128,30 @@ export function ocrQuality(text: string): number {
  * big, stylised name at the top of a resume, which whole-page segmentation
  * sometimes skips entirely.
  */
+/**
+ * Keep every line that appears in either extraction. The text layer and the
+ * OCR pass each drop different things (a sidebar, a scanned column, a name in
+ * a weird font). Union them instead of picking a winner and throwing the rest
+ * away — that was how "some details came and some didn't".
+ */
+export function unionText(primary: string, extra: string): string {
+  if (!extra?.trim()) return primary || '';
+  if (!primary?.trim()) return extra;
+  const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '');
+  const base = norm(primary);
+  const add: string[] = [];
+  for (const line of extra.split('\n')) {
+    const l = line.trim();
+    const n = norm(l);
+    if (n.length < 5) continue;
+    if (base.includes(n)) continue;
+    add.push(l);
+    if (add.length >= 48) break;
+  }
+  if (!add.length) return primary;
+  return `${primary.replace(/\s+$/g, '')}\n${add.join('\n')}`;
+}
+
 export function mergeMissingLines(main: string, sparse: string): string {
   const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '');
   const mainNorm = norm(main);
