@@ -1,6 +1,8 @@
 # Deployment guide — CraftCV
 
-CraftCV is a fully static site. `npm run build` produces a `dist/` folder that
+CraftCV is a fully static site. `npm run build` runs the `prebuild` step first
+(it vendors the offline OCR engine into `public/ocr/`, ~11 MB, see README) and
+then produces a `dist/` folder that
 runs on any static host. No backend, no database, no environment variables needed
 for the current feature set. Hash routing (`#/dashboard`, `#/editor/...`) means
 **zero server configuration** — no redirects, no 404 handling.

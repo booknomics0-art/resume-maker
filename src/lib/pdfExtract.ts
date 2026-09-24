@@ -9,10 +9,23 @@
  *      content streams and returns positioned text items. We reconstruct lines
  *      and paragraphs from item coordinates. Works for ~95% of resumes
  *      (Word / Google Docs / Canva / LaTeX exports).
- *   2. OCR FALLBACK — if a page has (almost) no text layer it is a scanned /
- *      image PDF. We render each page to a canvas via pdf.js and run
- *      tesseract.js OCR on it (also in-browser). The better result per page wins.
+ *   2. OCR FALLBACK — pages without a usable text layer are scanned /
+ *      photographed pages. We render them to a canvas and run the vendored
+ *      Tesseract engine (see ocr.ts) on a preprocessed copy of the image. The
+ *      better result per page wins.
+ *
+ * Notes for maintainers
+ *  • The OCR engine is served from our own origin (`public/ocr/…`) — the app's
+ *    CSP forbids the jsDelivr CDN that tesseract.js uses by default. That was
+ *    the reason scanned PDFs used to fail with "OCR could not recover it".
+ *  • A page is never thrown away: if either stage produced text, we return it
+ *    and describe the result in `warning`, instead of failing the whole import.
  */
+
+import type { GrayImage } from './imaging';
+import { toGray } from './imaging';
+import { ocrAssetMode, ocrGrayPage, OcrUnavailableError, type OcrRunOptions } from './ocr';
+import { ocrQuality } from './ocrText';
 
 export interface PdfProgress {
   stage: string;
@@ -27,13 +40,31 @@ export interface PdfExtractResult {
   pages: number;
   textChars: number; // alphanumeric chars recovered from the text layer
   ocrChars: number; // alphanumeric chars recovered via OCR
+  ocrConfidence?: number; // average Tesseract confidence for OCR pages
+  ocrPages: number;
   warning?: string;
 }
 
+/** Renders one PDF page for OCR — injectable so tests can run headless. */
+export type PageRenderer = (page: any, num: number) => Promise<GrayImage | any>;
+
+export interface PdfExtractOptions {
+  /** Ignore the text layer and OCR every page (the "Re-run with OCR" button). */
+  forceOcr?: boolean;
+  /** Test hook: replaces the canvas renderer. */
+  renderPage?: PageRenderer;
+  /** OCR tweaks — used by tests to inject a canvas-free image encoder. */
+  ocr?: OcrRunOptions;
+}
+
 /** Max pages we are willing to OCR (OCR is heavy; resumes are 1-3 pages). */
-const OCR_MAX_PAGES = 8;
+const OCR_MAX_PAGES = 10;
 /** Below this many chars/page we consider the PDF "scanned". */
 const SCANNED_THRESHOLD = 40;
+/** A page whose text layer is this thin is worth OCR-ing as well. */
+const THIN_PAGE_CHARS = 260;
+/** Target long edge (px) for a rendered page ≈ 200 DPI for A4/Letter. */
+const RENDER_LONG_EDGE = 2200;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // pdf.js loader (dynamic import keeps it out of the main bundle)
@@ -140,119 +171,58 @@ async function extractPageText(page: any): Promise<string> {
   return chunksToText(chunks);
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// OCR fallback (scanned PDFs)
-// ─────────────────────────────────────────────────────────────────────────────
-
-async function ocrDocument(
-  doc: any,
-  numPages: number,
-  onProgress?: (p: PdfProgress) => void,
-): Promise<string[]> {
-  const Tesseract: any = await import('tesseract.js');
-  const pagesToOcr = Math.min(numPages, OCR_MAX_PAGES);
-  let ocrPageDone = 0;
-  const worker = await Tesseract.createWorker('eng', 1, {
-    logger: (m: any) => {
-      if (!onProgress) return;
-      const status = String(m.status || '');
-      const p = Number(m.progress || 0);
-      if (status.includes('loading') || status.includes('initializ')) {
-        onProgress({ stage: 'Loading OCR engine (first run only)…', pct: 55 + p * 5 });
-      } else if (status.includes('recognizing')) {
-        // spread recognition progress of each page across the remaining range
-        onProgress({
-          stage: `Running OCR — reading scanned text…`,
-          pct: 60 + ((ocrPageDone + p) / pagesToOcr) * 38,
-        });
-      }
-    },
-  });
-  try {
-    await worker.setParameters({ preserve_interword_spaces: '1', user_defined_dpi: '300' });
-    const out: string[] = [];
-    for (let i = 1; i <= pagesToOcr; i++) {
-      ocrPageDone = i - 1;
-      const page = await doc.getPage(i);
-      const canvas = await renderPageToCanvas(page);
-      const res = await worker.recognize(canvas);
-      let text = res.data.text || '';
-
-      // Page 1 extra pass: very large/stylized title lines (name!) are sometimes
-      // skipped by the default segmentation. A sparse-text pass recovers them.
-      if (i === 1) {
-        try {
-          await worker.setParameters({ tessedit_pageseg_mode: '11' });
-          const res2 = await worker.recognize(canvas);
-          await worker.setParameters({ tessedit_pageseg_mode: '3' });
-          text = mergeTitleLines(text, res2.data.text || '');
-        } catch {
-          /* second pass is best-effort */
-        }
-      }
-
-      out.push(cleanOcrText(text));
-      if (i < pagesToOcr) page.cleanup?.();
-    }
-    return out;
-  } finally {
-    await worker.terminate?.();
-  }
-}
-
 /**
- * Prepend lines from the sparse pass that the main pass completely missed
- * (typically the big name header). Containment filter keeps it conservative.
+ * A "text layer" that came out as gibberish (broken font encoding, CID maps) is
+ * worse than no text at all — those pages must go to OCR.
  */
-function mergeTitleLines(main: string, sparse: string): string {
-  const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '');
-  const mainNorm = norm(main);
-  if (!mainNorm) return sparse || main;
-  const sparseLines = sparse.split('\n').map(l => l.trim()).filter(Boolean).slice(0, 6);
-  const missing = sparseLines.filter(l => {
-    const n = norm(l);
-    return n.length >= 4 && !mainNorm.includes(n);
-  });
-  if (!missing.length) return main;
-  return [...missing, ...main.split('\n')].join('\n');
+function looksLikeGarbage(text: string): boolean {
+  if (text.trim().length < 20) return false;
+  const bad = (text.match(/[\uFFFD\u0000-\u0008\u000E-\u001F]/g) || []).length;
+  const letters = (text.match(/[A-Za-z]/g) || []).length;
+  if (bad / Math.max(1, text.length) > 0.06) return true;
+  return letters / Math.max(1, text.length) < 0.35;
 }
 
-let ocrPageDone = 0;
+// ─────────────────────────────────────────────────────────────────────────────
+// Rendering (PDF page → grayscale)
+// ─────────────────────────────────────────────────────────────────────────────
 
-async function renderPageToCanvas(page: any): Promise<HTMLCanvasElement> {
+/** Render a PDF page at ~200 DPI and return its grayscale pixels. */
+async function renderPageGray(page: any): Promise<GrayImage> {
   const vp1 = page.getViewport({ scale: 1 });
-  // ~200 DPI but never exceed 2200px on the long edge (OCR speed/quality balance)
-  const scale = Math.min(2.6, 2200 / Math.max(vp1.width, vp1.height));
+  const scale = Math.min(3, RENDER_LONG_EDGE / Math.max(vp1.width, vp1.height));
   const viewport = page.getViewport({ scale });
   const canvas = document.createElement('canvas');
   canvas.width = Math.max(1, Math.floor(viewport.width));
   canvas.height = Math.max(1, Math.floor(viewport.height));
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true } as any) as CanvasRenderingContext2D | null;
   if (!ctx) throw new Error('Canvas not supported in this browser');
+  // A white base layer: transparent PDF backgrounds would otherwise read as
+  // black once converted to grayscale.
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
   await page.render({ canvasContext: ctx, viewport }).promise;
-  return canvas;
+  const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  return toGray({ data: img.data, width: canvas.width, height: canvas.height });
 }
 
-function cleanOcrText(t: string): string {
-  return t
-    .replace(/\r/g, '')
-    .replace(/(\w)-\n(\w)/g, '$1$2') // de-hyphenate line breaks
-    .replace(/[ \t]+\n/g, '\n')
-    .replace(/\n{3,}/g, '\n\n')
-    .trim();
-}
+const countChars = (s: string) => s.replace(/\s/g, '').length;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Public API
 // ─────────────────────────────────────────────────────────────────────────────
 
-const countChars = (s: string) => s.replace(/\s/g, '').length;
+function normalizeOptions(forceOcrOrOptions?: boolean | PdfExtractOptions): PdfExtractOptions {
+  if (typeof forceOcrOrOptions === 'boolean') return { forceOcr: forceOcrOrOptions };
+  return forceOcrOrOptions || {};
+}
 
 export async function extractPdfSmart(
   file: File,
   onProgress?: (p: PdfProgress) => void,
-  forceOcr = false,
+  forceOcrOrOptions?: boolean | PdfExtractOptions,
 ): Promise<PdfExtractResult> {
+  const opts = normalizeOptions(forceOcrOrOptions);
   const pdfjs = await getPdfjs();
   onProgress?.({ stage: 'Reading PDF structure…', pct: 4 });
 
@@ -264,22 +234,37 @@ export async function extractPdfSmart(
       isEvalSupported: false,
       useSystemFonts: true,
     }).promise;
-  } catch {
+  } catch (e: any) {
+    if (e?.name === 'PasswordException') {
+      throw new Error('This PDF is password-protected. Remove the password (or export a fresh copy) and upload it again.');
+    }
+    if (e?.name === 'InvalidPDFException') {
+      throw new Error('This file could not be opened as a PDF — it may be corrupted or not a real PDF. Try exporting it again, or upload a DOCX/TXT.');
+    }
     throw new Error('This file could not be opened as a PDF — it may be corrupted or not a real PDF.');
   }
 
   const numPages: number = doc.numPages;
 
-  // Stage 1 — text layer
+  // ── Stage 1 — text layer ───────────────────────────────────────────────────
   const textPages: string[] = [];
+  const needsOcr: boolean[] = [];
   let textChars = 0;
+
   for (let i = 1; i <= numPages; i++) {
     const page = await doc.getPage(i);
-    const t = await extractPageText(page);
+    let t = '';
+    try {
+      t = await extractPageText(page);
+    } catch {
+      t = '';
+    }
+    const chars = countChars(t);
+    textChars += chars;
     textPages.push(t);
-    textChars += countChars(t);
+    needsOcr.push(opts.forceOcr === true || chars < THIN_PAGE_CHARS || looksLikeGarbage(t));
     page.cleanup?.();
-    onProgress?.({ stage: `Extracting text — page ${i}/${numPages}`, pct: 4 + (i / numPages) * 50 });
+    onProgress?.({ stage: `Reading text layer — page ${i}/${numPages}`, pct: 4 + (i / numPages) * 40 });
   }
 
   const perPage = textChars / Math.max(1, numPages);
@@ -287,55 +272,115 @@ export async function extractPdfSmart(
   const warnings: string[] = [];
   let method: PdfExtractMethod = 'text';
   let ocrChars = 0;
+  let ocrPages = 0;
+  let confidenceSum = 0;
+  let assetMode: string | null = null;
 
-  // Stage 2 — OCR fallback when needed (or forced by the user)
-  if (forceOcr || looksScanned) {
+  // ── Stage 2 — OCR the pages that need it ───────────────────────────────────
+  const pagesToOcr = Math.min(numPages, OCR_MAX_PAGES);
+  const ocrTargets = needsOcr.slice(0, pagesToOcr).filter(Boolean).length;
+  let ocrDone = 0;
+
+  if (ocrTargets > 0) {
     try {
-      onProgress?.({ stage: looksScanned ? 'Scanned PDF detected — starting OCR…' : 'Running OCR…', pct: 55 });
-      const ocrPages = await ocrDocument(doc, numPages, onProgress);
-      // merge per page: OCR text wins only when it clearly recovered more
-      let ocrUsed = false;
-      const merged = textPages.map((t, i) => {
-        const o = ocrPages[i] || '';
-        const oc = countChars(o);
-        if (oc > countChars(t) * 1.5 && oc > 40) {
-          ocrUsed = true;
-          ocrChars += oc;
-          return o;
+      if (looksScanned) onProgress?.({ stage: 'Scanned PDF detected — starting OCR…', pct: 46 });
+      const renderer = opts.renderPage || renderPageGray;
+      let mode: string | null = null;
+      try {
+        mode = await ocrAssetMode(opts.ocr);
+      } catch {
+        /* probe failure is not fatal — the engine reports its own errors */
+      }
+      assetMode = mode;
+
+      for (let i = 1; i <= numPages && ocrDone < OCR_MAX_PAGES; i++) {
+        if (!needsOcr[i - 1]) continue;
+        const page = await doc.getPage(i);
+        const slot = ocrDone; // how many OCR pages are already finished
+        const out = await ocrGrayPage(await renderer(page, i), {
+          ...(opts.ocr || {}),
+          isFirstPage: i === 1,
+          // map the page's own 0-100 progress into this page's slice of 46-94
+          onProgress: (p) => onProgress?.({
+            stage: `Page ${i}/${numPages} · ${p.stage}`,
+            pct: 46 + ((slot + p.pct / 100) / ocrTargets) * 48,
+          }),
+        });
+        ocrDone++;
+        page.cleanup?.();
+
+        const textLayer = textPages[i - 1] || '';
+        const useOcr = opts.forceOcr === true
+          || countChars(textLayer) < SCANNED_THRESHOLD
+          || ocrQuality(out.text) > ocrQuality(textLayer);
+        if (useOcr && out.text.trim()) {
+          textPages[i - 1] = out.text;
+          ocrChars += countChars(out.text);
+          ocrPages++;
+          confidenceSum += out.confidence;
         }
-        return t;
-      });
-      if (ocrUsed) {
-        method = textChars > 50 ? 'mixed' : 'ocr';
-        textPages.length = 0;
-        textPages.push(...merged);
-        if (method === 'ocr') warnings.push('Scanned/image PDF — text was recovered using in-browser OCR.');
-        else warnings.push('Some pages were images — OCR was used to read them.');
+      }
+
+      if (ocrPages > 0) {
+        method = textChars > 120 ? 'mixed' : 'ocr';
+        warnings.push(
+          looksScanned
+            ? `Scanned/image PDF — text was read with the built-in OCR engine (${assetMode === 'cdn' ? 'downloaded once from the CDN' : 'runs fully offline on your device'}). Check dates and numbers.`
+            : `${ocrPages} page${ocrPages > 1 ? 's' : ''} had no usable text layer — read with OCR. Check dates and numbers.`,
+        );
         if (numPages > OCR_MAX_PAGES) warnings.push(`OCR covered the first ${OCR_MAX_PAGES} pages only.`);
-      } else if (forceOcr) {
-        warnings.push('OCR ran but did not find additional text.');
+      } else if (ocrTargets > 0) {
+        warnings.push('OCR ran but did not find more text than the PDF already contained.');
       }
     } catch (e: any) {
-      warnings.push(`OCR could not run (${e?.message || 'unknown error'}).`);
+      if (e instanceof OcrUnavailableError) {
+        warnings.push(
+          `${e.message} (The scan itself is readable — your device just could not start the OCR engine.)`,
+        );
+      } else {
+        warnings.push(`OCR could not run (${e?.message || 'unknown error'}).`);
+      }
+    } finally {
+      doc.destroy?.();
     }
+  } else {
+    doc.destroy?.();
   }
 
-  if (method === 'text' && perPage < 200 && textChars > 0) {
-    warnings.push('Very little text was found — if results look incomplete, the PDF may be partly scanned.');
+  // ── Result ────────────────────────────────────────────────────────────────
+  const text = textPages.join('\n\n').trim();
+  const alnum = countChars(text);
+
+  if (alnum < 20) {
+    if (looksScanned || ocrTargets > 0) {
+      throw new Error(
+        'This PDF is a scanned image and no text could be read from it — the scan may be too dark, blurry or low-resolution. ' +
+        'Try re-scanning at 300 DPI, take a fresh photo in bright light (Upload & Edit accepts JPG/PNG photos too), ' +
+        'or upload a text-based PDF, DOCX or TXT file.',
+      );
+    }
+    throw new Error('No readable text was found in this PDF. Please upload a text-based PDF, DOCX or TXT file.');
   }
-  if (method === 'text' && looksScanned) {
-    throw new Error(
-      'This PDF has no readable text (it is a scanned image) and OCR could not recover it. Please upload a text-based PDF, DOCX or TXT file.',
-    );
+
+  if (method === 'text' && perPage < 200) {
+    warnings.push('Very little text was found — if the result looks incomplete, the PDF may be partly scanned.');
+  }
+  if (ocrPages > 0) {
+    const avg = Math.round(confidenceSum / ocrPages);
+    if (avg < 65) {
+      warnings.push(`OCR confidence was low (${avg}%). Please double-check names, numbers and dates.`);
+    }
   }
 
   onProgress?.({ stage: 'Done', pct: 100 });
   return {
-    text: textPages.join('\n\n'),
+    text,
     method,
     pages: numPages,
     textChars,
     ocrChars,
+    ocrConfidence: ocrPages ? Math.round(confidenceSum / ocrPages) : undefined,
+    ocrPages,
     warning: warnings.length ? warnings.join(' ') : undefined,
   };
 }

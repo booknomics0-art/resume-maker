@@ -9,7 +9,7 @@ human-written-looking PDF.
 
 - **Login / Signup** — email + password and a Google button (demo mode runs fully in-browser; `src/config.ts` holds the Google Client ID slot for real OAuth).
 - **Dashboard** — resumes with live thumbnails, completion %, duplicate/delete, sample resume.
-- **Import existing resume (PDF / DOCX / TXT / JSON)** — real PDF text extraction with **pdf.js** (compressed streams, correct line & paragraph reconstruction), automatic **in-browser OCR fallback (tesseract.js)** for scanned/image PDFs, then a line-aware parser that pulls out contact info, summary, experience (role / company / dates / bullets), education, skills, projects, certifications and achievements into an editable review screen. Everything runs locally in the browser — no server upload. Pipeline: `src/lib/pdfExtract.ts` → `src/lib/resumeParser.ts` → `src/components/ResumeImporter.tsx`.
+- **Import an existing resume — PDF, DOCX, TXT, JSON, and photos (JPG/PNG)** — real PDF text extraction with **pdf.js** (compressed streams, correct line & paragraph reconstruction). Pages without a text layer (scans, photos, image-only PDFs) are detected automatically and read by a **bundled, fully offline OCR engine** (Tesseract worker + wasm core + English model served from `/ocr/`, so no CDN and no CSP problems). Photos get desk-cropped, contrast-stretched and thresholded before recognition. A line-aware parser then pulls out contact info, headline, summary, experience (role / company / location / dates / bullets), education, skills, projects, certifications, achievements, languages and hobbies — and **fills every one of them straight into the form**, with the A4 resume rendered live beside it: type in the form, the resume changes with you. Nothing is uploaded — the file never leaves the tab. Pipeline: `src/lib/pdfExtract.ts` + `src/lib/ocr.ts` → `src/lib/resumeParser.ts` → `src/components/ResumeImporter.tsx` (draft bridge: `src/lib/importDraft.ts`).
 - **7-step wizard** — Basics → Summary → Experience → Education → Skills → Extras → Design, autosave + live A4 preview.
 - **Profile photo upload** — shown on all 50 templates (auto-resized in-browser).
 - **Mandatory fields enforced** — name, title, email, phone, city, summary, 1 job (or fresher toggle), 1 education entry, 3+ skills. Download unlocks at 100%.
@@ -34,17 +34,38 @@ npm run build    # static build in dist/
 
 ## Importer tests
 
-End-to-end tests for the upload pipeline (build a compressed PDF → extract with
-pdf.js → parse; OCR a scanned-image resume → parse; DOCX parse):
+End-to-end tests for the upload pipeline. They run the **real** extraction and
+parsing code in Node (esbuild bundles `src/lib/*.ts`; `@napi-rs/canvas` stands in
+for the browser canvas, and the tests skip politely if it is missing):
 
 ```bash
-npx esbuild tests/test-pdf-parse.mjs --bundle --platform=node --format=esm \
-  --outfile=.tmptest/run.mjs --external:pdfjs-dist --external:tesseract.js && node .tmptest/run.mjs
-node tests/test-ocr.mjs tests/scan-resume.jpg   # needs `npm i -D @tesseract.js-data/eng` in sandboxes without CDN access
+npm test              # all three suites
+npm run test:ocr      # photo of a resume → OCR → fields   (tests/scan-resume.jpg)
+npm run test:pdf      # text PDF (no OCR) + image-only PDF (the reported bug)
+npm run test:autofill # extracted data → form → live resume → editor hand-over
+node tests/test-image-ocr.mjs path/to/your-scan.jpg   # try any file
 ```
 
-Browsers load the OCR engine from the jsDelivr CDN at runtime (first OCR only);
-no data ever leaves the device — only the engine files are downloaded.
+`@napi-rs/canvas` is a dev-only dependency for these tests
+(`npm i -D @napi-rs/canvas`); the app itself never imports it.
+
+## Offline OCR engine
+
+Scanned pages and photos are read on the device. The engine's three files —
+`worker.min.js`, `tesseract-core-*-lstm.wasm.js` and `eng.traineddata.gz`
+(~11 MB total) — are **vendored from `node_modules` into `public/ocr/`** by
+`scripts/copy-ocr-assets.mjs`, which runs automatically on `npm run dev` and
+`npm run build`. They are fetched only when a user actually imports a scan, and
+the English model is cached in the browser afterwards.
+
+This is deliberate: tesseract.js defaults to jsDelivr, but CraftCV ships a strict
+CSP (`script-src 'self'`, `connect-src 'self'`) plus
+`Cross-Origin-Embedder-Policy: require-corp`, so CDN downloads are blocked — the
+old build failed every scanned upload with *"OCR could not recover it"* for that
+reason. `public/ocr/` is generated, not committed (see `.gitignore`), and the
+CSP keeps `'wasm-unsafe-eval'` because WebAssembly compilation is CSP-gated too.
+Never widen `script-src`/`connect-src` to a CDN — point the engine at our own
+origin instead.
 
 ## Docs (internal)
 

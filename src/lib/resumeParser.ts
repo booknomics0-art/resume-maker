@@ -13,11 +13,14 @@
  *  - Education, Projects, Certifications & Achievements are now parsed too.
  */
 
-import { emptyResume, uid, type Resume, type ExperienceItem, type EducationItem, type ProjectItem, type CertItem } from './types';
+import { emptyResume, uid, type Resume, type ExperienceItem, type EducationItem, type ProjectItem, type CertItem, type LanguageItem } from './types';
 import { sanitizeInput } from './security';
 import { extractPdfSmart, type PdfProgress, type PdfExtractMethod, type PdfExtractResult } from './pdfExtract';
+import { extractFromImage } from './imageExtract';
+import type { OcrRunOptions } from './ocr';
+import { repairOcrText } from './ocrText';
 
-export type SupportedFormat = 'pdf' | 'docx' | 'txt' | 'json' | 'unknown';
+export type SupportedFormat = 'pdf' | 'docx' | 'txt' | 'json' | 'image' | 'unknown';
 
 /** Extra info about HOW the file was parsed (shown in the review UI). */
 export interface ParseMeta {
@@ -25,6 +28,11 @@ export interface ParseMeta {
   pages?: number;
   textChars?: number;
   ocrChars?: number;
+  /** Average Tesseract confidence on OCR pages (0-100). */
+  ocrConfidence?: number;
+  /** How many pages needed OCR. */
+  ocrPages?: number;
+  /** OCR took this long (ms) — useful when explaining why the import is slow. */
   warning?: string;
 }
 
@@ -41,6 +49,7 @@ export function detectFormat(file: File): SupportedFormat {
   const name = file.name.toLowerCase();
   const type = file.type.toLowerCase();
   if (name.endsWith('.pdf') || type === 'application/pdf') return 'pdf';
+  if (/^image\//.test(type) || /\.(jpe?g|png|webp|bmp|gif|avif)$/.test(name)) return 'image';
   if (name.endsWith('.docx') || type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') return 'docx';
   if (name.endsWith('.doc')) return 'docx';
   if (name.endsWith('.json')) return 'json';
@@ -149,11 +158,13 @@ const HEADER_KEYWORDS: Array<{ type: SectionType; kws: string[] }> = [
   { type: 'projects', kws: ['personal projects', 'academic projects', 'key projects', 'selected projects', 'projects', 'project work'] },
   { type: 'certifications', kws: ['certifications', 'certification', 'certificates', 'licenses', 'courses & certifications'] },
   { type: 'achievements', kws: ['achievements', 'achievement', 'accomplishments', 'awards & honors', 'awards', 'honors', 'honours', 'extra-curricular', 'extracurricular'] },
+  { type: 'languages', kws: ['languages known', 'language proficiency', 'languages', 'language'] },
+  { type: 'hobbies', kws: ['hobbies & interests', 'hobbies and interests', 'hobbies', 'interests', 'personal interests'] },
 ];
 // suffixes allowed after a keyword in a real section header
 const HEADER_SUFFIXES = ['& qualification', 'qualifications', 'qualification', '& courses', 'courses', 'details', 'information', '& achievements', 'background', '& skills', 'and skills', '& tools', 'tools', '& technologies', 'proficiencies', 'toolkit', 'summary', 'profile', 'history', '& honors', '& awards', 'set'];
 
-type SectionType = 'summary' | 'experience' | 'education' | 'skills' | 'projects' | 'certifications' | 'achievements';
+type SectionType = 'summary' | 'experience' | 'education' | 'skills' | 'projects' | 'certifications' | 'achievements' | 'languages' | 'hobbies';
 
 export interface ParsedSections {
   contact: {
@@ -164,6 +175,7 @@ export interface ParsedSections {
     linkedin?: string;
     website?: string;
   };
+  headline?: string;
   summary?: string;
   experience: Array<Partial<ExperienceItem> & { raw: string }>;
   education: Array<Partial<EducationItem> & { raw: string }>;
@@ -171,6 +183,8 @@ export interface ParsedSections {
   projects: Array<Partial<ProjectItem> & { raw: string }>;
   certs: Array<Partial<CertItem> & { raw: string }>;
   achievements: string[];
+  languages: Array<Partial<LanguageItem>>;
+  hobbies: string[];
   rawText: string;
 }
 
@@ -647,6 +661,53 @@ function parseAchievements(contentLines: string[]): string[] {
     .slice(0, 10);
 }
 
+const LEVEL_WORDS = /(native|fluent|proficient|professional|conversational|intermediate|beginner|basic|advanced|excellent|mother tongue|bilingual|full professional|limited working|elementary)/i;
+
+/** "English (Fluent), Hindi - Native, Marathi" → structured list */
+function parseLanguages(contentLines: string[] | undefined): Array<Partial<LanguageItem>> {
+  if (!contentLines || !contentLines.length) return [];
+  const out: Array<Partial<LanguageItem>> = [];
+  const seen = new Set<string>();
+  for (const raw of contentLines.slice(0, 8)) {
+    const line = stripBullet(raw);
+    if (!line || isJunk(line) || !/[A-Za-z]{3}/.test(line)) continue;
+    for (const part of line.split(/\s*[,;•·|]\s*/)) {
+      const t = part.replace(/[.:]+$/, '').trim();
+      if (!t || t.length < 3 || t.length > 40) continue;
+      const m = t.match(/^([A-Za-z][A-Za-z\s'()-]{2,28}?)\s*[(:\-–—]\s*([A-Za-z][A-Za-z\s]{2,28})?\)?$/);
+      const name = (m ? m[1] : t).replace(/\s+/g, ' ').trim();
+      const level = m && m[2] && LEVEL_WORDS.test(m[2]) ? m[2].trim() : (LEVEL_WORDS.test(t) ? (t.match(LEVEL_WORDS)?.[0] ?? '') : '');
+      if (!name || !/^[A-Za-z]/.test(name)) continue;
+      const key = name.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push({ name: name.slice(0, 40), level: level ? level[0].toUpperCase() + level.slice(1).toLowerCase() : '' });
+    }
+  }
+  return out.slice(0, 8);
+}
+
+/** Hobbies / interests — short comma or bullet separated items. */
+function parseHobbies(contentLines: string[] | undefined): string[] {
+  if (!contentLines || !contentLines.length) return [];
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const raw of contentLines.slice(0, 6)) {
+    const line = stripBullet(raw);
+    if (!line || isJunk(line)) continue;
+    for (const part of line.split(/\s*[,;•·|]\s*/)) {
+      const t = part.replace(/^[\-–—\s]+|[\s.]+$/g, '').trim();
+      if (t.length < 3 || t.length > 40 || !/[A-Za-z]{3}/.test(t)) continue;
+      if (/\d{4}/.test(t)) continue; // dates leak in from neighbouring sections
+      const key = t.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(t);
+    }
+  }
+  return out.slice(0, 12);
+}
+
 function parseSummary(contentLines: string[] | undefined): string {
   if (!contentLines || !contentLines.length) return '';
   const txt = contentLines
@@ -657,12 +718,41 @@ function parseSummary(contentLines: string[] | undefined): string {
   return txt.slice(0, 800).trim();
 }
 
+/**
+ * The line under the name is almost always the target role ("Software
+ * Developer"). Prefer it over inferring the headline from the last job title —
+ * it is what the candidate wants to be hired as.
+ */
+function findHeadline(text: string, name?: string): string {
+  const lines = splitLines(text).map(l => l.trim()).filter(l => !isJunk(l));
+  let start = 0;
+  if (name) {
+    const idx = lines.findIndex(l => l.toLowerCase() === name.toLowerCase());
+    if (idx >= 0) start = idx + 1;
+  }
+  for (let i = start; i < Math.min(start + 5, lines.length); i++) {
+    const raw = lines[i];
+    if (!raw || raw.length > 60) continue;
+    if (/@|https?:|www\.|\d{4}|\d{6}/.test(raw)) continue;
+    const cleaned = raw.replace(/^[|•·\-–—\s]+|[|•·\-–—\s]+$/g, '').trim();
+    if (!cleaned || cleaned.length < 3) continue;
+    if (HEADER_WORD.test(cleaned) && !HEADLINE_WORDS.test(cleaned)) continue;
+    if (DEGREE_KW.test(cleaned)) continue;
+    if (cleaned.split(/\s+/).length > 6) continue;
+    if (HEADLINE_WORDS.test(cleaned)) return cleaned.slice(0, 100);
+  }
+  return '';
+}
+
 // ═════════════════════════════════════════════════════════════════════════════
 // Top-level parse
 // ═════════════════════════════════════════════════════════════════════════════
 
-export function parseResumeText(rawText: string): ParsedSections {
-  const text = sanitizeInput(rawText, 30000);
+export function parseResumeText(rawText: string, opts?: { ocr?: boolean }): ParsedSections {
+  // OCR output needs its spacing/typo artefacts repaired before section
+  // detection — otherwise "Node . js" and "Work Experience" (merged into the
+  // line above) never match a real keyword.
+  const text = sanitizeInput(opts?.ocr ? repairOcrText(rawText) : rawText, 30000);
   const lines = splitLines(text);
   const contact = extractContactInfo(text);
   const sections = detectSections(lines);
@@ -670,6 +760,7 @@ export function parseResumeText(rawText: string): ParsedSections {
 
   return {
     contact,
+    headline: findHeadline(text, contact.name),
     summary: parseSummary(contents.summary),
     experience: parseExperience(contents.experience || []),
     education: parseEducation(contents.education || []),
@@ -677,6 +768,8 @@ export function parseResumeText(rawText: string): ParsedSections {
     projects: parseProjects(contents.projects || []),
     certs: parseCerts(contents.certifications || []),
     achievements: parseAchievements(contents.achievements || []),
+    languages: parseLanguages(contents.languages),
+    hobbies: parseHobbies(contents.hobbies),
     rawText: text,
   };
 }
@@ -695,9 +788,16 @@ export function parsedToResume(parsed: ParsedSections, fieldId = 'it'): Resume {
     website: parsed.contact.website || '',
     photo: '',
   };
+  if (parsed.headline) resume.personal.headline = parsed.headline.slice(0, 100);
   resume.summary = parsed.summary || '';
   resume.skills = [...parsed.skills];
   resume.achievements = [...parsed.achievements];
+  resume.hobbies = [...(parsed.hobbies || [])];
+  resume.languages = (parsed.languages || []).map(l => ({
+    id: uid(),
+    name: (l.name || '').slice(0, 40),
+    level: (l.level || '').slice(0, 40),
+  })).filter(l => l.name);
   resume.experience = parsed.experience.map(exp => ({
     id: uid(),
     role: (exp.role || '').slice(0, 100),
@@ -728,17 +828,30 @@ export function parsedToResume(parsed: ParsedSections, fieldId = 'it'): Resume {
     issuer: (c.issuer || '').slice(0, 60),
     year: (c.year || '').slice(0, 20),
   }));
-  const firstRole = parsed.experience.find(e => e.role)?.role;
-  if (firstRole) resume.personal.headline = firstRole.slice(0, 100);
+  if (!resume.personal.headline) {
+    const firstRole = parsed.experience.find(e => e.role)?.role;
+    if (firstRole) resume.personal.headline = firstRole.slice(0, 100);
+  }
   return resume;
+}
+
+export interface ParseFileOptions {
+  onProgress?: (p: PdfProgress) => void;
+  /** Skip the PDF text layer and OCR every page (used by "Re-run with OCR"). */
+  forceOcr?: boolean;
+  /** OCR tweaks (tests inject a canvas-free image encoder + local model). */
+  ocr?: OcrRunOptions;
+  /** Test hook: replace the PDF page rasteriser. */
+  renderPage?: (page: any, num: number) => Promise<any>;
 }
 
 export async function parseResumeFile(
   file: File,
-  opts?: { onProgress?: (p: PdfProgress) => void; forceOcr?: boolean },
+  opts?: ParseFileOptions,
 ): Promise<ParseResumeResult> {
   const format = detectFormat(file);
   let meta: ParseMeta | undefined;
+  let usedOcr = false;
   try {
     let text = '';
     let resume: Resume | null = null;
@@ -751,24 +864,42 @@ export async function parseResumeFile(
     }
 
     if (format === 'pdf') {
-      const pdf = await extractPdfSmart(file, opts?.onProgress, opts?.forceOcr || false);
+      const pdf = await extractPdfSmart(file, opts?.onProgress, {
+        forceOcr: opts?.forceOcr,
+        renderPage: opts?.renderPage,
+        ocr: opts?.ocr,
+      });
       text = pdf.text;
-      meta = { method: pdf.method, pages: pdf.pages, textChars: pdf.textChars, ocrChars: pdf.ocrChars, warning: pdf.warning };
+      usedOcr = pdf.ocrPages > 0;
+      meta = {
+        method: pdf.method,
+        pages: pdf.pages,
+        textChars: pdf.textChars,
+        ocrChars: pdf.ocrChars,
+        ocrConfidence: pdf.ocrConfidence,
+        ocrPages: pdf.ocrPages,
+        warning: pdf.warning,
+      };
+    } else if (format === 'image') {
+      const img = await extractFromImage(file, opts?.onProgress);
+      text = img.text;
+      usedOcr = true;
+      meta = { method: 'ocr', textChars: 0, ocrChars: img.imageChars, ocrConfidence: img.confidence, ocrPages: 1, warning: img.warning };
     } else if (format === 'txt') text = await extractFromTxt(file);
     else if (format === 'docx') text = await extractFromDocx(file);
-    else throw new Error(`Unsupported format: ${file.name}. Please upload PDF, DOCX, TXT, or JSON.`);
+    else throw new Error(`Unsupported format: ${file.name}. Please upload PDF, DOCX, TXT, JPG, PNG or JSON.`);
 
     if (!text || text.trim().length < 20) {
       throw new Error(
         format === 'pdf'
-          ? 'No readable text found in this PDF. If it is a scanned/photo PDF, OCR could not recover it — please upload a text-based PDF, DOCX or TXT.'
+          ? 'No readable text found in this PDF — it looks like a scanned image with too little detail to read. Re-scan at 300 DPI, upload a photo (JPG/PNG) instead, or use a text-based PDF/DOCX/TXT.'
           : 'Could not extract text from file. The file may be corrupted. Please try another format or copy-paste manually.',
       );
     }
 
-    parsed = parseResumeText(text);
+    parsed = parseResumeText(text, { ocr: usedOcr || format === 'image' });
     resume = parsedToResume(parsed);
-    return { resume, parsed, text, format, meta };
+    return { resume, parsed, text: parsed.rawText, format, meta };
   } catch (e: any) {
     return { resume: null, parsed: null, text: '', format, meta, error: e?.message || 'Failed to parse resume' };
   }
