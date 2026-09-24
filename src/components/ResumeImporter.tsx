@@ -251,18 +251,27 @@ export default function ResumeImporter() {
 
   const reparseFromText = () => {
     if (!draft) return;
-    if (!confirm('Re-read the structured fields from the text below?\n\nThis replaces the values currently in the form (your template, photo and any template choice stay).')) return;
+    if (!confirm('Re-read the structured fields from the text below?\n\nThis replaces the values currently in the form (your template, photo and template choice stay).')) return;
     const parsed = parseResumeText(textDraft, { ocr: draft.meta?.method !== 'text' });
     const fresh = parsedToResume(parsed);
-    set({
-      ...fresh,
-      id: draft.resume.id,
-      name: draft.resume.name,
-      templateId: draft.resume.templateId,
-      fieldId: draft.resume.fieldId,
-      personal: { ...fresh.personal, photo: draft.resume.personal.photo },
-    });
-    saveImportDraft({ ...draft, rawText: textDraft });
+    // one atomic draft write: the edited text and the re-read fields together,
+    // so neither can overwrite the other
+    const next: ImportDraft = {
+      ...draft,
+      rawText: textDraft,
+      resume: {
+        ...fresh,
+        id: draft.resume.id,
+        name: draft.resume.name,
+        templateId: draft.resume.templateId,
+        fieldId: draft.resume.fieldId,
+        personal: { ...fresh.personal, photo: draft.resume.personal.photo },
+      },
+      updatedAt: Date.now(),
+    };
+    saveImportDraft(next);
+    setDraft(next);
+    setTab(0);
   };
 
   const handleSave = () => {
@@ -483,7 +492,12 @@ export default function ResumeImporter() {
                   style={{ minHeight: 260, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontSize: 12.5 }}
                   value={textDraft}
                   onChange={(e) => setTextDraft(e.target.value)}
-                  onBlur={() => saveImportDraft({ ...draft, rawText: textDraft })}
+                  onBlur={() => {
+                    // merge into whatever the latest draft is (a field may have
+                    // been edited in this same tick) instead of the stale copy
+                    const current = loadImportDraft() ?? draft;
+                    saveImportDraft({ ...current, rawText: textDraft });
+                  }}
                 />
                 <div className="row" style={{ marginTop: 8, gap: 8, flexWrap: 'wrap' }}>
                   <button className="btn small" onClick={reparseFromText}>🔄 Re-read fields from this text</button>
