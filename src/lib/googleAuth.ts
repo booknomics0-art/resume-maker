@@ -230,12 +230,32 @@ export function classifyAuthError(raw: string, extra: { code?: string; status?: 
     });
   }
 
+  // A callback that arrives with a stale/used/foreign flow state (user pressed
+  // Back, reloaded an old callback URL, or the flow timed out) is NOT a
+  // credentials problem — Supabase answers
+  // `{"error_code":"bad_oauth_state","msg":"OAuth state not found or expired"}`.
+  // Sending the owner to the provider settings here would be a wild goose chase.
+  if (
+    m.includes('oauth state') ||
+    m.includes('bad_oauth_state') ||
+    m.includes('state not found') ||
+    m.includes('state has expired') ||
+    m.includes('flow state')
+  ) {
+    return out({
+      code: 'verifier_missing',
+      title: 'That Google sign-in link expired',
+      message: 'The sign-in attempt behind this link is gone — it was already used, started in another tab/browser, or left open too long.',
+      hint: 'Press “Continue with Google” again and finish in one go. Email + password works too.',
+      showSetup: false,
+    });
+  }
+
   if (
     m.includes('redirect_uri_mismatch') ||
     m.includes('unable to exchange external code') ||
     m.includes('invalid_client') ||
     m.includes('invalid_grant') ||
-    m.includes('oauth state') ||
     m.includes('code challenge')
   ) {
     return out({

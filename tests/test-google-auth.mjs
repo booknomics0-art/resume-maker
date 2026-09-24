@@ -71,6 +71,11 @@ const mismatched = C('Unable to exchange external code: redirect_uri_mismatch');
 const badRedirect = C('Invalid redirect URL: https://craftcv.example.com/');
 const denied = C('access_denied');
 const verifier = C('PKCE code verifier not found in storage. This can happen if the auth flow was initiated in a different browser or device.');
+const staleState = C('{"code":400,"error_code":"bad_oauth_state","msg":"OAuth state not found or expired"}', { code: 'bad_oauth_state' });
+const staleStateCb = google.issueFromRedirect(
+  redirect.parseRedirectParams('https://app.example/?error=invalid_request&error_code=bad_oauth_state&error_description=OAuth+state+not+found+or+expired'),
+);
+const stateAsText = C('OAuth state not found or expired');
 const offline = C('TypeError: Failed to fetch');
 const missingCloud = C('anything', { cloudMissing: true });
 const mystery = C('something brand new happened');
@@ -84,6 +89,9 @@ const bChecks = [
   ['bad redirect URL → redirect_not_allowed', badRedirect.code === 'redirect_not_allowed'],
   ['access_denied → cancelled (not a scary error)', denied.code === 'cancelled' && denied.showSetup === false],
   ['lost PKCE verifier → actionable message', verifier.code === 'verifier_missing'],
+  ['stale/used oauth state → expired link, never “wrong credentials”', staleState.code === 'verifier_missing' && staleState.title.toLowerCase().includes('expired')],
+  ['stale oauth state via callback URL → same friendly message', staleStateCb.code === 'verifier_missing' && staleStateCb.showSetup === false],
+  ['“OAuth state not found or expired” text matched', stateAsText.code === 'verifier_missing'],
   ['offline → network', offline.code === 'network'],
   ['no Supabase configured → cloud_missing', missingCloud.code === 'cloud_missing'],
   ['unknown text still has a fallback', mystery.code === 'unknown' && Boolean(mystery.message)],
