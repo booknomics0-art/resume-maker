@@ -20,8 +20,10 @@
          The OCR engine (worker + wasm core + English model) is served from our
          own origin under /ocr/, precisely so it keeps working under this policy.
          script-src/connect-src must not be widened to a CDN. 'wasm-unsafe-eval'
-         is required because WebAssembly compilation is CSP-gated too. -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://accounts.google.com https://apis.google.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https:; connect-src 'self' blob: https://accounts.google.com https://*.supabase.co wss://*.supabase.co; frame-src 'self' https://accounts.google.com; object-src 'none'; base-uri 'self'; form-action 'self'" />
+         is required because WebAssembly compilation is CSP-gated too.
+         Google sign-in is a top-level redirect through Supabase (not the GSI
+         script), so accounts.google.com is deliberately NOT allowed here. -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https:; connect-src 'self' blob: https://*.supabase.co wss://*.supabase.co; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'" />
     
     <!-- Open Graph for social sharing -->
     <meta property="og:title" content="CraftCV — Free Professional Resume Builder | 80 Templates" />
@@ -33,7 +35,7 @@
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230F2148'/%3E%3Ctext x='16' y='22' font-size='16' font-family='Georgia' fill='%23C9D2DE' text-anchor='middle'%3ECV%3C/text%3E%3C/svg%3E" />
     
     <!-- Preconnect for performance -->
-    <link rel="preconnect" href="https://accounts.google.com" crossorigin />
+    <link rel="preconnect" href="https://*.supabase.co" crossorigin />
     
   </head>
   <body>

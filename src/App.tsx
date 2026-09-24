@@ -12,7 +12,9 @@ import {
 import { currentUser, logout, setLocalSession, type User } from './lib/auth';
 import { initSecurity } from './lib/security';
 import { cloudEnabled } from './lib/supabase';
-import { cloudCurrentUser, touchProfile } from './lib/cloud';
+import { cloudBootAuth, cloudCurrentUser, touchProfile } from './lib/cloud';
+import { hasAuthCallback } from './lib/authRedirect';
+import type { GoogleAuthIssue } from './lib/googleAuth';
 import { syncWithCloud } from './lib/store';
 
 function useHashRoute() {
@@ -32,6 +34,10 @@ export const navigate = (to: string) => {
 export default function App() {
   const [user, setUser] = useState<User | null>(() => currentUser());
   const [menuOpen, setMenuOpen] = useState(false);
+  // True while an OAuth callback (`?code=…`) is being exchanged, so the visitor
+  // sees "signing you in" instead of the login form and then a jump.
+  const [booting, setBooting] = useState(() => cloudEnabled() && hasAuthCallback());
+  const [authNotice, setAuthNotice] = useState<GoogleAuthIssue | null>(null);
   const tab = useHashRoute();
 
   // Initialize application protections on mount
@@ -39,12 +45,35 @@ export default function App() {
     initSecurity();
   }, []);
 
-  // Cloud: restore the Supabase session (e.g. new device / after email confirm)
-  // and merge cloud resumes into the local copy.
+  // Cloud: finish a Google/email redirect round-trip, restore the Supabase session
+  // (e.g. new device / after email confirm) and merge cloud resumes into the copy
+  // stored in this browser.
   useEffect(() => {
     if (!cloudEnabled()) return;
     let cancelled = false;
     (async () => {
+      // Was this page opened as an OAuth callback? Finish it before anything
+      // else. `cloudBootAuth()` resolves one shared promise per page load, so a
+      // React StrictMode double-mount cannot burn the single-use code twice and
+      // failures keep their explanation.
+      const redirect = await cloudBootAuth();
+      if (cancelled) return;
+
+      if (redirect.attempted) {
+        if (redirect.ok && redirect.user) {
+          setLocalSession(redirect.user.name, redirect.user.email, redirect.user.provider);
+          setUser(currentUser());
+          void touchProfile();
+          await syncWithCloud();
+        } else {
+          // e.g. "Google login is switched off for this project" — shown on the
+          // login card together with the exact fix, never as a silent failure.
+          setAuthNotice(redirect.issue ?? null);
+        }
+        setBooting(false);
+        return;
+      }
+
       const cu = await cloudCurrentUser();
       if (cancelled) return;
       if (cu) {
@@ -59,6 +88,7 @@ export default function App() {
         logout();
         setUser(null);
       }
+      setBooting(false);
     })();
     return () => { cancelled = true; };
   }, []);
@@ -78,8 +108,22 @@ export default function App() {
     return () => { document.body.style.overflow = ''; };
   }, [menuOpen]);
 
+  if (booting) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: 'var(--navy-900, #0F2148)', color: '#fff', padding: 24 }}>
+        <div style={{ textAlign: 'center', maxWidth: 360 }}>
+          <div className="brand-badge" style={{ margin: '0 auto 14px' }}>CV</div>
+          <div style={{ fontSize: 18, fontWeight: 700 }}>Signing you in…</div>
+          <div style={{ opacity: 0.75, fontSize: 13.5, marginTop: 6 }}>
+            Finishing the Google handshake with Supabase. One moment.
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!user) {
-    return <AuthPage onAuth={() => setUser(currentUser())} />;
+    return <AuthPage onAuth={() => setUser(currentUser())} notice={authNotice} />;
   }
 
   let page: React.ReactNode;
