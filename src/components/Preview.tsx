@@ -323,7 +323,7 @@ export default function Preview({ r, tpl }: { r: Resume; tpl?: Template }) {
           {r.personal.photo ? (
             <img className="avatar avatar-photo" src={r.personal.photo} alt="" />
           ) : (
-            <div className="avatar">{initials(name)}</div>
+            <div className="avatar ph">{initials(name)}</div>
           )}
           <div className="side-block">
             <h3 className="s-sec-title">Contact</h3>
@@ -462,7 +462,7 @@ export default function Preview({ r, tpl }: { r: Resume; tpl?: Template }) {
     return (
       <div className={sheetClass(t)} style={sheetVars(t)}>
         <div className="head">
-          {p.photo ? <img className="seal seal-photo" src={p.photo} alt="" /> : <div className="seal">{initials(name)}</div>}
+          {p.photo ? <img className="seal seal-photo" src={p.photo} alt="" /> : <div className="seal ph">{initials(name)}</div>}
           <h1 className="s-name">{name}</h1>
           <div className="s-headline">{headline}</div>
           <ContactBits r={r} />
@@ -546,7 +546,7 @@ export default function Preview({ r, tpl }: { r: Resume; tpl?: Template }) {
     return (
       <div className={sheetClass(t)} style={sheetVars(t)}>
         <aside className="spine">
-          {p.photo ? <img className="spine-photo" src={p.photo} alt="" /> : <div className="spine-mono">{initials(name)}</div>}
+          {p.photo ? <img className="spine-photo" src={p.photo} alt="" /> : <div className="spine-mono ph">{initials(name)}</div>}
           {orderedSections.map((s) => (
             <div className="spine-label" key={s}>{SPINE_LABELS[s]}</div>
           ))}
