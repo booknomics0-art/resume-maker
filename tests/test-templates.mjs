@@ -54,7 +54,7 @@ const { TEMPLATES, TEMPLATE_COUNT, LAYOUT_META, SIDE_SECTIONS, SECTION_LABELS, C
 
 // every modifier a template may use — each one must exist as a real class in
 // src/templates.css, so a typo can never silently do nothing
-const VALID_MODS = new Set(['mod-invert', 'mod-serif', 'mod-band-flat', 'mod-band-tint', 'mod-square', 'mod-dark', 'mod-tint', 'mod-numbered', 'mod-tight']);
+const VALID_MODS = new Set(['mod-invert', 'mod-serif', 'mod-band-flat', 'mod-band-tint', 'mod-square', 'mod-dark', 'mod-tint', 'mod-numbered', 'mod-tight', 'mod-caps', 'mod-frame', 'mod-outline', 'mod-plain']);
 const { readFileSync: rf } = await import('node:fs');
 const css = rf(new URL('../src/templates.css', import.meta.url), 'utf8');
 

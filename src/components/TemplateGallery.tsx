@@ -62,7 +62,7 @@ function TplCard({
       role="button"
       tabIndex={0}
       aria-pressed={selected}
-      aria-label={`Use the ${t.name} template — ${LAYOUT_META[t.layout]?.label || t.layout} family`}
+      aria-label={`Use the ${t.name} design — ${t.tagline}`}
       onClick={() => onSelect(t.id)}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(t.id); }
@@ -77,32 +77,17 @@ function TplCard({
         <span className="tpl-cta" aria-hidden="true">{selected ? 'Applied' : 'Use this design'}</span>
       </div>
 
+      {/* intentionally minimal: the design speaks for itself — name + one tap */}
       <div className="tpl-body">
         <div className="tpl-name">
           <h4 title={t.name}>{t.name}</h4>
-          {selected && <span className="tpl-applied">✓ Applied</span>}
-        </div>
-        <p className="tpl-tag">{t.tagline}</p>
-
-        <div className="tpl-flags">
-          {t.photo && <span className="tpl-flag" title="This design carries a photo frame — upload one in Basics">◉ Photo</span>}
-          {t.onePage && <span className="tpl-flag" title="Tuned to hold a full career on one A4 page">▤ 1 page</span>}
-          <span className="tpl-flag tpl-flag-cat">{CATEGORY_META[t.category].label}</span>
-        </div>
-
-        <div className="tpl-foot">
-          <span className="tpl-fam">{LAYOUT_META[t.layout]?.label || t.layout}</span>
-          <span
-            className="tpl-swatch"
-            title={`Palette: ${t.paletteName}`}
-            aria-label={`Palette ${t.paletteName}`}
-          >
+          <span className="tpl-swatch" aria-hidden="true">
             {[t.pal.p, t.pal.p2, t.pal.a].filter(Boolean).map((c, i) => (
               <i key={i} style={{ background: c }} />
             ))}
-            <em>{t.paletteName}</em>
           </span>
         </div>
+        <span className="tpl-cta-mobile" aria-hidden="true">{selected ? '✓ Applied' : 'Use this design →'}</span>
       </div>
     </article>
   );
@@ -240,12 +225,8 @@ export default function TemplateGallery({
 
       <div className="tpl-meta">
         <span>
-          <span className="tpl-star tpl-star-inline" aria-hidden="true">★</span>{' '}
-          {active ? <>Applied: <b>{active.name}</b></> : 'Pick any design to apply it'} — gold stars mark the
-          best fit for {f.label}
-        </span>
-        <span className="tpl-meta-right">
-          Designs are A4-exact: what you see here is what prints
+          {active ? <>Applied: <b>{active.name}</b></> : 'Tap any design to apply it'}
+          {' · '}<span className="tpl-star tpl-star-inline" aria-hidden="true">★</span> = best fit for {f.label}
         </span>
       </div>
 

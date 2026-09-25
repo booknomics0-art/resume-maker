@@ -4,9 +4,10 @@ import {
   type CertItem, type Resume,
 } from '../lib/types';
 import { COMMON_SKILLS, FIELDS, fieldById } from '../lib/fields';
-import { LAYOUT_META, TEMPLATE_COUNT } from '../lib/templates';
+import { LAYOUT_META, TEMPLATE_COUNT, templateById } from '../lib/templates';
 import { callAi, loadAiSettings } from '../lib/ai';
 import TemplateGallery from './TemplateGallery';
+import DeviceSheet, { DeviceTabs, type DeviceMode } from './DeviceSheet';
 
 /** Layout families — derived from the template library, never hard-coded. */
 const FAMILY_COUNT = Object.keys(LAYOUT_META).length;
@@ -570,12 +571,29 @@ export function StepExtras({ r, set }: StepProps) {
 
 export function StepDesign({ r, set }: StepProps) {
   const f = fieldById(r.fieldId);
+  const [device, setDevice] = useState<DeviceMode>('a4');
+  const applied = templateById(r.templateId);
   return (
     <div className="design-step">
       <div className="notice design-intro">
         <b>{TEMPLATE_COUNT} templates · {FAMILY_COUNT} families</b> — every thumbnail below is
         <b> your own resume</b> in that design, sized for <b>{f.label}</b> (section order, emphasis and
-        spacing follow your field). Tap a card to apply it, filter by family, or search by name.
+        spacing follow your field). Tap a card to apply it — the preview below shows your full
+        resume in that design straight away, on A4, mobile and desktop.
+      </div>
+
+      {/* live preview of the applied design — name, number and every section
+          re-flow into the chosen template instantly; switch device to check it
+          on mobile and desktop too */}
+      <div className="card pad design-device">
+        <div className="spread design-device-head">
+          <div style={{ minWidth: 0 }}>
+            <b style={{ color: 'var(--navy-900)', fontSize: 14 }}>Preview · {applied.name}</b>
+            <div className="hint">Your whole resume, fitted to this design — exactly what prints</div>
+          </div>
+          <DeviceTabs mode={device} onChange={setDevice} idPrefix="design" />
+        </div>
+        <DeviceSheet r={r} mode={device} idPrefix="design" />
       </div>
 
       <TemplateGallery r={r} onSelect={(templateId) => set({ templateId })} />

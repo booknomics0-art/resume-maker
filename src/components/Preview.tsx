@@ -329,7 +329,7 @@ export default function Preview({ r, tpl }: { r: Resume; tpl?: Template }) {
             <h3 className="s-sec-title">Contact</h3>
             {r.personal.email && <div className="contact-line">{r.personal.email}</div>}
             {r.personal.phone && <div className="contact-line">{r.personal.phone}</div>}
-            {r.personal.city && <div className="contact-line">{r.personal.city}, India</div>}
+            {r.personal.city && <div className="contact-line">{r.personal.city}</div>}
             {r.personal.linkedin && <div className="contact-line">{r.personal.linkedin}</div>}
             {r.personal.website && <div className="contact-line">{r.personal.website}</div>}
           </div>
@@ -550,6 +550,7 @@ export default function Preview({ r, tpl }: { r: Resume; tpl?: Template }) {
           {orderedSections.map((s) => (
             <div className="spine-label" key={s}>{SPINE_LABELS[s]}</div>
           ))}
+          <div className="spine-name" aria-hidden="true">{name}</div>
         </aside>
         <div className="spine-body">
           <div className="head">
