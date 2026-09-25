@@ -29,7 +29,7 @@ import { FIELDS, fieldById } from '../lib/fields';
 import { LAYOUT_META, TEMPLATES, TEMPLATE_COUNT } from '../lib/templates';
 import { ocrAssetMode, type OcrAssetMode } from '../lib/ocr';
 import { navigate } from '../App';
-import LiveSheet from './LiveSheet';
+import DeviceSheet, { DeviceTabs, type DeviceMode } from './DeviceSheet';
 import {
   StepBasics, StepDesign, StepEducation, StepExperience, StepExtras, StepSkills, StepSummary,
 } from './Steps';
@@ -147,6 +147,8 @@ export default function ResumeImporter() {
   const [dragActive, setDragActive] = useState(false);
   const [tab, setTab] = useState(0);
   const [mobileTab, setMobileTab] = useState<'form' | 'preview'>('form');
+  // which device the live resume is previewed on: A4 sheet, phone or desktop
+  const [device, setDevice] = useState<DeviceMode>('a4');
   const [showReport, setShowReport] = useState(false);
   const [textDraft, setTextDraft] = useState('');
   const [elapsed, setElapsed] = useState(0);
@@ -409,7 +411,7 @@ export default function ResumeImporter() {
         <div className="editor-grid">
           {/* ── the auto-filled form ── */}
           <div className={`card pad editor-form ${mobileTab === 'preview' ? 'editor-pane-hidden' : ''}`}>
-            <div className="chips" style={{ marginBottom: 14, position: 'sticky', top: 0, zIndex: 2, background: 'var(--card, #fff)', paddingBottom: 8 }}>
+            <div className="chips import-jump">
               {sections.map((s) => (
                 <button
                   key={s.id}
@@ -447,11 +449,11 @@ export default function ResumeImporter() {
             </div>
           </div>
 
-          {/* ── the live resume ── */}
+          {/* ── the live resume — A4 sheet / phone / desktop ── */}
           <div className={`preview-pane panel ${mobileTab === 'form' ? 'editor-pane-hidden' : ''}`}>
             <div className="preview-toolbar">
               <b style={{ color: 'var(--navy-900)', fontSize: 13 }}>Live resume · updates as you type</b>
-              <span className="hint" style={{ fontSize: 12 }}>A4 · {Math.ceil(1)} page view</span>
+              <span className="hint" style={{ fontSize: 12 }}>every detail fits the template you pick</span>
             </div>
             <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
               <select
@@ -480,7 +482,8 @@ export default function ResumeImporter() {
               </select>
             </div>
 
-            <LiveSheet r={r} />
+            <DeviceTabs mode={device} onChange={setDevice} idPrefix="import" />
+            <DeviceSheet r={r} mode={device} idPrefix="import" />
 
             <div className="row" style={{ justifyContent: 'center' }}>
               <button className="btn small primary" onClick={handleSave}>💾 Save &amp; open in editor →</button>

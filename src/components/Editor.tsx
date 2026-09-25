@@ -8,29 +8,10 @@ import { fieldById } from '../lib/fields';
 import { navigate } from '../App';
 import { recordDownload } from '../lib/cloud';
 import Preview, { A4 } from './Preview';
+import DeviceSheet, { type A4Fit, type DeviceMode } from './DeviceSheet';
 import {
   StepBasics, StepDesign, StepEducation, StepExperience, StepExtras, StepSkills, StepSummary,
 } from './Steps';
-
-function useContainerScale(baseWidth = A4.w) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(1);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const compute = () => {
-      const w = el.clientWidth;
-      if (w === 0) return;
-      setScale(Math.min(1, (w - 2) / baseWidth));
-    };
-    compute();
-    const ro = new ResizeObserver(compute);
-    ro.observe(el);
-    window.addEventListener('resize', compute);
-    return () => { ro.disconnect(); window.removeEventListener('resize', compute); };
-  }, [baseWidth]);
-  return { ref, scale };
-}
 
 function stepValid(step: number, r: Resume): string[] {
   const p = r.personal;
@@ -80,43 +61,14 @@ export default function Editor({ id }: { id: string }) {
   const [touched, setTouched] = useState(false);
   const [mobileTab, setMobileTab] = useState<'form' | 'preview'>('form');
   const dirtyRef = useRef(false);
-  const { ref: scaleRef, scale: fitScale } = useContainerScale();
 
-  // ---- A4 preview scaling -------------------------------------------------
-  // The sheet is laid out at true A4 px (794 wide), then scaled from the top-left
-  // inside an exact-size frame — so the full sheet is always visible, on any
-  // mobile/desktop viewport and in portrait or landscape.
-  const sheetRef = useRef<HTMLDivElement>(null);
-  const [contentH, setContentH] = useState(A4.h);
-  const [fitMode, setFitMode] = useState<'width' | 'page'>(() =>
+  // ---- preview views: A4 sheet (fit width / whole page) + phone + desktop --
+  // DeviceSheet lays the sheet out at true A4 px and scales it into an
+  // exact-size frame, so the full page is always visible on any viewport.
+  const [device, setDevice] = useState<DeviceMode>('a4');
+  const [fitMode, setFitMode] = useState<A4Fit>(() =>
     typeof window !== 'undefined' && window.innerWidth > window.innerHeight + 40 ? 'page' : 'width',
   );
-  const [vh, setVh] = useState(typeof window !== 'undefined' ? window.innerHeight : 900);
-
-  // Measure the real (unscaled) sheet height so content longer than one A4 page
-  // is never cut off.
-  useEffect(() => {
-    const el = sheetRef.current;
-    if (!el) return;
-    const compute = () => setContentH(Math.max(A4.h, el.offsetHeight));
-    compute();
-    const ro = new ResizeObserver(compute);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [step, mobileTab]);
-
-  useEffect(() => {
-    const onResize = () => setVh(window.innerHeight);
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, []);
-
-  // Fit width: sheet fills the pane width (max 100%). Whole page: the entire
-  // A4 page fits on screen at once — ideal for landscape phones and short windows.
-  const scale = fitMode === 'page'
-    ? Math.max(0.12, Math.min(fitScale, (vh - 300) / A4.h))
-    : fitScale;
-  // -------------------------------------------------------------------------
 
   // autosave (debounced) — never persists a brand-new resume the user hasn't touched
   useEffect(() => {
@@ -280,41 +232,54 @@ export default function Editor({ id }: { id: string }) {
         {!isDesignStep && (
           <div className={`preview-pane panel no-print editor-preview ${mobileTab === 'form' ? 'editor-pane-hidden' : ''}`}>
             <div className="preview-toolbar">
-              <b style={{ color: 'var(--navy-900)', fontSize: 13 }}>Live preview</b>
-              <div className="row" style={{ gap: 8 }}>
-                <div className="chips" style={{ gap: 4 }}>
-                  <button
-                    className={`chip ${fitMode === 'width' ? 'on' : ''}`}
-                    style={{ padding: '5px 11px', minHeight: 30, fontSize: 12 }}
-                    onClick={() => setFitMode('width')}
-                  >Fit width</button>
-                  <button
-                    className={`chip ${fitMode === 'page' ? 'on' : ''}`}
-                    style={{ padding: '5px 11px', minHeight: 30, fontSize: 12 }}
-                    onClick={() => setFitMode('page')}
-                  >Whole page</button>
-                </div>
-                <span className="hint" style={{ fontSize: 12 }}>A4 · updates as you type</span>
+              <b style={{ color: 'var(--navy-900)', fontSize: 13 }}>Live preview · updates as you type</b>
+            </div>
+            <div className="editor-view-tabs" role="tablist" aria-label="Preview view">
+              <div className="chips" style={{ gap: 4 }}>
+                <button
+                  role="tab"
+                  aria-selected={device === 'a4' && fitMode === 'width'}
+                  className={`chip ${device === 'a4' && fitMode === 'width' ? 'on' : ''}`}
+                  style={{ padding: '5px 11px', minHeight: 30, fontSize: 12 }}
+                  onClick={() => { setDevice('a4'); setFitMode('width'); }}
+                >▤ Fit width</button>
+                <button
+                  role="tab"
+                  aria-selected={device === 'a4' && fitMode === 'page'}
+                  className={`chip ${device === 'a4' && fitMode === 'page' ? 'on' : ''}`}
+                  style={{ padding: '5px 11px', minHeight: 30, fontSize: 12 }}
+                  onClick={() => { setDevice('a4'); setFitMode('page'); }}
+                >▤ Whole page</button>
+              </div>
+              <div className="chips" style={{ gap: 4 }}>
+                <button
+                  role="tab"
+                  aria-selected={device === 'phone'}
+                  className={`chip ${device === 'phone' ? 'on' : ''}`}
+                  style={{ padding: '5px 11px', minHeight: 30, fontSize: 12 }}
+                  onClick={() => setDevice('phone')}
+                >📱 Mobile</button>
+                <button
+                  role="tab"
+                  aria-selected={device === 'desktop'}
+                  className={`chip ${device === 'desktop' ? 'on' : ''}`}
+                  style={{ padding: '5px 11px', minHeight: 30, fontSize: 12 }}
+                  onClick={() => setDevice('desktop')}
+                >🖥 Desktop</button>
               </div>
             </div>
-            <div className="sheet-holder" ref={scaleRef} style={{ width: '100%' }}>
-              <div className="sheet-frame" style={{ width: A4.w * scale, height: contentH * scale }}>
-                <div ref={sheetRef} className="sheet-scale" style={{ width: A4.w, transform: `scale(${scale})` }}>
-                  <Preview r={r} />
-                  {/* on-screen guides only — where the printed A4 page ends */}
-                  {Array.from({ length: Math.floor((contentH - 4) / A4.h) }).map((_, i) => (
-                    <div className="page-break" key={i} style={{ top: (i + 1) * A4.h }} />
-                  ))}
-                </div>
-              </div>
-            </div>
+            <DeviceSheet r={r} mode={device} fit={fitMode} idPrefix="editor" />
             <div className="row" style={{ justifyContent: 'center', marginTop: 6 }}>
               <button className="btn small primary" disabled={pct < 100} onClick={handleDownload} style={{ flex: '0 0 auto' }}>
                 ⬇ Download PDF
               </button>
             </div>
             <div className="hint" style={{ textAlign: 'center', fontSize: 11.5 }}>
-              Exact A4 page — what you see here is what prints{contentH > A4.h + 4 ? ` · ${Math.ceil(contentH / A4.h)} pages` : ''}
+              {device === 'a4'
+                ? 'Exact A4 page — what you see here is what prints'
+                : device === 'phone'
+                  ? 'How it opens on a mobile phone — the whole page fits the screen'
+                  : 'How it opens on a desktop — the whole page fits the window'}
             </div>
           </div>
         )}
