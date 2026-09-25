@@ -55,6 +55,10 @@ of four: (1) a clean PDF, (2) watermark removal, (3) ATS scoring vs a JD,
 - **On-device privacy as a selling point**: parsing, OCR, ATS scoring and
   backups all run in the tab; the only server call is the user's own resume
   sync.
+- **Length is the user's call** (Novoresume's free tier is capped at 1 page):
+  1, 2 or 3 A4 pages work through the exact same flow — live page-break
+  guides + a page-count badge in the editor, and clean pagination in the PDF
+  (entries never split, headings never orphaned).
 
 ## What we deliberately did NOT copy
 

@@ -387,6 +387,13 @@ label.f .req { color: var(--err); margin-left: 2px; }
 /* ---------- preview pane ---------- */
 .preview-pane { background: var(--silver-200); border-radius: var(--radius); padding: 18px; min-height: 420px; display: flex; flex-direction: column; gap: 12px; }
 .preview-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+/* live page count — the resume is allowed to be 1, 2 or 3 A4 pages */
+.page-badge {
+  font-size: 11px; font-weight: 700; letter-spacing: .2px; padding: 3px 9px;
+  border-radius: 999px; border: 1px solid var(--silver-200); background: var(--navy-50);
+  color: var(--navy-700); white-space: nowrap;
+}
+.page-badge.multi { border-color: rgba(180, 124, 10, .35); background: #fffbeb; color: #92600a; }
 .sheet-holder { overflow: auto; display: flex; justify-content: center; align-items: flex-start; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
 /* Exact-size scaled box: the sheet is laid out at true A4 px (794 wide), then
    scaled from the top-left corner inside a frame of exactly w×h scaled px.
@@ -948,6 +955,15 @@ pre.code .c { color: #8fa3c7; }
     transform: none !important; box-shadow: none !important;
   }
   .print-root .sheet { width: 210mm !important; min-height: 297mm; box-shadow: none !important; }
+  /* multi-page (2–3 A4) pagination: sections flow across pages, but an
+     individual entry (a job, a degree, a project, a sidebar block) is kept
+     intact and a section heading is never left alone at a page bottom */
+  .print-root .sheet .s-item,
+  .print-root .sheet .side-block,
+  .print-root .sheet .rail-block,
+  .print-root .sheet li { break-inside: avoid; page-break-inside: avoid; }
+  .print-root .sheet .s-sec-title,
+  .print-root .sheet .s-item-head { break-after: avoid; page-break-after: avoid; }
   /* photo placeholders are an editor affordance — the printed/downloaded
      page must never contain dashed boxes, initials or any app branding */
   .print-root .sheet .ph { display: none !important; }

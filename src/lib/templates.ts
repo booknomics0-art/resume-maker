@@ -77,7 +77,8 @@ export interface Template {
   strengths: string[];
   /** every family draws a photo frame (photo, or the placeholder box) */
   photo: boolean;
-  /** tuned with .mod-tight to hold a full career on one A4 */
+  /** tuned with .mod-tight to be compact — a full career fits one A4,
+   *  and a longer career flows onto page 2/3 without losing the design */
   onePage: boolean;
 }
 
@@ -264,8 +265,8 @@ const ROWS: Row[] = [
 
   /* 2 ─ IT & Software ─────────────────────────────────────────────────────── */
   ['it-sidebar', 'Navy Sidebar', 'split', 'it',
-    'Navy column for stack, links and photo; story on the right, one page, no waste.',
-    ['it', 'data', 'operations', 'design'], ['Skills always visible', 'Photo in the rail', 'Tuned to hold one page'],
+    'Navy column for stack, links and photo; story on the right, tight and no waste.',
+    ['it', 'data', 'operations', 'design'], ['Skills always visible', 'Photo in the rail', 'Tuned to stay compact'],
     { ...RAMP['Navy & Silver'] }, { swatch: 'Navy & Silver' }],
   ['it-masthead', 'Dev Masthead', 'masthead', 'it',
     'Oversized name, numbered sections, facts rail for your stack and links.',
@@ -298,7 +299,7 @@ const ROWS: Row[] = [
     ['sales', 'marketing', 'hr'], ['Photo-forward, not flashy', 'Rail keeps quota and reach', 'Confident header'],
     { ...RAMP['Espresso & Beige'] }, { swatch: 'Espresso & Beige' }],
   ['sales-band', 'Burgundy Band', 'metro', 'sales',
-    'A single burgundy band with cream chips — warm authority, one page.',
+    'A single burgundy band with cream chips — warm authority, clean layout.',
     ['sales', 'marketing', 'operations'], ['Memorable at a glance', 'One accent, used once', 'Prints beautifully in colour'],
     RAMP['Burgundy & Cream'], { mods: ['mod-band-flat'], swatch: 'Burgundy & Cream' }],
 
@@ -334,7 +335,7 @@ const ROWS: Row[] = [
   /* ── ATS & General ──────────────────────────────────────────────────────── */
   ['ats-ledger', 'Ledger ATS', 'ledger', 'ats',
     'Dates in the left rule and one clean column of facts — parses, prints and reads like a sheet.',
-    ATS_FIELDS, ['Ruled rows, no ambiguity', 'Long histories fit one page', 'Photo in the header, still plain'],
+    ATS_FIELDS, ['Ruled rows, no ambiguity', 'Long histories stay legible', 'Photo in the header, still plain'],
     pal('Slate & Pearl'), { mods: ['mod-plain'], swatch: 'Slate & Pearl' }],
   ['ats-numbered', 'Numbered ATS', 'editorial', 'ats',
     'Numbered sections in a wide margin, so a recruiter can quote your page back to you.',

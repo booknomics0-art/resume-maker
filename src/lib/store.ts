@@ -195,15 +195,15 @@ export function sampleResume(): Resume {
     email: 'amit.shukla@example.com',
     phone: '+91 98200 12345',
     city: 'Bengaluru',
-    linkedin: 'linkedin.com/in/amitshukla',
-    website: 'amitshukla.dev',
-    photo: '',
-  };
+      linkedin: 'linkedin.com/in/amitshukla',
+      website: '',
+      photo: '',
+    };
   r.bestExperience =
-    'Led a 6-member team at Smart India Hackathon 2019. We built a working grievance-tracking prototype in 36 hours and won our track — I owned the frontend and the final demo.';
+    'Won Smart India Hackathon 2019 — 36-hour prototype with a 6-member team; I owned the frontend.';
   r.hobbies = ['Chess', 'Trekking', 'Cricket'];
   r.summary =
-    'Software engineer with 7 years of experience building and scaling web platforms in React, TypeScript and Node.js. Led the checkout rebuild that lifted conversion by 18%, and own a payments service processing 40M+ transactions a month. I like owning a feature from the first design chat to the production release.';
+    'Seven years building and scaling web platforms in React, TypeScript and Node.js. Led the checkout rebuild that lifted conversion by 18%; own a payments service processing 40M+ transactions a month.';
   r.experience = [
     {
       id: uid(),
@@ -214,8 +214,8 @@ export function sampleResume(): Resume {
       end: '',
       current: true,
       bullets: [
-        'Rebuilt the checkout and payments flow in React and TypeScript, lifting conversion by 18% and cutting cart abandonment by 23%',
         'Designed a Node.js and PostgreSQL microservice processing 40M+ transactions a month at 99.95% uptime',
+        'Rebuilt checkout and payments in React and TypeScript — conversion up 18%, cart abandonment down 23%',
         'Mentored four engineers and introduced a code-review standard that cut production incidents by 35%',
       ],
     },
@@ -230,7 +230,6 @@ export function sampleResume(): Resume {
       bullets: [
         'Shipped the customer portal used by 40,000+ monthly active users, reducing support tickets by 28%',
         'Moved builds to Docker and GitHub Actions, cutting release time from 45 minutes to 8',
-        'Cut the median API response time from 620ms to 180ms by profiling and caching the top 10 queries',
       ],
     },
     {
@@ -242,8 +241,7 @@ export function sampleResume(): Resume {
       end: 'May 2019',
       current: false,
       bullets: [
-        'Delivered 12 client web applications on schedule, working directly with founders on scope and content',
-        'Raised Lighthouse performance scores from 58 to 92 across the studio portfolio',
+        'Delivered 12 client web apps on schedule and raised Lighthouse scores from 58 to 92 across the portfolio',
       ],
     },
   ];
@@ -254,7 +252,7 @@ export function sampleResume(): Resume {
       school: 'Pune Institute of Technology',
       location: 'Pune',
       year: '2017',
-      note: 'CGPA 8.6/10 · Led the web development club',
+      note: 'CGPA 8.6/10',
     },
   ];
   r.skills = ['React', 'TypeScript', 'JavaScript', 'Node.js', 'Next.js', 'PostgreSQL', 'AWS', 'Docker', 'GraphQL', 'Redis', 'CI/CD', 'System Design'];
@@ -263,25 +261,22 @@ export function sampleResume(): Resume {
       id: uid(),
       name: 'OpenLedger',
       link: 'github.com/amitshukla/openledger',
-      points: 'Open-source personal finance tracker with bank CSV import, 400+ GitHub stars\nBuilt with Next.js, tRPC and PostgreSQL; deployed on AWS ECS',
-    },
-    {
-      id: uid(),
-      name: 'DeployMate',
-      link: 'internal tool',
-      points: 'Internal CI dashboard that flags flaky tests before release, adopted by 5 teams',
+      points: 'Open-source personal finance tracker with bank CSV import, 400+ GitHub stars — Next.js, tRPC, PostgreSQL on AWS ECS',
     },
   ];
   r.certs = [
     { id: uid(), name: 'AWS Certified Solutions Architect – Associate', issuer: 'Amazon Web Services', year: '2023' },
-    { id: uid(), name: 'Meta Front-End Developer Certificate', issuer: 'Coursera', year: '2022' },
   ];
   r.languages = [
     { id: uid(), name: 'English', level: 'Professional' },
     { id: uid(), name: 'Hindi', level: 'Native' },
     { id: uid(), name: 'Kannada', level: 'Conversational' },
   ];
-  r.achievements = ['Winner, Smart India Hackathon 2019 (team of 6)', 'Speaker at React Pune meetup, 2024'];
+  // the SIH win is already the Key Highlights story — no duplication on a one-pager
+  r.achievements = [
+    'Finalist, Google Code Jam 2016 (top 1% of 10,000 contestants)',
+    'Speaker, React Pune meetup, 2024',
+  ];
   r.step = 6;
   return r;
 }

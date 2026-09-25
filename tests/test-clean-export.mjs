@@ -139,7 +139,7 @@ if (untaggedPlaceholder.length) console.log('   untagged:', untaggedPlaceholder.
 const styles = readFileSync(join(root, 'src', 'styles.css'), 'utf8');
 const printBlock = styles.slice(styles.indexOf('@media print'));
 
-ok('print: exactly one page, A4, zero margins (@page)',
+ok('print: A4 pages, zero margins (@page)',
   /@page\s*\{\s*size:\s*A4;\s*margin:\s*0;?\s*\}/.test(styles));
 ok('print: only .print-root is shown',
   /@media print[\s\S]*\.print-root\s*{\s*display:\s*block/.test(printBlock));
@@ -152,12 +152,23 @@ ok('print: .ph photo placeholders never reach the page',
 ok('print: .no-print UI (topbar, bottom nav, overlay) is display:none',
   /\.no-print[^{]*\{\s*display:\s*none/.test(printBlock));
 
+// ---- 2–3 page resumes are first-class: the sheet grows, nothing clips -------
+ok('multi-page: the printed sheet grows past one A4 (min-height, not a fixed height)',
+  /\.print-root \.sheet \{[^}]*min-height:\s*297mm/.test(printBlock) &&
+  !/\.print-root \.sheet \{[^}]*[^-]height:\s*297mm/.test(printBlock));
+ok('multi-page: entries keep together across a page break (break-inside avoid)',
+  /\.print-root \.sheet \.s-item[\s\S]*?break-inside:\s*avoid/.test(printBlock));
+ok('multi-page: a section heading is never left alone at a page bottom (break-after avoid)',
+  /\.print-root \.sheet \.s-sec-title[\s\S]*?break-after:\s*avoid/.test(printBlock));
+
 // ---- the editor's print root contains ONLY the sheet ------------------------
 const editor = readFileSync(join(root, 'src', 'components', 'Editor.tsx'), 'utf8');
 const m = editor.match(/<div className="print-root"[\s\S]*?>([\s\S]*?)<\/div>/);
 ok('editor: print-root exists', !!m);
 ok('editor: print-root holds exactly <Preview r={r} /> — nothing else prints',
   !!m && /^\s*<Preview r=\{r\} \/>?\s*$/.test(m[1]));
+ok('multi-page: the editor shows a live page count (A4 · N pages) badge',
+  editor.includes('page-badge') && /onPages=\{setPages\}/.test(editor));
 
 // ---- the flagship sample itself is watermark-free content -------------------
 const sampleJson = JSON.stringify(sampleR).toLowerCase();

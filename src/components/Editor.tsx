@@ -70,6 +70,8 @@ export default function Editor({ id }: { id: string }) {
   const [fitMode, setFitMode] = useState<A4Fit>(() =>
     typeof window !== 'undefined' && window.innerWidth > window.innerHeight + 40 ? 'page' : 'width',
   );
+  // how many A4 pages the resume currently spans — 1, 2 or 3, the user's call
+  const [pages, setPages] = useState(1);
 
   // autosave (debounced) — never persists a brand-new resume the user hasn't touched
   useEffect(() => {
@@ -123,8 +125,21 @@ export default function Editor({ id }: { id: string }) {
     // Save name first
     setR((prev) => ({ ...prev, name: prev.name.startsWith('Untitled') && prev.personal.fullName ? `${prev.personal.fullName} — ${prev.personal.headline}` : prev.name }));
 
+    // The browser names the saved PDF after the page title — give it the
+    // resume's own name so the file lands as "Amit Shukla — Senior Software
+    // Engineer.pdf", never as the app's title.
+    const base = (r.name && !r.name.startsWith('Untitled'))
+      ? r.name
+      : (r.personal.fullName ? `${r.personal.fullName} — ${r.personal.headline}` : 'resume');
+    const clean = base.replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim() || 'resume';
+    const prevTitle = document.title;
+    const restore = () => { document.title = prevTitle; window.removeEventListener('afterprint', restore); };
+    document.title = clean;
+    window.addEventListener('afterprint', restore);
+    window.setTimeout(restore, 60_000); // safety net if afterprint never fires
+
     recordDownload(r);
-    setTimeout(() => window.print(), 100);
+    setTimeout(() => window.print(), 150);
   };
 
   const stepBody = [
@@ -243,6 +258,12 @@ export default function Editor({ id }: { id: string }) {
           <div className={`preview-pane panel no-print editor-preview ${mobileTab === 'form' ? 'editor-pane-hidden' : ''}`}>
             <div className="preview-toolbar">
               <b style={{ color: 'var(--navy-900)', fontSize: 13 }}>Live preview · updates as you type</b>
+              <span
+                className={`page-badge ${pages > 1 ? 'multi' : ''}`}
+                title={pages === 1 ? 'Fits one A4 page' : `Spans ${pages} A4 pages — that is fine, the PDF downloads all of them`}
+              >
+                A4 · {pages} {pages === 1 ? 'page' : 'pages'}
+              </span>
             </div>
             <div className="editor-view-tabs" role="tablist" aria-label="Preview view">
               <div className="chips" style={{ gap: 4 }}>
@@ -278,7 +299,7 @@ export default function Editor({ id }: { id: string }) {
                 >🖥 Desktop</button>
               </div>
             </div>
-            <DeviceSheet r={r} mode={device} fit={fitMode} idPrefix="editor" />
+            <DeviceSheet r={r} mode={device} fit={fitMode} idPrefix="editor" onPages={setPages} />
             <div className="row" style={{ justifyContent: 'center', marginTop: 6 }}>
               <button className="btn small primary" disabled={pct < 100} onClick={handleDownload} style={{ flex: '0 0 auto' }}>
                 ⬇ Download PDF
@@ -286,7 +307,9 @@ export default function Editor({ id }: { id: string }) {
             </div>
             <div className="hint" style={{ textAlign: 'center', fontSize: 11.5 }}>
               {device === 'a4'
-                ? 'Exact A4 page — what you see here is what prints'
+                ? (pages > 1
+                  ? `Your resume is ${pages} pages — every page is in the PDF. Recruiters like 1–2, so tighten if you can`
+                  : 'Exact A4 page — what you see here is what prints')
                 : device === 'phone'
                   ? 'How it opens on a mobile phone — the whole page fits the screen'
                   : 'How it opens on a desktop — the whole page fits the window'}

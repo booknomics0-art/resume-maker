@@ -38,9 +38,10 @@ function useBoxSize<T extends HTMLElement>() {
 
 /** Multi-page A4 sheet: true A4 px scaled into an exact-size frame. */
 function A4View({
-  r, tpl, fit, maxSheetPx, idPrefix,
+  r, tpl, fit, maxSheetPx, idPrefix, onPages,
 }: {
   r: Resume; tpl?: Template; fit: A4Fit; maxSheetPx?: number; idPrefix: string;
+  onPages?: (n: number) => void;
 }) {
   const holderRef = useRef<HTMLDivElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -75,6 +76,11 @@ function A4View({
     ro.observe(el);
     return () => ro.disconnect();
   }, [r]);
+
+  // report how many A4 pages the sheet spans so the editor can badge it
+  useEffect(() => {
+    if (onPages) onPages(Math.max(1, Math.ceil((contentH - 4) / A4.h)));
+  }, [contentH, onPages]);
 
   const cap = maxSheetPx ?? A4.w;
   const widthScale = w > 0 ? Math.min(1, cap / A4.w, (w - 2) / A4.w) : 0;
@@ -123,7 +129,7 @@ function DesktopFrame({ children }: { children: ReactNode }) {
     <div className="dev-desk" role="img" aria-label="Desktop preview of this resume">
       <div className="dev-desk-chrome" aria-hidden="true">
         <span /><span /><span />
-        <em>resume.pdf — A4, one page</em>
+        <em>resume.pdf — A4</em>
       </div>
       <div className="dev-desk-screen">{children}</div>
       <div className="dev-desk-base" aria-hidden="true" />
@@ -164,7 +170,7 @@ export function DeviceTabs({
 }
 
 export default function DeviceSheet({
-  r, tpl, mode = 'a4', fit = 'width', idPrefix = 'dev', maxSheetPx,
+  r, tpl, mode = 'a4', fit = 'width', idPrefix = 'dev', maxSheetPx, onPages,
 }: {
   r: Resume;
   tpl?: Template;
@@ -174,9 +180,11 @@ export default function DeviceSheet({
   idPrefix?: string;
   /** cap the rendered A4 width in 'a4' mode (narrow side panes) */
   maxSheetPx?: number;
+  /** report how many A4 pages the content spans (live, as it is edited) */
+  onPages?: (n: number) => void;
 }) {
   if (mode === 'a4') {
-    return <A4View r={r} tpl={tpl} fit={fit} maxSheetPx={maxSheetPx} idPrefix={idPrefix} />;
+    return <A4View r={r} tpl={tpl} fit={fit} maxSheetPx={maxSheetPx} idPrefix={idPrefix} onPages={onPages} />;
   }
 
   return (
