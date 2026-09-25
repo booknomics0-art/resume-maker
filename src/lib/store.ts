@@ -144,6 +144,25 @@ export function deleteResume(id: string) {
   void removeResume(id);
 }
 
+/** One resume as a portable JSON file — re-upload it any time via Upload & Edit. */
+export function downloadResumeJson(r: Resume): void {
+  try {
+    const clean = { ...r, id: r.id };
+    const blob = new Blob([JSON.stringify(clean, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const safe = (r.personal.fullName || 'resume').trim().replace(/[^\w-]+/g, '-').replace(/^-+|-+$/g, '') || 'resume';
+    a.href = url;
+    a.download = `${safe}-craftcv.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  } catch (e) {
+    console.error('JSON export failed', e);
+  }
+}
+
 export function duplicateResume(id: string): Resume | null {
   if (!isSafeString(id)) return null;
   const src = loadResumes().find((r) => r.id === id);
@@ -158,84 +177,111 @@ export function duplicateResume(id: string): Resume | null {
   return copy;
 }
 
+/**
+ * The flagship sample resume — Amit Shukla, Senior Software Engineer.
+ * Written the way a strong one-page resume should read: every bullet leads
+ * with an action verb and ends in a measurable result, the profile states
+ * scope + proof in three lines, and no section is filler. Load it from the
+ * dashboard or `#/editor/sample` and edit any field.
+ */
 export function sampleResume(): Resume {
   const r = emptyResume();
-  r.name = 'Aarav Sharma — Frontend Developer';
+  r.name = 'Amit Shukla — Senior Software Engineer';
   r.fieldId = 'it';
   r.templateId = 'ats-sterling';
   r.personal = {
-    fullName: 'Aarav Sharma',
-    headline: 'Frontend Developer',
-    email: 'aarav.sharma@example.com',
-    phone: '+91 98765 43210',
-    city: 'Pune',
-    linkedin: 'linkedin.com/in/aaravsharma',
-    website: 'aarav.dev',
+    fullName: 'Amit Shukla',
+    headline: 'Senior Software Engineer',
+    email: 'amit.shukla@example.com',
+    phone: '+91 98200 12345',
+    city: 'Bengaluru',
+    linkedin: 'linkedin.com/in/amitshukla',
+    website: 'amitshukla.dev',
     photo: '',
   };
   r.bestExperience =
-    'Led a 6-member team at Smart India Hackathon 2020. We built a working grievance-tracking prototype in 36 hours and won our track — I handled the frontend and the final demo.';
-  r.hobbies = ['Cricket', 'Photography', 'Trekking'];
+    'Led a 6-member team at Smart India Hackathon 2019. We built a working grievance-tracking prototype in 36 hours and won our track — I owned the frontend and the final demo.';
+  r.hobbies = ['Chess', 'Trekking', 'Cricket'];
   r.summary =
-    'Frontend developer with 4 years of experience building products in React and TypeScript. Shipped a billing dashboard used by 30,000+ monthly users, cut load time by 40%, and mentored two junior developers. I like owning a feature from the first design chat to the production release.';
+    'Software engineer with 7 years of experience building and scaling web platforms in React, TypeScript and Node.js. Led the checkout rebuild that lifted conversion by 18%, and own a payments service processing 40M+ transactions a month. I like owning a feature from the first design chat to the production release.';
   r.experience = [
     {
       id: uid(),
-      role: 'Frontend Developer',
-      company: 'Nimbus Labs',
-      location: 'Pune',
-      start: 'Mar 2023',
-      end: 'Present',
+      role: 'Senior Software Engineer',
+      company: 'FinEdge Technologies',
+      location: 'Bengaluru',
+      start: 'Jul 2021',
+      end: '',
       current: true,
       bullets: [
-        'Rebuilt the billing dashboard in React and cut average load time from 4.2s to 2.5s',
-        'Added 220 unit and integration tests; release regressions dropped from ~6 a month to under 1',
-        'Introduced component-level visual reviews, which halved UI bugs reported after launch',
+        'Rebuilt the checkout and payments flow in React and TypeScript, lifting conversion by 18% and cutting cart abandonment by 23%',
+        'Designed a Node.js and PostgreSQL microservice processing 40M+ transactions a month at 99.95% uptime',
+        'Mentored four engineers and introduced a code-review standard that cut production incidents by 35%',
       ],
     },
     {
       id: uid(),
-      role: 'Junior Web Developer',
-      company: 'BrightPixel Solutions',
-      location: 'Mumbai',
-      start: 'Jun 2021',
-      end: 'Feb 2023',
+      role: 'Software Engineer',
+      company: 'CloudNest Solutions',
+      location: 'Pune',
+      start: 'Jun 2019',
+      end: 'Jun 2021',
       current: false,
       bullets: [
-        'Delivered 14 client sites on schedule, working directly with founders on scope and content',
-        'Moved builds to GitHub Actions with preview deployments, saving about 3 hours per release',
-        'Taught a monthly internal session on CSS; attendance settled at 12–15 teammates',
+        'Shipped the customer portal used by 40,000+ monthly active users, reducing support tickets by 28%',
+        'Moved builds to Docker and GitHub Actions, cutting release time from 45 minutes to 8',
+        'Cut the median API response time from 620ms to 180ms by profiling and caching the top 10 queries',
+      ],
+    },
+    {
+      id: uid(),
+      role: 'Frontend Developer',
+      company: 'BrightPixel Labs',
+      location: 'Pune',
+      start: 'Jul 2017',
+      end: 'May 2019',
+      current: false,
+      bullets: [
+        'Delivered 12 client web applications on schedule, working directly with founders on scope and content',
+        'Raised Lighthouse performance scores from 58 to 92 across the studio portfolio',
       ],
     },
   ];
   r.education = [
     {
       id: uid(),
-      degree: 'B.Tech, Computer Science',
+      degree: 'B.Tech, Information Technology',
       school: 'Pune Institute of Technology',
       location: 'Pune',
-      year: '2021',
-      note: 'CGPA 8.2/10 · Led the web development club',
+      year: '2017',
+      note: 'CGPA 8.6/10 · Led the web development club',
     },
   ];
-  r.skills = ['React', 'TypeScript', 'JavaScript', 'Next.js', 'Node.js', 'CSS', 'Git', 'REST APIs', 'Jest', 'Figma'];
+  r.skills = ['React', 'TypeScript', 'JavaScript', 'Node.js', 'Next.js', 'PostgreSQL', 'AWS', 'Docker', 'GraphQL', 'Redis', 'CI/CD', 'System Design'];
   r.projects = [
     {
       id: uid(),
-      name: 'OpenShelf',
-      link: 'github.com/aarav/openshelf',
-      points: 'Small library tracker used by 400+ readers\nBuilt with Next.js and SQLite, deployed free on Fly.io',
+      name: 'OpenLedger',
+      link: 'github.com/amitshukla/openledger',
+      points: 'Open-source personal finance tracker with bank CSV import, 400+ GitHub stars\nBuilt with Next.js, tRPC and PostgreSQL; deployed on AWS ECS',
+    },
+    {
+      id: uid(),
+      name: 'DeployMate',
+      link: 'internal tool',
+      points: 'Internal CI dashboard that flags flaky tests before release, adopted by 5 teams',
     },
   ];
   r.certs = [
+    { id: uid(), name: 'AWS Certified Solutions Architect – Associate', issuer: 'Amazon Web Services', year: '2023' },
     { id: uid(), name: 'Meta Front-End Developer Certificate', issuer: 'Coursera', year: '2022' },
   ];
   r.languages = [
     { id: uid(), name: 'English', level: 'Professional' },
     { id: uid(), name: 'Hindi', level: 'Native' },
-    { id: uid(), name: 'Marathi', level: 'Conversational' },
+    { id: uid(), name: 'Kannada', level: 'Conversational' },
   ];
-  r.achievements = ['Winner, Smart India Hackathon 2020 (team of 6)', 'Speaker at React Pune meetup, 2024'];
+  r.achievements = ['Winner, Smart India Hackathon 2019 (team of 6)', 'Speaker at React Pune meetup, 2024'];
   r.step = 6;
   return r;
 }

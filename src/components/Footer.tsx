@@ -12,7 +12,7 @@ export default function Footer() {
           </div>
           <p>
             Build a clean, professional resume in under 10 minutes.
-            Ten career fields, eighty hand-tuned designs, one honest document
+            Ten career fields, 50 hand-tuned templates, one honest document
             you can stand behind in an interview. Upload & edit existing resumes,
             unlimited PDF downloads — 100% free, no watermark.
           </p>

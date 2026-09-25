@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { STEPS, completeness, emptyResume, type Resume } from '../lib/types';
-import { loadResumes, sampleResume, upsertResume } from '../lib/store';
+import { downloadResumeJson, loadResumes, sampleResume, upsertResume } from '../lib/store';
 import {
   clearImportDraft, draftResumeFor, forgetImportInfo, importInfoFor, isDraftResume, subscribeImportDraft,
 } from '../lib/importDraft';
@@ -8,6 +8,7 @@ import { fieldById } from '../lib/fields';
 import { navigate } from '../App';
 import { recordDownload } from '../lib/cloud';
 import Preview, { A4 } from './Preview';
+import AtsCheck from './AtsCheck';
 import DeviceSheet, { type A4Fit, type DeviceMode } from './DeviceSheet';
 import {
   StepBasics, StepDesign, StepEducation, StepExperience, StepExtras, StepSkills, StepSummary,
@@ -164,9 +165,16 @@ export default function Editor({ id }: { id: string }) {
         <div className="row editor-head-actions">
           <button className="btn" onClick={() => navigate('/')}>← Dashboard</button>
           <button
+            className="btn"
+            title="Download this resume as JSON — portable backup, re-upload it any time (Upload & Edit)"
+            onClick={() => downloadResumeJson(r)}
+          >
+            ⤓ JSON
+          </button>
+          <button
             className="btn primary"
             disabled={pct < 100}
-            title={pct < 100 ? 'Finish mandatory fields first' : 'Download PDF — free, unlimited'}
+            title={pct < 100 ? 'Finish mandatory fields first' : 'Download PDF — free, unlimited, no watermark'}
             onClick={handleDownload}
           >
             ⬇ Download PDF
@@ -207,6 +215,8 @@ export default function Editor({ id }: { id: string }) {
           {errs.length > 0 && (
             <div className="notice err">{errs.map((e) => <div key={e}>• {e}</div>)}</div>
           )}
+
+          {!isDesignStep && <AtsCheck r={r} />}
 
           {stepBody}
 

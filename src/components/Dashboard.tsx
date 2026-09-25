@@ -48,21 +48,33 @@ export default function Dashboard() {
         <div className="stat"><b>{resumes.length}</b><span>Resumes created</span></div>
         <div className="stat"><b>{done}</b><span>Ready to send</span></div>
         <div className="stat silver"><b>{avg}%</b><span>Average completion</span></div>
-        <div className="stat silver"><b>800</b><span>Field × template combos</span></div>
+        <div className="stat silver"><b>500</b><span>Field × template combos</span></div>
       </div>
 
       {resumes.length === 0 ? (
-        <div className="empty">
-          <h3>No resumes yet</h3>
-          <p>
-            Create your first resume, or load the sample to see a finished example
-            (Aarav Sharma, Frontend Developer) that you can edit freely.
-            <br />Or upload existing resume for advanced editing.
-          </p>
-          <div className="row" style={{ justifyContent: 'center' }}>
-            <button className="btn primary" onClick={newResume}>+ Create resume</button>
-            <button className="btn" onClick={() => navigate('/import')}>📤 Upload existing</button>
-            <button className="btn" onClick={addSample}>Open the sample</button>
+        <div className="empty empty-sample" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 250px', gap: 28, alignItems: 'center' }}>
+          <div style={{ textAlign: 'left' }}>
+            <h3 style={{ textAlign: 'left' }}>No resumes yet</h3>
+            <p style={{ textAlign: 'left' }}>
+              Create your first resume, or load the finished sample —
+              <b> Amit Shukla, Senior Software Engineer</b> — and edit any field.
+              <br />Or upload an existing resume (PDF, DOCX or photo) for advanced editing.
+            </p>
+            <div className="row" style={{ justifyContent: 'flex-start', marginTop: 14 }}>
+              <button className="btn primary" onClick={newResume}>+ Create resume</button>
+              <button className="btn" onClick={() => navigate('/import')}>📤 Upload existing</button>
+              <button className="btn" onClick={addSample}>Load the sample →</button>
+            </div>
+          </div>
+          <div
+            onClick={addSample}
+            title="Click to load this sample resume"
+            style={{ cursor: 'pointer', justifySelf: 'center', border: '1px solid var(--silver-200)', borderRadius: 8, overflow: 'hidden', boxShadow: '0 6px 20px rgba(15, 33, 72, .12)', width: 'min(250px, 60%)' }}
+          >
+            <Thumb r={sampleResume()} />
+            <div style={{ padding: '8px 12px', background: 'var(--navy-50)', fontSize: 12, color: 'var(--navy-800)', borderTop: '1px solid var(--silver-200)' }}>
+              Sample resume — click to load &amp; edit
+            </div>
           </div>
         </div>
       ) : (

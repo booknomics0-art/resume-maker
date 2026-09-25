@@ -152,6 +152,10 @@ export default function ResumeImporter() {
   const [showReport, setShowReport] = useState(false);
   const [textDraft, setTextDraft] = useState('');
   const [elapsed, setElapsed] = useState(0);
+  // Copy-paste fallback — the file is unreadable, or the user just wants to
+  // type: the same parser runs on pasted text and fills the form identically.
+  const [pasteOpen, setPasteOpen] = useState(false);
+  const [pasteText, setPasteText] = useState('');
   // Which copy of the OCR engine this build will actually use — worth showing,
   // because a CDN fallback is exactly what used to make scans fail on the live site.
   const [engineMode, setEngineMode] = useState<OcrAssetMode | null>(null);
@@ -207,7 +211,8 @@ export default function ResumeImporter() {
 
     setFormat(result.format);
     if (result.error || !result.resume) {
-      setError(result.error || 'Could not read that file. Try another format, or copy-paste the text.');
+      setError(result.error || 'Could not read that file. Try another format, or paste the resume text below instead.');
+      setPasteOpen(true); // the paste panel is right there — no dead end
       setStep('upload');
       return;
     }
@@ -226,6 +231,39 @@ export default function ResumeImporter() {
     setTab(0);
     setStep('review');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  /** Same pipeline as a file upload, but the source is pasted text. */
+  const handlePaste = () => {
+    const text = pasteText.trim();
+    if (text.length < 30) {
+      setError('Paste a bit more text — at least a few lines (name, a job, a skill) so we can structure it.');
+      return;
+    }
+    setError('');
+    try {
+      const parsed = parseResumeText(text);
+      const fresh = parsedToResume(parsed);
+      const next: ImportDraft = {
+        resume: fresh,
+        fileName: 'Pasted text',
+        fileSize: new Blob([text]).size,
+        format: 'txt',
+        meta: { method: 'text', textChars: text.length },
+        rawText: parsed.rawText,
+        updatedAt: Date.now(),
+      };
+      saveImportDraft(next);
+      rememberImportInfo(next.resume.id, { fileName: 'Pasted text', format: 'txt', meta: next.meta });
+      setDraft(next);
+      setPasteOpen(false);
+      setPasteText('');
+      setTab(0);
+      setStep('review');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch {
+      setError('Could not read that text. Check that it is plain text from a resume, then try again.');
+    }
   };
 
   /** Every form edit lands here: update state, autosave the draft. */
@@ -602,7 +640,7 @@ export default function ResumeImporter() {
         >
           <div style={{ fontSize: 48, marginBottom: 12 }}>📄</div>
           <h3 style={{ color: 'var(--navy-900)', marginBottom: 6 }}>
-            {dragActive ? 'Drop your resume here' : 'Drag &amp; drop your resume'}
+            {dragActive ? 'Drop your resume here' : 'Drag & drop your resume'}
           </h3>
           <p className="hint" style={{ marginBottom: 16 }}>
             PDF · DOCX · TXT · JSON · photo of a page (JPG/PNG) · Max 25MB · parsed on your device
@@ -614,6 +652,35 @@ export default function ResumeImporter() {
         </div>
 
         {error && <div className="notice err" style={{ marginTop: 16 }}>{error}</div>}
+
+        {/* ── copy-paste fallback ─────────────────────────────────────────── */}
+        <div style={{ marginTop: 16, borderTop: '1px solid var(--silver-200)', paddingTop: 16 }}>
+          <button
+            type="button"
+            className="btn small"
+            aria-expanded={pasteOpen}
+            onClick={() => setPasteOpen((o) => !o)}
+          >
+            ✂️ {pasteOpen ? 'Hide the paste box' : 'No file? Paste your resume text instead'}
+          </button>
+          {pasteOpen && (
+            <div style={{ marginTop: 12 }}>
+              <textarea
+                className="textarea"
+                rows={9}
+                value={pasteText}
+                onChange={(e) => setPasteText(e.target.value)}
+                placeholder={'Paste the full text of your resume here…\n\ne.g.\nAmit Shukla\nSenior Software Engineer\namit.shukla@example.com | +91 98200 12345 | Bengaluru\n\nExperience\nSenior Software Engineer — FinEdge Technologies (Jul 2021 – Present)\n• Rebuilt the checkout flow, lifting conversion by 18%\n…'}
+                style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontSize: 12.5 }}
+              />
+              <div className="row" style={{ marginTop: 10, gap: 8, flexWrap: 'wrap' }}>
+                <button type="button" className="btn primary" onClick={handlePaste}>🧠 Read text &amp; fill the form</button>
+                <button type="button" className="btn" onClick={() => { setPasteOpen(false); setPasteText(''); }}>Cancel</button>
+                <span className="hint" style={{ fontSize: 12 }}>{pasteText.trim().length} characters · structured exactly like a PDF import</span>
+              </div>
+            </div>
+          )}
+        </div>
 
         <div style={{ marginTop: 22, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
           <div style={{ background: 'var(--navy-50)', borderRadius: 10, padding: 16, border: '1px solid var(--navy-100)' }}>

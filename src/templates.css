@@ -57,6 +57,14 @@
   overflow: hidden; text-overflow: ellipsis; max-width: 46%;
 }
 .s-item-head .s-dates { flex: 0 1 auto; }
+/* narrow side rails — a date must wrap to a second line, never clip to "2." */
+.tpl-split .side .s-dates, .tpl-portrait .side .s-dates,
+.tpl-studio .side .s-dates, .tpl-infographic .side .s-dates,
+.tpl-panelband .side .s-dates, .tpl-masthead .rail .s-dates,
+.tpl-banner .rail .s-dates, .tpl-tintsheet .aside .s-dates,
+.tpl-spinegradient .rail .s-dates {
+  white-space: normal; overflow: visible; text-overflow: clip; max-width: none;
+}
 .s-skillset { display: flex; flex-wrap: wrap; gap: 5px; }
 .s-skill {
   border: 1px solid #c9d2de; border-radius: 4px; padding: 2px 9px; font-size: 11.5px;

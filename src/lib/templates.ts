@@ -618,7 +618,7 @@ export function hasSection(r: Resume, id: SectionId): boolean {
 
 export const SECTION_LABELS: Record<SectionId, string> = {
   summary: 'Profile',
-  highlight: 'Best Experience',
+  highlight: 'Key Highlights',
   experience: 'Work Experience',
   education: 'Education',
   skills: 'Skills',

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   STEPS, uid, type ExperienceItem, type EducationItem, type ProjectItem,
   type CertItem, type Resume,
@@ -28,6 +28,26 @@ function F({ label, req, children, hint }: { label: string; req?: boolean; child
       {children}
       {hint && <div className="hint">{hint}</div>}
     </div>
+  );
+}
+
+/** Swap an entry one place up/down — order matters on a resume. */
+function moveItem<T>(list: T[], from: number, to: number): T[] {
+  if (to < 0 || to >= list.length || from === to) return list;
+  const next = [...list];
+  const [item] = next.splice(from, 1);
+  next.splice(to, 0, item);
+  return next;
+}
+
+function MoveButtons({ index, count, onMove }: { index: number; count: number; onMove: (to: number) => void }) {
+  return (
+    <span className="row" style={{ gap: 4, margin: '0 8px' }} role="group" aria-label={`Reorder entry ${index + 1}`}>
+      <button type="button" className="btn small" title="Move up" disabled={index === 0}
+        style={{ padding: '4px 9px', lineHeight: 1.1 }} onClick={() => onMove(index - 1)}>↑</button>
+      <button type="button" className="btn small" title="Move down" disabled={index === count - 1}
+        style={{ padding: '4px 9px', lineHeight: 1.1 }} onClick={() => onMove(index + 1)}>↓</button>
+    </span>
   );
 }
 
@@ -136,11 +156,11 @@ export function StepBasics({ r, set }: StepProps) {
         </div>
 
         <F label="Full name" req>
-          <input className="input" value={p.fullName} placeholder="e.g. Aarav Sharma"
+          <input className="input" value={p.fullName} placeholder="e.g. Amit Shukla"
             onChange={(e) => upd({ fullName: e.target.value })} />
         </F>
         <F label="Target job title" req hint="The role you are applying for">
-          <input className="input" value={p.headline} placeholder="e.g. Frontend Developer"
+          <input className="input" value={p.headline} placeholder="e.g. Senior Software Engineer"
             onChange={(e) => upd({ headline: e.target.value })} />
         </F>
         <F label="Email" req>
@@ -261,6 +281,8 @@ export function StepExperience({ r, set }: StepProps) {
           <div className="entry-card" key={e.id}>
             <div className="entry-head">
               <b>Job {i + 1}</b>
+              <MoveButtons index={i} count={r.experience.length}
+                onMove={(to) => set({ experience: moveItem(r.experience, i, to) })} />
               <button type="button" className="btn small danger"
                 onClick={() => set({ experience: r.experience.filter((x) => x.id !== e.id) })}>
                 Remove
@@ -352,6 +374,8 @@ export function StepEducation({ r, set }: StepProps) {
         <div className="entry-card" key={e.id}>
           <div className="entry-head">
             <b>Education {i + 1}</b>
+            <MoveButtons index={i} count={r.education.length}
+              onMove={(to) => set({ education: moveItem(r.education, i, to) })} />
             <button type="button" className="btn small danger"
               onClick={() => set({ education: r.education.filter((x) => x.id !== e.id) })}>
               Remove
@@ -438,6 +462,19 @@ export function StepExtras({ r, set }: StepProps) {
   const [achv, setAchv] = useState(r.achievements.join('\n'));
   const [hobby, setHobby] = useState('');
 
+  // Keep the achievements textarea honest when the value changes from outside
+  // (import re-read, AI rewrite, editor hand-over) — without clobbering what
+  // the user is typing right now.
+  const lastWritten = useRef(r.achievements.join('\n'));
+  useEffect(() => {
+    const current = r.achievements.join('\n');
+    if (current !== lastWritten.current) {
+      lastWritten.current = current;
+      setAchv(current);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [r.achievements]);
+
   const updProject = (id: string, patch: Partial<ProjectItem>) =>
     set({ projects: r.projects.map((p) => (p.id === id ? { ...p, ...patch } : p)) });
   const updCert = (id: string, patch: Partial<CertItem>) =>
@@ -457,7 +494,7 @@ export function StepExtras({ r, set }: StepProps) {
       </div>
 
       <div style={{ marginBottom: 16 }}>
-        <F label="Best experience (a moment you are proud of)"
+        <F label="Key highlight (a moment you are proud of)"
           hint="One short story: what happened, what you did, what it taught you. 1–2 lines is perfect.">
           <textarea className="textarea" rows={3} value={r.bestExperience}
             placeholder="e.g. Led a 6-member team at Smart India Hackathon 2020 — built a working prototype in 36 hours and won our track."
@@ -489,6 +526,8 @@ export function StepExtras({ r, set }: StepProps) {
         <div className="entry-card" key={p.id}>
           <div className="entry-head">
             <b>Project {i + 1}</b>
+            <MoveButtons index={i} count={r.projects.length}
+              onMove={(to) => set({ projects: moveItem(r.projects, i, to) })} />
             <button type="button" className="btn small danger"
               onClick={() => set({ projects: r.projects.filter((x) => x.id !== p.id) })}>Remove</button>
           </div>
@@ -559,8 +598,12 @@ export function StepExtras({ r, set }: StepProps) {
         </F>
         <F label="Achievements (one per line)">
           <textarea className="textarea" rows={4} value={achv}
-            placeholder={'Winner, Smart India Hackathon 2020\nSpeaker at local meetup'}
-            onChange={(e) => { setAchv(e.target.value); set({ achievements: e.target.value.split('\n') }); }} />
+            placeholder={'Winner, Smart India Hackathon 2019 (team of 6)\nSpeaker at local meetup'}
+            onChange={(e) => {
+              lastWritten.current = e.target.value;
+              setAchv(e.target.value);
+              set({ achievements: e.target.value.split('\n') });
+            }} />
         </F>
       </div>
     </div>
