@@ -67,7 +67,7 @@ None. CraftCV is completely free — there is no billing code in the app.
 
 ## Database (Supabase)
 
-1. Create a project, run `supabase/migrations/0001_init.sql` then `supabase/seed/template_catalog.sql` in the SQL editor.
+1. Create a project, run migrations `supabase/migrations/0001_init.sql` and `supabase/migrations/0002_prune_obsolete_template_catalog.sql`, then run `supabase/seed/template_catalog.sql` in the SQL editor. The seed removes catalog rows that are no longer in the current source catalogue.
 2. Put `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in `.env` (local) / Netlify env vars.
 3. Full guide with admin queries: `docs/SUPABASE.md`. Regenerate the catalog seed with `npm run seed:templates`.
 

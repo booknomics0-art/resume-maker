@@ -181,6 +181,17 @@ const sql = readFileSync(join(root, 'supabase', 'seed', 'template_catalog.sql'),
 const sqlIds = [...sql.matchAll(/^\s{2}\('([^']+)'/gm)].map((m) => m[1]);
 ok('SQL seed holds the same ids in the same order',
   sqlIds.length === TEMPLATES.length && sqlIds.every((id, i) => id === TEMPLATES[i].id));
+const pruneAt = sql.indexOf('delete from public.template_catalog');
+const insertAt = sql.indexOf('insert into public.template_catalog');
+const pruneSql = pruneAt >= 0 && insertAt > pruneAt ? sql.slice(pruneAt, insertAt) : '';
+const pruneIds = [...pruneSql.matchAll(/'([^']+)'/g)].map((m) => m[1]);
+ok('SQL seed removes obsolete catalog rows before upserting current designs',
+  pruneAt >= 0 && insertAt > pruneAt && pruneIds.length === TEMPLATES.length
+    && pruneIds.every((id, i) => id === TEMPLATES[i].id));
+const pruneMigration = readFileSync(join(root, 'supabase/migrations/0002_prune_obsolete_template_catalog.sql'), 'utf8');
+const migrationIds = [...pruneMigration.matchAll(/'([^']+)'/g)].map((m) => m[1]);
+ok('database cleanup migration retains exactly the current catalog IDs',
+  migrationIds.length === TEMPLATES.length && migrationIds.every((id, i) => id === TEMPLATES[i].id));
 ok('SQL seed carries no third-party brand text', !BRAND.test(sql));
 
 process.exit(checks(out) ? 0 : 1);

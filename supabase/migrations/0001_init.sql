@@ -6,8 +6,8 @@
 --   resumes            every resume of every user (full JSON + indexed columns)
 --   resume_downloads   one row per PDF download (analytics)
 --   events             generic product events
---   template_catalog   the 80 templates (seeded from src/lib/templates.ts by
---                      scripts/seed-templates.mjs) — usage stats join on it
+--   template_catalog   the canonical template catalog (seeded from src/lib/templates.ts
+--                      by scripts/seed-templates.mjs) — usage stats join on it
 -- Security
 --   RLS on every table. Users only see their own rows. `admin` role sees all.
 -- ============================================================================

@@ -58,8 +58,10 @@ HTTPS certificate is automatic and free.
 ## Production upgrades (phase 2, in order)
 
 1. **Real accounts + data sync (done in code)** — create a Supabase project, run
-   `supabase/migrations/0001_init.sql` + `supabase/seed/template_catalog.sql`,
-   then set `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` as Netlify env vars.
+   `supabase/migrations/0001_init.sql` and `0002_prune_obsolete_template_catalog.sql`,
+   then `supabase/seed/template_catalog.sql`, and set `VITE_SUPABASE_URL` /
+   `VITE_SUPABASE_ANON_KEY` as Netlify env vars. The seed prunes catalog entries
+   that are no longer part of the current source library.
    Full guide: `docs/SUPABASE.md`.
 2. **Google login** — enable the Google provider in Supabase Auth and paste a Google Cloud
    OAuth *Web application* client ID + secret (Google redirect URI:
