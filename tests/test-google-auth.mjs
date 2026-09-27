@@ -245,10 +245,18 @@ async function loadCloud(href, fetchImpl, env = {}) {
     sessionStorage: memoryStorage(),
   };
   const opened = [];
+  let openCalls = 0;
   win.open = (url) => {
+    openCalls++;
+    // A popup must be reserved before the first asynchronous probe; in a real
+    // browser user activation is gone after those awaits.
+    if (env.popup === false || openCalls > 1) return null;
     opened.push(url);
-    if (env.popup === false) return null;
-    return { opener: 'kept' };
+    return {
+      opener: 'kept', document: { title: '', body: { textContent: '' } },
+      location: { replace(target) { opened[0] = target; } },
+      close() { opened[0] = 'closed'; },
+    };
   };
   // `window.self === window.top` means the page is top-level. A preview iframe
   // is a page whose parent is a *different* window.
