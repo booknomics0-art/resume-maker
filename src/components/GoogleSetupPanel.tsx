@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import { googleSetupInfo, type GoogleAuthIssue, type GoogleProviderState } from '../lib/googleAuth';
-import { GOOGLE_CLIENT_ID } from '../lib/googleClient';
 import { SUPABASE_URL, cloudEnabled } from '../lib/supabase';
 import { cloudGoogleDiagnostics, type GoogleDiagnostics } from '../lib/cloud';
 import { authRedirectUrl } from '../lib/authRedirect';
@@ -154,9 +153,7 @@ export default function GoogleSetupPanel({
             Create (or open) an OAuth client of type <b>Web application</b>. Under <i>Authorized redirect URIs</i> add exactly this
             address, then copy the <b>Client ID</b> and <b>Client secret</b>.
           </p>
-          <CopyRow label="Client ID this app uses" value={GOOGLE_CLIENT_ID} />
           <CopyRow label="Authorized redirect URI (Google Cloud)" value={info.callbackUrl} />
-          <CopyRow label="Authorized JavaScript origin (optional)" value={info.appOrigin} />
           <a className="btn small" href={info.googleConsoleUrl} target="_blank" rel="noreferrer noopener">Open Google credentials ↗</a>
         </li>
 
@@ -175,8 +172,8 @@ export default function GoogleSetupPanel({
         <li>
           <StepHead title="Supabase → Authentication → Providers → Google" active={blocker === 'provider'} blocker={blocker} />
           <p className="hint">
-            Toggle <b>Google</b> on, paste the Client ID and Client secret from step 1 and press <b>Save</b>.
-            Use the same Client ID here — a mismatch is the reason for “redirect_uri_mismatch” errors.
+            Toggle <b>Google</b> on, paste the matching Client ID and Client secret from step 1, then press <b>Save</b>.
+            The redirect URI must also match exactly. Keep the secret in Supabase only — never in a browser variable or source file.
           </p>
           {info.providersUrl
             ? <a className="btn small primary" href={info.providersUrl} target="_blank" rel="noreferrer noopener">Open Supabase Providers ↗</a>
@@ -263,8 +260,8 @@ export default function GoogleSetupPanel({
           </div>
           {diag.authorize.ok && (
             <div className="hint" style={{ fontSize: 11.5 }}>
-              A green handshake means the Client ID/secret pair in Supabase is valid and Google accepts Supabase’s callback URL.
-              If the Google screen still refuses you, the consent screen is in “Testing” — see step 2.
+              This confirms Google accepted Supabase’s Client ID and callback URL, but it does not test the Client Secret.
+              The secret is checked only after a real account completes Google sign-in. If Google blocks the account, check whether the consent screen is in “Testing” — see step 2.
             </div>
           )}
         </div>

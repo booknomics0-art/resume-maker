@@ -31,7 +31,7 @@ function loadEnv() {
 }
 
 const env = loadEnv();
-const clientId = env.GOOGLE_CLIENT_ID || env.VITE_GOOGLE_CLIENT_ID || '';
+const clientId = env.GOOGLE_CLIENT_ID || '';
 const clientSecret = env.GOOGLE_CLIENT_SECRET || '';
 const token = env.SUPABASE_ACCESS_TOKEN || '';
 const supabaseUrl = (env.VITE_SUPABASE_URL || 'https://voyvalrnxmdogsllarnz.supabase.co').replace(/\/+$/, '');

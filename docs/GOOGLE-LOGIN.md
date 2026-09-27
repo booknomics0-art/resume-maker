@@ -19,19 +19,26 @@ Other shapes of the same complaint, all of them covered below:
 | A red *“Google sign-in was cancelled”* right after a blocked-app page | (old build) the real cause was thrown away — fixed, see the error map |
 | Anything on a `http://` address other than `localhost` | **no `crypto.subtle`** → the PKCE handshake cannot be built at all |
 
-## Live status of this project (checked 2026-09-24)
+## Current live status (verified 2026-09-27)
 
-Read straight off the public endpoints — no guessing:
+Read from the public Supabase Auth endpoints:
 
 | Check | Result |
 |---|---|
 | `GET /auth/v1/settings → external.google` | **enabled** ✅ (`email`, `google` on; sign-ups allowed) |
-| `GET /auth/v1/authorize?provider=google` | **302 to `accounts.google.com`** ✅ — Supabase accepted the client ID/secret pair and Google accepted its callback |
-| Google client in use | `854985942115-ns0npfc14kimq2nno8n10qkgagr85cfg.apps.googleusercontent.com` |
+| `GET /auth/v1/authorize?provider=google` | **redirects to Google's sign-in page** ✅ |
+| Google client currently configured in Supabase | `130784773041-jfk6ilb2h80djsberev63bppm5tt6nir.apps.googleusercontent.com` |
 | Callback Supabase sends to Google | `https://voyvalrnxmdogsllarnz.supabase.co/auth/v1/callback` |
+| App redirect used for the check | `https://resume-maker-ivory-ten.vercel.app/` was accepted |
 
-So **the Supabase half is correct** and the Google client/secret pair is real. What
-is left is the *last mile*, which is exactly what the app now checks and explains.
+The previous browser-side Google button used a different Client ID
+(`854985942115-ns0npfc14kimq2nno8n10qkgagr85cfg.apps.googleusercontent.com`) from
+what Supabase now reports. That mismatch can break ID-token sign-in. The app now
+uses a single Supabase OAuth redirect/PKCE flow on every origin, so Supabase's
+stored Client ID + secret are authoritative; the frontend no longer embeds a
+second Google client ID or loads Google's JavaScript SDK. Re-run
+`npm run check:auth` after changing provider or URL settings, because these live
+values can change.
 
 ### For the record — the two phrasings GoTrue uses
 
@@ -43,13 +50,13 @@ classifier matches on both:
 | `POST /auth/v1/token?grant_type=id_token` (old GSI/One-Tap code path) | `400 {"error_code":"provider_disabled","msg":"Provider (issuer \"https://accounts.google.com\") is not enabled"}` |
 | `GET /auth/v1/authorize?provider=google` | `400 {"error_code":"validation_failed","msg":"Unsupported provider: provider is not enabled"}` |
 
-## The original cause (now fixed)
+## The original cause observed at the time
 
 **The Google provider was switched off in the Supabase project**
 (`Authentication → Providers → Google`). Supabase stores the Google *client
 secret* on its server, so this switch cannot be flipped from the website — no
-front-end change can avoid it. It is a one-time project setting, and on this
-project it **is now enabled** (see the live status above).
+front-end change can avoid it. Enable it in Supabase and save the matching Client
+ID + secret there; use the live checker to confirm its current state.
 
 ### The other four causes (all detected and explained in-app now)
 
@@ -147,18 +154,23 @@ Google redirect  : https://<ref>.supabase.co/auth/v1/callback
 Scopes           : email profile
 ```
 
-A green handshake means Supabase reached Google with a client ID/secret pair
-Google accepted — Google rejects an unregistered `redirect_uri` before showing
-the account chooser, so the Google Cloud half of the setup is correct too.
+A green handshake means Supabase reached Google's sign-in endpoint with its
+configured Client ID, and Google accepted the callback URI. **It does not verify
+the Client Secret**: Google checks that only when Supabase exchanges the code
+after a real user completes sign-in.
 
-### Two things the script cannot see
+### What the preflight cannot confirm
 
+* **Client Secret** — only a completed OAuth round-trip tests the secret. If
+  Google returns `invalid_client` after account selection, re-paste the matching
+  Client ID + secret in Supabase → Authentication → Providers → Google.
 * **OAuth consent screen** (Google Cloud → *OAuth consent screen*): if it is still
   in *Testing*, only listed test users can sign in — everyone else gets
   *“Access blocked: … has not completed the Google verification process”*. Press
   **Publish app** (or add test users) before opening sign-up to the public.
-* **Site URL / Redirect URLs** must contain your *real* deployed domain. If they
-  do not, the user is returned to the wrong address after Google accepts them.
+* **Site URL** — the CLI checks the `--app-url` you pass, not the dashboard's
+  configured Site URL. Add the real deployed domain to Supabase → Authentication
+  → URL Configuration.
 
 The app itself also checks: the login screen probes the project setting, labels
 the button, and the *"Check again"* button inside the built-in walkthrough
