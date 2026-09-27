@@ -15,7 +15,7 @@
 import { cloudEnabled, supabase, SUPABASE_ANON_KEY, SUPABASE_URL } from './supabase';
 import { completeness, type Resume } from './types';
 import { auditLog } from './security';
-import { authRedirectUrl, capturedRedirect, clearRedirectParams } from './authRedirect';
+import { authRedirectUrl, browserAuthorizeUrl, capturedRedirect, clearRedirectParams, takeGoogleStart, withGoogleStart } from './authRedirect';
 import {
   classifyAuthError, googleSetupInfo, issueFromRedirect, probeGoogleProvider,
   type GoogleAuthIssue, type GoogleSetupInfo, type ProviderProbe,
@@ -275,7 +275,11 @@ async function guardAuthorizeUrl(authorizeUrl: string): Promise<{ ok: boolean; i
       cache: 'no-store',
       headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
     });
-    if (res.type === 'opaqueredirect' || res.status === 0 || res.ok) return { ok: true };
+    // 3xx is the happy path (Supabase handing us to Google). Some browsers expose
+    // that status instead of an opaque redirect — do not treat it as a failure.
+    if (res.type === 'opaqueredirect' || res.status === 0 || res.ok || (res.status >= 300 && res.status < 400)) {
+      return { ok: true };
+    }
     let serverText = `HTTP ${res.status}`;
     try {
       const body = (await res.json()) as Record<string, unknown>;
@@ -296,13 +300,28 @@ async function guardAuthorizeUrl(authorizeUrl: string): Promise<{ ok: boolean; i
  * “refused to connect” area and the flow looks broken although it is fine. In
  * that case the flow is started in a real top-level tab instead.
  */
-function isEmbedded(): boolean {
+export function isEmbedded(): boolean {
   try {
     return typeof window !== 'undefined' && window.self !== window.top;
   } catch {
     // Reading window.top throws for a cross-origin parent — that *is* an embed.
     return true;
   }
+}
+
+const FLOW_ID_KEY = 'craftcv.google.flow';
+
+function saveFlowId(flowId: string | null | undefined): void {
+  if (!flowId) return;
+  try { sessionStorage.setItem(FLOW_ID_KEY, flowId); } catch { /* private mode */ }
+}
+
+function storedFlowId(): string {
+  try { return sessionStorage.getItem(FLOW_ID_KEY) || ''; } catch { return ''; }
+}
+
+function clearStoredFlowId(): void {
+  try { sessionStorage.removeItem(FLOW_ID_KEY); } catch { /* ignore */ }
 }
 
 /**
@@ -329,24 +348,21 @@ export async function cloudStartGoogleSignIn(): Promise<{ ok: boolean; issue?: G
   const sb = supabase();
   if (!sb) return { ok: false, issue: classifyAuthError('cloud not configured', { cloudMissing: true }) };
 
-  // Reserve the tab synchronously while the click still has user activation.
-  // Opening it after the provider probe + PKCE + network guard is blocked by
-  // browsers (the previous implementation always reached window.open too late).
-  // Keep it same-origin until the verifier is stored; close it on any failure.
-  const embedded = isEmbedded();
-  let tab: Window | null = null;
-  if (embedded) {
-    try { tab = window.open('', '_blank'); } catch { /* popup blocked */ }
+  // Embedded preview (Arena panel, dashboard iframe): Google's pages send
+  // X-Frame-Options: DENY, and the iframe's localStorage is partitioned away
+  // from a popup. Opening a blank tab and stashing the PKCE verifier *here*
+  // makes the callback fail with "code verifier not found". Instead open a
+  // same-origin top-level tab that starts the handshake itself — verifier and
+  // callback then share that tab's first-party storage.
+  if (isEmbedded()) {
+    let tab: Window | null = null;
+    try { tab = window.open(withGoogleStart(window.location.href), '_blank'); } catch { /* popup blocked */ }
     if (!tab) return { ok: false, issue: providerIssueFrom('embedded_preview') };
-    try {
-      tab.document.title = 'Connecting to Google…';
-      tab.document.body.textContent = 'Connecting to Google… Please keep this tab open.';
-    } catch { /* a browser may restrict the new tab */ }
+    markPendingFlow(authRedirectUrl(), 'tab');
+    return { ok: true, openedInNewTab: true };
   }
-  const fail = (issue: GoogleAuthIssue) => {
-    try { tab?.close(); } catch { /* tab may have been closed already */ }
-    return { ok: false, issue };
-  };
+
+  const fail = (issue: GoogleAuthIssue): { ok: false; issue: GoogleAuthIssue } => ({ ok: false, issue });
 
   // 0. Environment checks first — both of these make the handshake impossible
   //    regardless of how well the Supabase project is configured.
@@ -371,12 +387,16 @@ export async function cloudStartGoogleSignIn(): Promise<{ ok: boolean; issue?: G
         redirectTo: authRedirectUrl(),
         // We navigate ourselves, after the guard below.
         skipBrowserRedirect: true,
+        // openid so Google issues an ID token Supabase can verify; email +
+        // profile are what the account row is built from.
+        scopes: 'openid email profile',
         // Let people pick the account instead of silently reusing the last one.
         queryParams: { prompt: 'select_account' },
       },
     });
     if (error) return fail(providerIssueFrom(error.message, error.code ?? '', error.status));
-    authorizeUrl = data?.url ?? '';
+    authorizeUrl = browserAuthorizeUrl(data?.url ?? '');
+    saveFlowId(data?.flowId);
   } catch (err) {
     return fail(classifyAuthError(errorText(err)));
   }
@@ -384,31 +404,66 @@ export async function cloudStartGoogleSignIn(): Promise<{ ok: boolean; issue?: G
 
   // 3. Validate, then hand the browser over to Supabase/Google.
   const guard = await guardAuthorizeUrl(authorizeUrl);
-  if (!guard.ok) return fail(guard.issue ?? classifyAuthError('Google authorization failed')); 
-  auditLog('CLOUD_GOOGLE_START', { redirectTo: authRedirectUrl(), embedded: isEmbedded() });
-
-  // Embedded preview: Google refuses to render inside a frame, so open the flow
-  // in a real top-level tab. This runs inside the click handler, so the popup is
-  // allowed by the browser; if a blocker refuses anyway there is no other way to
-  // reach Google from inside a frame, and the caller explains that instead.
-  if (embedded && tab) {
-    try {
-      // The new tab shares origin/storage with the preview so the PKCE verifier
-      // written by signInWithOAuth is available when its callback loads.
-      tab.location.replace(authorizeUrl);
-      try { tab.opener = null; } catch { /* cross-origin: nothing to do */ }
-      // mode:'tab' — do NOT treat a later remount of this page as “Google blocked
-      // us”. The other tab owns the callback; this page just waits for the session.
-      markPendingFlow(authRedirectUrl(), 'tab');
-      return { ok: true, openedInNewTab: true };
-    } catch (err) {
-      return fail(classifyAuthError(errorText(err)));
-    }
-  }
+  if (!guard.ok) return fail(guard.issue ?? classifyAuthError('Google authorization failed'));
+  auditLog('CLOUD_GOOGLE_START', { redirectTo: authRedirectUrl(), embedded: false });
 
   markPendingFlow(authRedirectUrl(), 'navigate');
   window.location.assign(authorizeUrl);
   return { ok: true };
+}
+
+/**
+ * A top-level tab opened with `?google=start` (from an embedded preview) must
+ * begin the handshake itself. Once per page load — React StrictMode must not
+ * mint two PKCE verifiers for one navigation.
+ */
+let googleStartTask: Promise<{ ok: boolean; issue?: GoogleAuthIssue; openedInNewTab?: boolean }> | null = null;
+
+export function cloudResumeGoogleStart(): Promise<{ ok: boolean; issue?: GoogleAuthIssue; openedInNewTab?: boolean }> | null {
+  if (googleStartTask) return googleStartTask;
+  if (typeof window === 'undefined' || !window.location) return null;
+  const taken = takeGoogleStart(window.location.href);
+  if (!taken.start) return null;
+  try { window.history.replaceState(window.history.state, '', taken.cleaned); } catch { /* cosmetic */ }
+  // A frame must never navigate itself to Google (X-Frame-Options: DENY).
+  if (isEmbedded()) return null;
+  googleStartTask = cloudStartGoogleSignIn();
+  return googleStartTask;
+}
+
+/**
+ * Finish Google sign-in from an ID token (Google Identity Services button).
+ * The token's audience must be the client ID configured on the Supabase Google
+ * provider. The client *secret* is not involved — Supabase checks the token
+ * against Google's public keys.
+ */
+export async function cloudSignInWithGoogleIdToken(
+  idToken: string,
+  nonce?: string,
+): Promise<{ ok: boolean; issue?: GoogleAuthIssue; user?: CloudUser }> {
+  const sb = supabase();
+  if (!sb) return { ok: false, issue: classifyAuthError('cloud not configured', { cloudMissing: true }) };
+  try {
+    const attempt = async (useNonce: string | undefined) => sb.auth.signInWithIdToken({
+      provider: 'google',
+      token: idToken,
+      ...(useNonce ? { nonce: useNonce } : {}),
+    });
+    let { data, error } = await attempt(nonce);
+    // A project with "skip nonce check" rejects a nonce, and the reverse
+    // rejects a missing one. One retry covers both without a second Google prompt.
+    if (error && nonce && /nonce/i.test(error.message)) {
+      ({ data, error } = await attempt(undefined));
+    }
+    if (error) return { ok: false, issue: providerIssueFrom(error.message, error.code ?? '', error.status) };
+    const user = toCloudUser(data.user ?? data.session?.user ?? null);
+    if (!user) return { ok: false, issue: classifyAuthError('Supabase returned no user for this sign-in') };
+    clearPendingFlow();
+    auditLog('CLOUD_GOOGLE_OK', { email: user.email, via: 'id_token' });
+    return { ok: true, user };
+  } catch (err) {
+    return { ok: false, issue: classifyAuthError(errorText(err)) };
+  }
 }
 
 /**
@@ -522,10 +577,15 @@ export async function cloudCompleteRedirectSignIn(): Promise<RedirectSignInResul
 
   try {
     if (params.code) {
+      // Prefer the flow id from the callback; otherwise the one this tab stored
+      // before leaving for Google (the URL only carries it when the project
+      // opts into appendPkceFlowIdToRedirects).
+      const flowId = params.flowId || storedFlowId();
       const { data, error } = await sb.auth.exchangeCodeForSession(
         params.code,
-        params.flowId ? { flowId: params.flowId } : undefined,
+        flowId ? { flowId } : undefined,
       );
+      clearStoredFlowId();
       if (error) {
         auditLog('CLOUD_GOOGLE_EXCHANGE_FAILED', { code: error.code, error: error.message });
         return { attempted: true, ok: false, issue: providerIssueFrom(error.message, error.code ?? '', error.status) };

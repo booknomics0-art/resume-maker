@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { googleSetupInfo, type GoogleAuthIssue, type GoogleProviderState } from '../lib/googleAuth';
+import { GOOGLE_CLIENT_ID } from '../lib/googleClient';
 import { SUPABASE_URL, cloudEnabled } from '../lib/supabase';
 import { cloudGoogleDiagnostics, type GoogleDiagnostics } from '../lib/cloud';
 import { authRedirectUrl } from '../lib/authRedirect';
@@ -153,6 +154,7 @@ export default function GoogleSetupPanel({
             Create (or open) an OAuth client of type <b>Web application</b>. Under <i>Authorized redirect URIs</i> add exactly this
             address, then copy the <b>Client ID</b> and <b>Client secret</b>.
           </p>
+          <CopyRow label="Client ID this app uses" value={GOOGLE_CLIENT_ID} />
           <CopyRow label="Authorized redirect URI (Google Cloud)" value={info.callbackUrl} />
           <CopyRow label="Authorized JavaScript origin (optional)" value={info.appOrigin} />
           <a className="btn small" href={info.googleConsoleUrl} target="_blank" rel="noreferrer noopener">Open Google credentials ↗</a>

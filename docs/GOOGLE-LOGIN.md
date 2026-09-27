@@ -27,7 +27,7 @@ Read straight off the public endpoints — no guessing:
 |---|---|
 | `GET /auth/v1/settings → external.google` | **enabled** ✅ (`email`, `google` on; sign-ups allowed) |
 | `GET /auth/v1/authorize?provider=google` | **302 to `accounts.google.com`** ✅ — Supabase accepted the client ID/secret pair and Google accepted its callback |
-| Google client in use | `834408285039-835dd7l1kkrveupjnmooe1l3a4ttifee.apps.googleusercontent.com` |
+| Google client in use | `854985942115-ns0npfc14kimq2nno8n10qkgagr85cfg.apps.googleusercontent.com` |
 | Callback Supabase sends to Google | `https://voyvalrnxmdogsllarnz.supabase.co/auth/v1/callback` |
 
 So **the Supabase half is correct** and the Google client/secret pair is real. What

@@ -314,11 +314,22 @@ export function classifyAuthError(raw: string, extra: { code?: string; status?: 
     });
   }
 
+  if (m.includes('nonce')) {
+    return out({
+      code: 'verifier_missing',
+      title: 'Google sign-in needs another try',
+      message: 'The secure check on this Google sign-in did not match. Nothing was changed.',
+      hint: 'Press “Continue with Google” again and finish in one go.',
+      showSetup: false,
+    });
+  }
+
   if (
     m.includes('redirect_uri_mismatch') ||
     m.includes('unable to exchange external code') ||
     m.includes('invalid_client') ||
     m.includes('invalid_grant') ||
+    m.includes('unacceptable audience') ||
     m.includes('code challenge')
   ) {
     return out({

@@ -18,6 +18,7 @@
     "seed:templates:push": "node scripts/seed-templates.mjs --push",
     "test:auth": "node tests/test-google-auth.mjs",
     "check:auth": "node scripts/check-google-auth.mjs",
+    "apply:google": "node scripts/apply-google-provider.mjs",
     "test:templates": "node tests/test-templates.mjs",
     "test:clean": "node tests/test-clean-export.mjs",
     "test:ats": "node tests/test-ats.mjs",

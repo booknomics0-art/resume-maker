@@ -167,3 +167,59 @@ export function authRedirectUrl(): string {
   const { origin, pathname } = window.location;
   return `${origin}${pathname.replace(/index\.html$/, '')}`;
 }
+
+/** Query flag that tells a freshly opened top-level tab to start Google sign-in. */
+export const GOOGLE_START_PARAM = 'google';
+export const GOOGLE_START_VALUE = 'start';
+
+/** OAuth leftovers that must not ride along into a new sign-in tab. */
+const STALE_OAUTH_KEYS = [
+  'code', 'error', 'error_code', 'error_description', 'state', 'sb_flow_id',
+  'access_token', 'refresh_token',
+];
+
+/**
+ * Same page, plus `?google=start`, minus any previous OAuth payload.
+ * Used to open a real top-level tab from an embedded preview: that tab owns the
+ * PKCE verifier and the callback, so partitioned iframe storage cannot split them.
+ */
+export function withGoogleStart(href: string): string {
+  let url: URL;
+  try {
+    url = new URL(href, 'https://localhost');
+  } catch {
+    return href;
+  }
+  for (const key of STALE_OAUTH_KEYS) url.searchParams.delete(key);
+  url.searchParams.set(GOOGLE_START_PARAM, GOOGLE_START_VALUE);
+  return url.toString();
+}
+
+/** Reads and removes `?google=start`. The hash route is left untouched. */
+export function takeGoogleStart(href: string): { start: boolean; cleaned: string } {
+  let url: URL;
+  try {
+    url = new URL(href, 'https://localhost');
+  } catch {
+    return { start: false, cleaned: href };
+  }
+  const start = url.searchParams.get(GOOGLE_START_PARAM) === GOOGLE_START_VALUE;
+  url.searchParams.delete(GOOGLE_START_PARAM);
+  return { start, cleaned: url.toString() };
+}
+
+/**
+ * supabase-js adds `skip_http_redirect=true` when we ask it not to navigate
+ * itself. That flag is for the library's own fetch — if it stays on the URL we
+ * then assign, some GoTrue versions answer with JSON instead of sending the
+ * browser to Google. Strip it before any real navigation.
+ */
+export function browserAuthorizeUrl(authorizeUrl: string): string {
+  try {
+    const url = new URL(authorizeUrl);
+    url.searchParams.delete('skip_http_redirect');
+    return url.toString();
+  } catch {
+    return authorizeUrl;
+  }
+}
