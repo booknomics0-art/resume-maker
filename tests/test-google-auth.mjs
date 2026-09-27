@@ -61,6 +61,23 @@ const aChecks = [
   ['plain route (#/editor/abc) is NOT an auth callback', !route.hasParams],
   ['legacy implicit tokens still handled', implicit.hasParams && implicit.accessToken === 'tok_123'],
   ['junk short code ignored', !junk.hasParams],
+  ['google start URL sets the flag and keeps the hash', (() => {
+    const started = redirect.withGoogleStart(`${APP}/?error=access_denied&code=9f8e7d6c5b4a3210#/login`);
+    const u = new URL(started);
+    return u.searchParams.get('google') === 'start' && u.hash === '#/login'
+      && !u.searchParams.has('code') && !u.searchParams.has('error');
+  })()],
+  ['takeGoogleStart removes the flag once', (() => {
+    const taken = redirect.takeGoogleStart(redirect.withGoogleStart(`${APP}/#/editor/abc`));
+    return taken.start === true && !new URL(taken.cleaned).searchParams.has('google')
+      && new URL(taken.cleaned).hash === '#/editor/abc';
+  })()],
+  ['ordinary URL is not a google start', redirect.takeGoogleStart(`${APP}/#/`).start === false],
+  ['skip_http_redirect stripped before the browser navigates', (() => {
+    const stripped = redirect.browserAuthorizeUrl('https://sb.example/auth/v1/authorize?provider=google&skip_http_redirect=true&code_challenge=abc');
+    const u = new URL(stripped);
+    return !u.searchParams.has('skip_http_redirect') && u.searchParams.get('code_challenge') === 'abc';
+  })()],
 ];
 
 // ── 2. error translation — every message must name a fixable cause ───────────
@@ -313,7 +330,7 @@ let oauthOptions = null;
 enabledRun.mod.supabase().auth.signInWithOAuth = async (creds) => {
   oauthOptions = creds.options;
   return {
-    data: { provider: 'google', url: 'https://sb.example/auth/v1/authorize?provider=google&code_challenge=xyz', flowId: 'f-1' },
+    data: { provider: 'google', url: 'https://sb.example/auth/v1/authorize?provider=google&skip_http_redirect=true&code_challenge=xyz', flowId: 'f-1' },
     error: null,
   };
 };
@@ -391,6 +408,7 @@ const eChecks = [
   ['disabled provider: nothing was navigated', disabledRun.navigations.length === 0],
   ['disabled provider: message points at the setup steps', startDisabled.issue?.showSetup === true],
   ['enabled provider: browser is navigated to Supabase', startEnabled.ok === true && /\/auth\/v1\/authorize\?provider=google/.test(enabledRun.navigations[0] || '')],
+  ['enabled provider: skip_http_redirect stripped (would otherwise return JSON)', enabledRun.navigations[0] && !String(enabledRun.navigations[0]).includes('skip_http_redirect')],
   ['enabled provider: returns to this app, not a random page', oauthOptions?.redirectTo === 'https://app.example/'],
   ['enabled provider: PKCE flow used (no implicit tokens in the URL)', oauthOptions?.skipBrowserRedirect === true],
   ['stale probe: raw Supabase JSON page is prevented', startStale.ok === false && staleRun.navigations.length === 0],
@@ -471,7 +489,7 @@ const fChecks = [
   ['new-tab / popup marker never triggers “came back empty”', pendingTab.interrupted === false],
   ['brand-new same-tab marker is ignored (min-age guard)', pendingTooFresh.interrupted === false],
   ['preview iframe: flow continues in a real tab (Google cannot be framed)', startFramed.ok === true && startFramed.openedInNewTab === true],
-  ['preview iframe: the tab points at the Supabase authorize URL', /\/auth\/v1\/authorize\?provider=google/.test(framedRun.opened[0] || '')],
+  ['preview iframe: the tab is a same-origin start URL (verifier stays in that tab)', /[?&]google=start/.test(framedRun.opened[0] || '') && !/supabase/.test(framedRun.opened[0] || '')],
   ['preview iframe: the frame itself is never navigated', framedRun.navigations.length === 0],
   ['preview iframe: popup blocked → explained, not silently navigated', startFramedBlocked.ok === false && startFramedBlocked.issue?.code === 'embedded_preview'],
   ['preview iframe: popup blocked → no navigation', framedBlockedRun.navigations.length === 0],

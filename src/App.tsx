@@ -14,7 +14,7 @@ import {
 import { currentUser, logout, setLocalSession, isOfflineSession, type User } from './lib/auth';
 import { initSecurity } from './lib/security';
 import { cloudEnabled } from './lib/supabase';
-import { cloudBootAuth, cloudCurrentUser, touchProfile } from './lib/cloud';
+import { cloudBootAuth, cloudCurrentUser, cloudResumeGoogleStart, touchProfile } from './lib/cloud';
 import { hasAuthCallback } from './lib/authRedirect';
 import type { GoogleAuthIssue } from './lib/googleAuth';
 import { syncWithCloud } from './lib/store';
@@ -45,6 +45,23 @@ export default function App() {
   // Initialize application protections on mount
   useEffect(() => {
     initSecurity();
+  }, []);
+
+  // A preview iframe cannot finish Google sign-in itself (Google refuses to be
+  // framed, and its storage is partitioned). The button opens a top-level tab
+  // with ?google=start; that tab starts the handshake here, once.
+  useEffect(() => {
+    if (!cloudEnabled()) return;
+    const pending = cloudResumeGoogleStart();
+    if (!pending) return;
+    let cancelled = false;
+    void pending.then((res) => {
+      if (cancelled || res.ok) return;
+      if (res.issue) setAuthNotice(res.issue);
+      const hash = window.location.hash || '#/';
+      if (hash === '#' || hash === '#/') window.location.hash = '/login';
+    });
+    return () => { cancelled = true; };
   }, []);
 
   // Cloud: finish a Google/email redirect round-trip, restore the Supabase session

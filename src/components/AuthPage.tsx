@@ -1,12 +1,14 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { login, signup, setLocalSession, markOfflineSession } from '../lib/auth';
 import { cloudEnabled } from '../lib/supabase';
 import {
-  cloudSignIn, cloudSignUp, cloudStartGoogleSignIn, cloudGoogleProviderState,
-  cloudOnAuthChange, pendingFlowInterrupted, clearPendingFlow, touchProfile,
+  cloudSignIn, cloudSignUp, cloudStartGoogleSignIn, cloudSignInWithGoogleIdToken,
+  cloudGoogleProviderState, cloudOnAuthChange, pendingFlowInterrupted, clearPendingFlow,
+  touchProfile, isEmbedded,
 } from '../lib/cloud';
-import { hasAuthCallback } from '../lib/authRedirect';
+import { hasAuthCallback, withGoogleStart } from '../lib/authRedirect';
 import { providerStateNote, type GoogleAuthIssue, type GoogleProviderState } from '../lib/googleAuth';
+import { googleJsOriginAllowed, mountGoogleButton } from '../lib/googleClient';
 import { syncWithCloud } from '../lib/store';
 import { trackEvent } from '../lib/track';
 import GoogleSetupPanel from './GoogleSetupPanel';
@@ -42,6 +44,13 @@ export default function AuthPage({ onAuth, notice }: { onAuth: () => void; notic
   const [showSetup, setShowSetup] = useState(false);
   // True when the handshake continues in another tab (embedded preview).
   const [awaitingTab, setAwaitingTab] = useState(false);
+  // Google's own button (ID token) — only on origins registered for this client.
+  const gisHost = useRef<HTMLDivElement>(null);
+  const [gisReady, setGisReady] = useState(false);
+  const onAuthRef = useRef(onAuth);
+  onAuthRef.current = onAuth;
+  const embedded = typeof window !== 'undefined' && isEmbedded();
+  const useIdentityButton = !embedded && typeof window !== 'undefined' && googleJsOriginAllowed(window.location.origin);
 
   // A failed Google round-trip arrives as a prop from App.
   useEffect(() => {
@@ -64,6 +73,44 @@ export default function AuthPage({ onAuth, notice }: { onAuth: () => void; notic
 
   // Label the button correctly on load instead of failing on click.
   useEffect(() => { void refreshGoogleState(); }, [refreshGoogleState]);
+
+  const finishGoogleUser = useCallback((name: string, email: string) => {
+    clearPendingFlow();
+    setLocalSession(name, email, 'google');
+    setGoogleIssue(null);
+    setShowSetup(false);
+    void touchProfile();
+    void syncWithCloud();
+    onAuthRef.current();
+  }, []);
+
+  // Production origin (registered JavaScript origin): Google's button returns an
+  // ID token and Supabase verifies it. No client secret in the browser.
+  useEffect(() => {
+    if (!useIdentityButton || !gisHost.current || !cloudEnabled()) return;
+    let cancelled = false;
+    const host = gisHost.current;
+    void mountGoogleButton(host, (idToken, nonce) => {
+      if (cancelled) return;
+      setGoogleBusy(true);
+      setGoogleIssue(null);
+      void cloudSignInWithGoogleIdToken(idToken, nonce).then((res) => {
+        if (cancelled) return;
+        setGoogleBusy(false);
+        if (!res.ok || !res.user) {
+          setGoogleIssue(res.issue ?? null);
+          if (res.issue?.showSetup) setShowSetup(true);
+          return;
+        }
+        finishGoogleUser(res.user.name, res.user.email);
+      });
+    }).then(() => {
+      if (!cancelled) setGisReady(true);
+    }).catch(() => {
+      if (!cancelled) setGisReady(false);
+    });
+    return () => { cancelled = true; };
+  }, [useIdentityButton, finishGoogleUser]);
 
   // The Google flow may be running in a separate tab: inside embedded previews
   // (where Google refuses to render in a frame) `cloudStartGoogleSignIn()` opens
@@ -316,15 +363,44 @@ export default function AuthPage({ onAuth, notice }: { onAuth: () => void; notic
               <div style={{ flex: 1, height: 1, background: 'var(--silver-200)' }} /> or <div style={{ flex: 1, height: 1, background: 'var(--silver-200)' }} />
             </div>
 
-            <button
-              type="button"
-              className="btn"
-              onClick={googleClick}
-              disabled={googleBusy}
-              style={{ justifyContent: 'center', padding: '10px 16px' }}
-            >
-              <GoogleIcon /> {googleBusy ? 'Opening Google…' : 'Continue with Google'}
-            </button>
+            {embedded ? (
+              <a
+                className="btn"
+                href={withGoogleStart(window.location.href)}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ justifyContent: 'center', padding: '10px 16px' }}
+                onClick={() => {
+                  setGoogleIssue(null);
+                  setAwaitingTab(true);
+                  setInfo('Google opened in a new tab. Finish sign-in there — that tab is where you will be signed in (this preview cannot show Google’s page).');
+                }}
+              >
+                <GoogleIcon /> Continue with Google
+              </a>
+              <div className="hint" style={{ textAlign: 'center', fontSize: 11.5 }}>
+                Opens in a new tab — Google blocks its sign-in page inside this preview.
+              </div>
+            ) : (
+              <>
+                <div
+                  ref={gisHost}
+                  className="google-btn-host"
+                  hidden={!useIdentityButton || !gisReady}
+                />
+                {(!useIdentityButton || !gisReady) && (
+                  <button
+                    type="button"
+                    className="btn"
+                    onClick={googleClick}
+                    disabled={googleBusy}
+                    style={{ justifyContent: 'center', padding: '10px 16px' }}
+                  >
+                    <GoogleIcon /> {googleBusy ? 'Opening Google…' : 'Continue with Google'}
+                  </button>
+                )}
+              </>
+            )}
 
             {googleState === 'disabled' && !showSetup && (
               <div
