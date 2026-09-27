@@ -3,6 +3,7 @@ import Dashboard from './components/Dashboard';
 import Editor from './components/Editor';
 import Settings from './components/Settings';
 import AuthPage from './components/AuthPage';
+import Landing from './components/Landing';
 import Footer from './components/Footer';
 import ResumeImporter from './components/ResumeImporter';
 import {
@@ -84,9 +85,15 @@ export default function App() {
         void touchProfile();
         await syncWithCloud();
       } else if (currentUser()) {
-        // local session exists but cloud session expired → force re-login so data keeps syncing
-        logout();
-        setUser(null);
+        // Local session exists but no cloud session:
+        //  · a real (email/Google) session must re-login so data keeps syncing
+        //  · a guest session ("start without account", provider === 'guest') is
+        //    browser-only by design — leaving them in is the whole point, and
+        //    everything they build syncs up later if they sign in for real.
+        if (currentUser()?.provider !== 'guest') {
+          logout();
+          setUser(null);
+        }
       }
       setBooting(false);
     })();
@@ -123,6 +130,25 @@ export default function App() {
   }
 
   if (!user) {
+    // Logged-out visitors get the public storefront on the home route — the
+    // product pitch (hero, templates, FAQ) comes BEFORE any login wall.
+    if (tab === '/' || tab === '') {
+      return (
+        <Landing
+          notice={authNotice}
+          onStartGuest={(target) => {
+            // Guest mode: a browser-only session (provider 'guest'). The whole
+            // app works offline; if the visitor later signs in for real, the
+            // existing cloud sync merges everything they built as a guest.
+            setLocalSession('Guest', 'guest@craftcv.local', 'guest');
+            setUser(currentUser());
+            navigate(target || '/editor/new');
+          }}
+        />
+      );
+    }
+    // Any other deep link (e.g. a bookmarked #/editor/…) keeps the old
+    // behaviour: show the login page first.
     return <AuthPage onAuth={() => setUser(currentUser())} notice={authNotice} />;
   }
 

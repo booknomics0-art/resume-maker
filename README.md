@@ -8,6 +8,18 @@ Resumes are stored in your own **Supabase** database (see `docs/SUPABASE.md`).
 
 ## Features
 
+- **Public landing page + guest mode** — the first screen is now the storefront
+  (hero, live A4 preview, comparison table, template strip, FAQ), not a login
+  wall. “Start free — no signup” creates a browser-only **guest session**
+  (`provider: 'guest'`): the full app works, and whatever is built syncs up the
+  moment the visitor signs in for real. Signed-in users never see the landing.
+  Crawlable static content + `SoftwareApplication`/`FAQPage` JSON-LD,
+  `robots.txt`, `sitemap.xml` and an OG image ship in `index.html`/`public/`.
+- **Resume Score (free “expert review”)** — a live 0–100 score card beside the
+  ATS check: essentials, content quality (quantified bullets, action verbs,
+  summary length) and human touches, each with an honest one-line tip.
+  `src/lib/resumeScore.ts` + `src/components/ResumeScore.tsx`; tested by
+  `npm run test:score`.
 - **Login / Signup** — Supabase Auth (email + password, and Google via the standard redirect/PKCE flow). Google needs a one-time setup in the Supabase project *and* in Google Cloud (provider enabled, OAuth consent screen **published** — while it is in “Testing”, Google blocks everyone who is not a listed test user). The app probes all of it, names the cause (provider off, credentials mismatched, consent screen in Testing, address not whitelisted, `http://` page, iframe preview), shows the exact fix with deep links and copy-paste values, reports *“you left for Google and came back without finishing”* instead of failing silently, opens a real tab when the app is embedded in a frame, follows a sign-in finished in another tab, and has **“Test the connection”** in Settings (the browser twin of `npm run check:auth`) — see [`docs/GOOGLE-LOGIN.md`](docs/GOOGLE-LOGIN.md). Without Supabase env vars the app falls back to a browser-only demo account.
 - **Cloud database** — every resume is saved to `public.resumes` in Supabase with row-level security; two-way sync with the offline copy, admin views for template usage & all resumes.
 - **Dashboard** — resumes with live thumbnails, completion %, duplicate/delete, sample resume.
@@ -92,7 +104,7 @@ parsing code in Node (esbuild bundles `src/lib/*.ts`; `@napi-rs/canvas` stands i
 for the browser canvas, and the tests skip politely if it is missing):
 
 ```bash
-npm test              # all seven suites (auth, templates, clean export, ATS, OCR, PDF, autofill)
+npm test              # all eight suites (auth, templates, score, clean export, ATS, OCR, PDF, autofill)
 npm run test:templates # catalogue shape + every design rendered in all 10 fields
 npm run test:clean    # every template SSR'd: no branding/links/placeholders; print stays A4 & multi-page safe
 npm run test:ats      # JD keyword extraction + match scoring + per-resume JD persistence

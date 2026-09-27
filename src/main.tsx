@@ -21,3 +21,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     </ErrorBoundary>
   </React.StrictMode>,
 );
+
+// The static #seo-content block in index.html exists for crawlers and no-JS
+// visitors. Once the app mounts it would just duplicate the rendered landing
+// page — so remove it. If JS never runs (crawler snapshot, broken bundle),
+// the static block stays and still tells the whole story.
+document.getElementById('seo-content')?.remove();

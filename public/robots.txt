@@ -1,0 +1,7 @@
+# CraftCV — crawl everything public.
+User-agent: *
+Allow: /
+
+# NOTE: replace the domain below with your production domain after first
+# deploy (it must be an absolute URL).
+Sitemap: https://craftcv.netlify.app/sitemap.xml

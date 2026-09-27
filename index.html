@@ -25,20 +25,100 @@
          script), so accounts.google.com is deliberately NOT allowed here. -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https:; connect-src 'self' blob: https://*.supabase.co wss://*.supabase.co; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'" />
     
-    <!-- Open Graph for social sharing -->
+    <!-- Open Graph for social sharing
+         NOTE: replace craftcv.netlify.app with your production domain after
+         first deploy (og:image must be an absolute URL for most scrapers). -->
     <meta property="og:title" content="CraftCV — Free Professional Resume Builder | 50 Templates" />
     <meta property="og:description" content="Advanced resume maker: upload PDF/DOCX, edit with high-tech editor, 100% free, unlimited downloads. 50 professional templates." />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="CraftCV" />
-    
+    <meta property="og:image" content="https://craftcv.netlify.app/og-image.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="CraftCV — Free Resume Builder | 50 Templates | No Watermark" />
+    <meta name="twitter:description" content="Upload your old resume or build one in 10 minutes. 50 templates, free ATS score, unlimited PDFs. ₹0 forever." />
+    <meta name="twitter:image" content="https://craftcv.netlify.app/og-image.jpg" />
+
     <title>CraftCV — Free Resume Builder | 50 Templates | Upload & Edit</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230F2148'/%3E%3Ctext x='16' y='22' font-size='16' font-family='Georgia' fill='%23C9D2DE' text-anchor='middle'%3ECV%3C/text%3E%3C/svg%3E" />
-    
-    <!-- Preconnect for performance -->
-    <link rel="preconnect" href="https://*.supabase.co" crossorigin />
-    
+
+    <!-- Structured data for rich results. Keep offers/price in sync with the
+         truth (₹0 — there is no billing in the product). The FAQPage entry
+         mirrors the 8 questions rendered in Landing.tsx — edit both together. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "CraftCV",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Web",
+      "url": "https://craftcv.netlify.app/",
+      "description": "Free online resume builder: upload and edit an existing resume (PDF, DOCX, photo OCR) or build one in 7 guided steps. 50 professional templates, free ATS match score, unlimited clean PDF downloads, no watermark.",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "INR" },
+      "featureList": [
+        "Upload and edit existing resumes (PDF, DOCX, TXT, photo OCR) on-device",
+        "Free ATS keyword match score against any job description",
+        "50 professional templates across 20 layout families and 10 career fields",
+        "Unlimited resumes and unlimited watermark-free PDF downloads",
+        "Cloud sync across devices with your own database"
+      ]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        { "@type": "Question", "name": "Is CraftCV really 100% free?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Every template, the ATS match score, upload & edit, and unlimited PDF downloads are free. There is no paid plan, no trial, no credit card and no watermark — the product has no billing at all." } },
+        { "@type": "Question", "name": "Can I edit my existing resume?", "acceptedAnswer": { "@type": "Answer", "text": "Yes — upload a PDF, DOCX, TXT or JSON file, or even a photo of a printed resume. Text is extracted on your device (scanned pages are read by an offline OCR engine) and lands straight into editable fields with a live preview. Nothing is uploaded to any server." } },
+        { "@type": "Question", "name": "Will my resume pass ATS screening?", "acceptedAnswer": { "@type": "Answer", "text": "CraftCV templates are built on clean structures that applicant tracking systems parse reliably. You also get a free ATS check: paste any job description and see which keywords your resume already covers and which are missing." } },
+        { "@type": "Question", "name": "How many resumes can I create?", "acceptedAnswer": { "@type": "Answer", "text": "Unlimited. Duplicate a resume and tailor one version per job application — something most builders restrict to a single resume even on paid plans." } },
+        { "@type": "Question", "name": "Do the free downloads have a watermark or branding?", "acceptedAnswer": { "@type": "Answer", "text": "No. The PDF you download is the final file: no watermark, no made-with link, no hidden paywall pages. It is even saved under your resume's own name." } },
+        { "@type": "Question", "name": "How many pages can my resume be?", "acceptedAnswer": { "@type": "Answer", "text": "One page to three or more — nothing caps your length. The live preview shows page-break guides, and the printed PDF keeps every entry intact across pages." } },
+        { "@type": "Question", "name": "Where is my data stored?", "acceptedAnswer": { "@type": "Answer", "text": "In your browser by default, and optionally in your own cloud database when you sign in. Parsing, OCR and ATS scoring all run on your device — we never sell or share your data." } },
+        { "@type": "Question", "name": "Do I need an account to try it?", "acceptedAnswer": { "@type": "Answer", "text": "No. Start as a guest and build your complete resume without signing up. Create an account only when you want your resumes synced across devices." } }
+      ]
+    }
+    </script>
   </head>
   <body>
+    <!-- Static, crawler-readable storefront content. Real visitors get the
+         React landing page; this block is removed from the DOM once the app
+         mounts (see src/main.tsx). If JS never runs, this still tells the
+         whole story. Keep the FAQ text in sync with Landing.tsx. -->
+    <div id="seo-content" style="font-family: 'Segoe UI', system-ui, sans-serif; color: #1c2434; max-width: 880px; margin: 0 auto; padding: 32px 20px;">
+      <p style="font-weight: 700; color: #0f2148; letter-spacing: 0.4px;">CRAFTCV — 100% FREE · NO WATERMARK · MADE FOR INDIA</p>
+      <h1>Free Online Resume Builder — 50 Templates, ATS Score, Upload & Edit</h1>
+      <p>
+        CraftCV is a free professional resume builder. Build a recruiter-ready resume in about
+        10 minutes, or upload your existing resume — PDF, DOCX, TXT or even a photo of a printed
+        page — and edit it with a live A4 preview. Unlimited resumes, unlimited watermark-free PDF
+        downloads, no credit card, no paid plan.
+      </p>
+      <h2>What you get free</h2>
+      <ul>
+        <li><b>Upload & edit an existing resume</b> — PDF, DOCX, TXT, JSON and photos, read on your device with an offline OCR engine for scans. Nothing is uploaded to any server.</li>
+        <li><b>Free ATS match score</b> — paste a job description and instantly see which keywords your resume covers and which are missing.</li>
+        <li><b>50 professional templates</b> across 20 layout families, tuned for 10 career fields — IT, Data, Sales, Healthcare, Teaching, Design, Leadership, Fresher and more. All unlocked.</li>
+        <li><b>Unlimited resumes</b> — duplicate and tailor one version per job application.</li>
+        <li><b>Clean PDF export</b> — 1 to 3+ A4 pages, no watermark, no branding, saved under your own resume's name.</li>
+      </ul>
+      <h2>Frequently asked questions</h2>
+      <h3>Is CraftCV really 100% free?</h3>
+      <p>Yes. Every template, the ATS match score, upload &amp; edit, and unlimited PDF downloads are free. There is no paid plan, no trial, no credit card and no watermark — the product has no billing at all.</p>
+      <h3>Can I edit my existing resume?</h3>
+      <p>Yes — upload a PDF, DOCX, TXT or JSON file, or even a photo of a printed resume. Text is extracted on your device and lands straight into editable fields with a live preview. Nothing is uploaded to any server.</p>
+      <h3>Will my resume pass ATS screening?</h3>
+      <p>CraftCV templates are built on clean structures that applicant tracking systems parse reliably, and the free ATS check shows which keywords from a job description are covered or missing.</p>
+      <h3>How many resumes can I create?</h3>
+      <p>Unlimited. Duplicate a resume and tailor one version per job application.</p>
+      <h3>Do the free downloads have a watermark or branding?</h3>
+      <p>No. The PDF you download is the final file: no watermark, no made-with link, no hidden paywall pages.</p>
+      <h3>Do I need an account to try it?</h3>
+      <p>No. Start as a guest and build your complete resume without signing up. Create an account only when you want your resumes synced across devices.</p>
+      <p><i>CraftCV needs JavaScript for the editor — enable it to start building.</i></p>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     

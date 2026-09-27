@@ -9,6 +9,7 @@ import { navigate } from '../App';
 import { recordDownload } from '../lib/cloud';
 import Preview, { A4 } from './Preview';
 import AtsCheck from './AtsCheck';
+import ResumeScore from './ResumeScore';
 import DeviceSheet, { type A4Fit, type DeviceMode } from './DeviceSheet';
 import {
   StepBasics, StepDesign, StepEducation, StepExperience, StepExtras, StepSkills, StepSummary,
@@ -232,6 +233,7 @@ export default function Editor({ id }: { id: string }) {
           )}
 
           {!isDesignStep && <AtsCheck r={r} />}
+          {!isDesignStep && <ResumeScore r={r} />}
 
           {stepBody}
 
