@@ -137,6 +137,7 @@ export default function Landing({
             <div className="land-chips">
               <span className="land-chip">✓ All {TEMPLATE_COUNT} templates unlocked</span>
               <span className="land-chip">✓ Free ATS score</span>
+              <span className="land-chip">✓ Free cover letter builder</span>
               <span className="land-chip">✓ PDF · DOCX · photo import</span>
               <span className="land-chip">✓ Works offline</span>
               <span className="land-chip">✓ Your data stays yours</span>

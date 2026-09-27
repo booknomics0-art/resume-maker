@@ -20,6 +20,26 @@ Resumes are stored in your own **Supabase** database (see `docs/SUPABASE.md`).
   summary length) and human touches, each with an honest one-line tip.
   `src/lib/resumeScore.ts` + `src/components/ResumeScore.tsx`; tested by
   `npm run test:score`.
+- **Cover letter builder (`#/cover-letter`)** — pick a resume, name the
+  company and role, and the letter drafts itself from facts already on the
+  resume (quantified bullets, tenure, skills); missing company becomes an
+  explicit `[Company name]` placeholder, freshers never get invented years.
+  Three layouts, fully editable body, live A4 preview, clean print pipeline.
+  `src/lib/coverLetter.ts` + `src/components/CoverLetter.tsx`; tested by
+  `npm run test:letter`.
+- **AI always visible, honest by design** — the summary/bullet “Improve with
+  AI” buttons now work even without the n8n webhook: an on-device fallback
+  (`localPolish`, `localSummaryDraft` in `src/lib/ai.ts`) tidies the user’s
+  own lines or drafts strictly from resume facts, labelled
+  “Quick polish (offline)”. With a webhook configured it is a full model
+  rewrite through `callAi`, humanized as before.
+- **PWA (installable)** — `manifest.webmanifest` + generated icons +
+  `public/sw.js` (network-first navigations, cache-first hashed assets,
+  OCR/Supabase untouched). Registered **only in production builds** so dev
+  never serves stale modules.
+- **Private usage stats** — `src/lib/track.ts` counts guest starts, signups,
+  PDF downloads and cover letters in localStorage only; shown in Settings →
+  “Usage on this device”. No third-party analytics, CSP untouched.
 - **Login / Signup** — Supabase Auth (email + password, and Google via the standard redirect/PKCE flow). Google needs a one-time setup in the Supabase project *and* in Google Cloud (provider enabled, OAuth consent screen **published** — while it is in “Testing”, Google blocks everyone who is not a listed test user). The app probes all of it, names the cause (provider off, credentials mismatched, consent screen in Testing, address not whitelisted, `http://` page, iframe preview), shows the exact fix with deep links and copy-paste values, reports *“you left for Google and came back without finishing”* instead of failing silently, opens a real tab when the app is embedded in a frame, follows a sign-in finished in another tab, and has **“Test the connection”** in Settings (the browser twin of `npm run check:auth`) — see [`docs/GOOGLE-LOGIN.md`](docs/GOOGLE-LOGIN.md). Without Supabase env vars the app falls back to a browser-only demo account.
 - **Cloud database** — every resume is saved to `public.resumes` in Supabase with row-level security; two-way sync with the offline copy, admin views for template usage & all resumes.
 - **Dashboard** — resumes with live thumbnails, completion %, duplicate/delete, sample resume.
@@ -104,7 +124,7 @@ parsing code in Node (esbuild bundles `src/lib/*.ts`; `@napi-rs/canvas` stands i
 for the browser canvas, and the tests skip politely if it is missing):
 
 ```bash
-npm test              # all eight suites (auth, templates, score, clean export, ATS, OCR, PDF, autofill)
+npm test              # all nine suites (auth, templates, score, letter, clean export, ATS, OCR, PDF, autofill)
 npm run test:templates # catalogue shape + every design rendered in all 10 fields
 npm run test:clean    # every template SSR'd: no branding/links/placeholders; print stays A4 & multi-page safe
 npm run test:ats      # JD keyword extraction + match scoring + per-resume JD persistence

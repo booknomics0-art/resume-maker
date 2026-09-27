@@ -12,7 +12,7 @@
     "preview": "vite preview",
     "test:ocr": "node tests/test-image-ocr.mjs",
     "test:pdf": "node tests/test-pdf-parse.mjs",
-    "test": "npm run test:auth && npm run test:templates && npm run test:score && npm run test:clean && npm run test:ats && npm run test:ocr && npm run test:pdf && npm run test:autofill",
+    "test": "npm run test:auth && npm run test:templates && npm run test:score && npm run test:letter && npm run test:clean && npm run test:ats && npm run test:ocr && npm run test:pdf && npm run test:autofill",
     "test:autofill": "node tests/test-autofill.mjs",
     "seed:templates": "node scripts/seed-templates.mjs",
     "seed:templates:push": "node scripts/seed-templates.mjs --push",
@@ -22,6 +22,7 @@
     "test:clean": "node tests/test-clean-export.mjs",
     "test:ats": "node tests/test-ats.mjs",
     "test:score": "node tests/test-score-landing.mjs",
+    "test:letter": "node tests/test-cover-letter.mjs",
     "preview:templates": "node scripts/render-templates.mjs"
   },
   "dependencies": {

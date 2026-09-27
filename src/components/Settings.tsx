@@ -5,6 +5,7 @@ import { cloudEnabled } from '../lib/supabase';
 import { cloudDeleteAccount, cloudGoogleProviderState } from '../lib/cloud';
 import type { GoogleProviderState } from '../lib/googleAuth';
 import { loadResumes, syncWithCloud, upsertResume } from '../lib/store';
+import { eventCounts, clearTrackedEvents } from '../lib/track';
 import CloudBadge from './CloudBadge';
 import GoogleSetupPanel from './GoogleSetupPanel';
 
@@ -18,6 +19,7 @@ export default function Settings() {
   const [googleState, setGoogleState] = useState<GoogleProviderState>('unknown');
   const [googleChecking, setGoogleChecking] = useState(false);
   const [showGoogleSetup, setShowGoogleSetup] = useState(false);
+  const [counts, setCounts] = useState<Record<string, number>>(() => eventCounts());
 
   const checkGoogle = useCallback(async () => {
     if (!cloudEnabled()) return;

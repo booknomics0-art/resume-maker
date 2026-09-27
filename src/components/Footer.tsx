@@ -23,6 +23,7 @@ export default function Footer() {
           <a href="#/">Dashboard</a>
           <a href="#/editor/new">Create a resume</a>
           <a href="#/import">📤 Upload & Edit Resume</a>
+          <a href="#/cover-letter">✉ Cover Letter Builder</a>
           <a href="#/faq">FAQ</a>
         </div>
 

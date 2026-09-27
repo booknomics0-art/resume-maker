@@ -6,6 +6,7 @@ import AuthPage from './components/AuthPage';
 import Landing from './components/Landing';
 import Footer from './components/Footer';
 import ResumeImporter from './components/ResumeImporter';
+import CoverLetter from './components/CoverLetter';
 import {
   AboutPage, ContactPage, FaqPage, PrivacyPage, TermsPage,
   DisclaimerPage, CookiePage, EulaPage,
@@ -17,6 +18,7 @@ import { cloudBootAuth, cloudCurrentUser, touchProfile } from './lib/cloud';
 import { hasAuthCallback } from './lib/authRedirect';
 import type { GoogleAuthIssue } from './lib/googleAuth';
 import { syncWithCloud } from './lib/store';
+import { trackEvent } from './lib/track';
 
 function useHashRoute() {
   const [hash, setHash] = useState(window.location.hash || '#/');
@@ -141,6 +143,7 @@ export default function App() {
             // app works offline; if the visitor later signs in for real, the
             // existing cloud sync merges everything they built as a guest.
             setLocalSession('Guest', 'guest@craftcv.local', 'guest');
+            trackEvent('guest_start');
             setUser(currentUser());
             navigate(target || '/editor/new');
           }}
@@ -160,6 +163,9 @@ export default function App() {
   } else if (tab === '/import') {
     page = <ResumeImporter />;
     active = '/import';
+  } else if (tab === '/cover-letter') {
+    page = <CoverLetter />;
+    active = '/cover-letter';
   } else if (tab === '/settings') {
     page = <Settings />;
     active = '/settings';
@@ -238,6 +244,7 @@ export default function App() {
           <NavLink to="/" id="/"><span className="nav-icon">▦</span> Dashboard</NavLink>
           <NavLink to="/editor/new" id="/editor"><span className="nav-icon">✎</span> New resume</NavLink>
           <NavLink to="/import" id="/import"><span className="nav-icon">📤</span> Upload & Edit</NavLink>
+          <NavLink to="/cover-letter" id="/cover-letter"><span className="nav-icon">✉</span> Cover letter</NavLink>
           <NavLink to="/settings" id="/settings"><span className="nav-icon">⚙</span> Settings</NavLink>
         </nav>
 

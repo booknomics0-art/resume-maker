@@ -1114,6 +1114,59 @@ pre.code .c { color: #8fa3c7; }
   .land-stat b { font-size: 20px; }
 }
 
+/* ==========================================================================
+   COVER LETTER BUILDER — scoped under .cl-*
+   ========================================================================== */
+.cl-grid { display: grid; grid-template-columns: 400px 1fr; gap: 18px; align-items: start; }
+.cl-form .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.cl-body-input { width: 100%; resize: vertical; font-family: inherit; font-size: 13px; line-height: 1.55; }
+.cl-sheet-box { display: flex; justify-content: center; align-items: flex-start; overflow: hidden; padding-bottom: 20px; }
+
+/* letter sheet — reuses .sheet (794×1123 white A4) from templates.css */
+.cl-page { flex: 1; display: flex; flex-direction: column; padding: 56px 60px; gap: 14px; font-size: 13.5px; }
+.cl-classic .cl-head { text-align: center; border-bottom: 3px double var(--p); padding-bottom: 14px; }
+.cl-classic .cl-name { font-size: 27px; font-weight: 800; color: var(--p); letter-spacing: 0.3px; }
+.cl-classic .cl-headline { font-size: 13.5px; color: var(--pm); margin-top: 3px; }
+.cl-classic .cl-contact { font-size: 11.5px; color: #4a5468; margin-top: 5px; }
+
+.cl-modern .cl-head { background: linear-gradient(135deg, var(--p), var(--p2)); color: #fff; margin: -56px -60px 6px; padding: 34px 60px 24px; }
+.cl-modern .cl-name { font-size: 26px; font-weight: 800; }
+.cl-modern .cl-headline { font-size: 13px; color: var(--a); margin-top: 3px; }
+.cl-modern .cl-contact { font-size: 11px; color: var(--a); margin-top: 6px; }
+.cl-modern .cl-date { color: var(--pm); }
+
+.cl-compact .cl-page { padding: 40px 48px; gap: 10px; font-size: 12.5px; }
+.cl-compact .cl-head { border-bottom: 2px solid var(--p); padding-bottom: 10px; display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.cl-compact .cl-name { font-size: 21px; font-weight: 800; color: var(--p); }
+.cl-compact .cl-contact { font-size: 10.5px; color: #4a5468; }
+.cl-compact .cl-headline { font-size: 12px; color: var(--pm); }
+.cl-compact .cl-date { color: var(--pm); }
+
+.cl-meta { display: flex; justify-content: space-between; gap: 20px; align-items: flex-end; }
+.cl-date { font-size: 11.5px; color: #4a5468; }
+.cl-recipient { font-size: 12.5px; text-align: right; color: #232a38; line-height: 1.5; }
+.cl-subject { font-weight: 700; color: var(--p); font-size: 13px; border-left: 3px solid var(--p); padding-left: 10px; }
+.cl-greeting { font-size: 13.5px; }
+.cl-p { margin: 0 0 10px !important; }
+.cl-list { margin: 0 0 10px; padding-left: 20px; }
+.cl-list li { margin-bottom: 5px; }
+.cl-signoff { margin-top: auto; padding-top: 18px; }
+.cl-sig-name { font-weight: 800; color: var(--p); font-size: 15px; margin-top: 4px; }
+.cl-sig-sub { font-size: 11.5px; color: var(--pm); }
+
+@media (max-width: 1080px) {
+  .cl-grid { grid-template-columns: 1fr; }
+}
+
+/* print — mirror the resume sheet rules so the letter exports clean A4 */
+@media print {
+  .print-root .sheet.cl-sheet { width: 210mm !important; min-height: 297mm; box-shadow: none !important; }
+  .print-root .cl-page { padding: 20mm 18mm; }
+  .print-root .cl-p, .print-root .cl-list, .print-root .cl-subject,
+  .print-root .cl-greeting, .print-root .cl-meta { break-inside: avoid; page-break-inside: avoid; }
+  .print-root .cl-signoff { break-inside: avoid; page-break-inside: avoid; }
+}
+
 /* ============================================================================
    CraftCV sheet designs — 20 layout families, one design language each.
    Resume sheet: A4 at 96dpi = 794 x 1123px.
