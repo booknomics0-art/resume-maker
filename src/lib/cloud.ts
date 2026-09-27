@@ -2,7 +2,7 @@
  * CraftCV cloud layer (Supabase).
  *
  * Responsibilities
- *  - Auth: email/password + Google (ID token) through Supabase Auth
+ *  - Auth: email/password + Google (OAuth redirect/PKCE) through Supabase Auth
  *  - Data: every resume is stored in `public.resumes` (one row per resume, full JSON
  *    in `data`, plus indexed columns for name/field/template/completeness)
  *  - Events: downloads and product events for analytics
@@ -429,41 +429,6 @@ export function cloudResumeGoogleStart(): Promise<{ ok: boolean; issue?: GoogleA
   if (isEmbedded()) return null;
   googleStartTask = cloudStartGoogleSignIn();
   return googleStartTask;
-}
-
-/**
- * Finish Google sign-in from an ID token (Google Identity Services button).
- * The token's audience must be the client ID configured on the Supabase Google
- * provider. The client *secret* is not involved — Supabase checks the token
- * against Google's public keys.
- */
-export async function cloudSignInWithGoogleIdToken(
-  idToken: string,
-  nonce?: string,
-): Promise<{ ok: boolean; issue?: GoogleAuthIssue; user?: CloudUser }> {
-  const sb = supabase();
-  if (!sb) return { ok: false, issue: classifyAuthError('cloud not configured', { cloudMissing: true }) };
-  try {
-    const attempt = async (useNonce: string | undefined) => sb.auth.signInWithIdToken({
-      provider: 'google',
-      token: idToken,
-      ...(useNonce ? { nonce: useNonce } : {}),
-    });
-    let result = await attempt(nonce);
-    // A project with "skip nonce check" rejects a nonce, and the reverse
-    // rejects a missing one. One retry covers both without a second Google prompt.
-    if (result.error && nonce && /nonce/i.test(result.error.message)) {
-      result = await attempt(undefined);
-    }
-    if (result.error) return { ok: false, issue: providerIssueFrom(result.error.message, result.error.code ?? '', result.error.status) };
-    const user = toCloudUser(result.data.user ?? result.data.session?.user ?? null);
-    if (!user) return { ok: false, issue: classifyAuthError('Supabase returned no user for this sign-in') };
-    clearPendingFlow();
-    auditLog('CLOUD_GOOGLE_OK', { email: user.email, via: 'id_token' });
-    return { ok: true, user };
-  } catch (err) {
-    return { ok: false, issue: classifyAuthError(errorText(err)) };
-  }
 }
 
 /**

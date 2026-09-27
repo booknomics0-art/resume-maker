@@ -14,7 +14,7 @@
  *   node tests/test-google-auth.mjs
  */
 
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { checks, root, tmpDir } from './_harness.mjs';
@@ -41,6 +41,15 @@ const google = await import(pathToFileURL(join(tmpDir, 'googleAuth.js')).href);
 
 const APP = 'https://craftcv.netlify.app';
 const SB = 'https://voyvalrnxmdogsllarnz.supabase.co';
+const authPageSource = readFileSync(join(root, 'src', 'components', 'AuthPage.tsx'), 'utf8');
+const viteConfigSource = readFileSync(join(root, 'vite.config.ts'), 'utf8');
+const indexSource = readFileSync(join(root, 'index.html'), 'utf8');
+
+const implementationChecks = [
+  ['every visible Continue with Google button uses Supabase OAuth/PKCE', authPageSource.includes('cloudStartGoogleSignIn') && !/mountGoogleButton|cloudSignInWithGoogleIdToken|signInWithIdToken/.test(authPageSource)],
+  ['Vite never loads or handles the Google client secret', !/GOOGLE_CLIENT_SECRET|googleExchangePlugin|api\/google\/exchange/.test(viteConfigSource)],
+  ['CSP does not load or frame the Google JavaScript SDK', !/accounts\.google\.com\/gsi\/client|accounts\.google\.com/.test(indexSource)],
+];
 
 // ── 1. callback URL parsing (must never fight the hash router) ───────────────
 const pkce = redirect.parseRedirectParams(`${APP}/?code=9f8e7d6c5b4a3210&sb_flow_id=flow-1#/`);
@@ -503,5 +512,5 @@ const fChecks = [
   ['diagnostics (broken project): explains what to do', diagBad.authorize.issue?.code === 'provider_disabled'],
 ];
 
-const ok = checks([...aChecks, ...bChecks, ...cChecks, ...dChecks, ...gChecks, ...eChecks, ...fChecks]);
+const ok = checks([...implementationChecks, ...aChecks, ...bChecks, ...cChecks, ...dChecks, ...gChecks, ...eChecks, ...fChecks]);
 process.exit(ok ? 0 : 1);

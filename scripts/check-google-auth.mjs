@@ -1,16 +1,17 @@
 #!/usr/bin/env node
 /**
- * Is Google sign-in ready on the Supabase project? One command, one answer.
+ * Is Google's Supabase provider enabled and its public OAuth redirect configured?
  *
  *   npm run check:auth                       # uses .env / netlify.toml defaults
  *   npm run check:auth -- --app-url=https://craftcv.netlify.app
  *
  * Supabase keeps the Google client secret on the server, so this switch lives in
- * the project dashboard, not in this repo. This script only *reads* the public
- * `/auth/v1/settings` endpoint and prints the exact values you have to paste into
- * the two dashboards (Google Cloud Console + Supabase).
+ * the project dashboard, not in this repo. This script reads public settings and
+ * tests the authorize redirect; it cannot verify the Client Secret or consent
+ * screen without completing a real account sign-in.
  *
- * Exit codes: 0 = Google enabled · 1 = Google disabled · 2 = could not check.
+ * Exit codes: 0 = provider enabled + redirect accepted · 1 = provider/redirect
+ * problem · 2 = could not check.
  */
 
 import { readFileSync, existsSync } from 'node:fs';
@@ -53,11 +54,11 @@ const GOOGLE_HOST = 'accounts.google.com';
 /**
  * Second half of the preflight: ask Supabase to START the Google flow.
  * A 302 whose Location is on accounts.google.com proves that
- *   • the provider is wired to a Google OAuth client,
- *   • the client ID / secret pair was accepted, and
- *   • Supabase's own callback URI is registered with that client
- *     (Google rejects an unknown redirect_uri before showing the account
- *      chooser, so reaching Google at all is meaningful).
+ *   • the provider is enabled and Supabase has a Google OAuth client ID,
+ *   • Google accepted that client ID and the redirect URI, and
+ *   • the requested app redirect was accepted by Supabase.
+ * It does NOT validate the client secret: Google uses that only when Supabase
+ * exchanges the authorization code after a real user completes sign-in.
  */
 async function handshake(appUrl) {
   const authorize = new URL(`${url}/auth/v1/authorize`);
@@ -144,14 +145,14 @@ if (google === true) {
     if (hs.scope) console.log(`Scopes           : ${hs.scope}`);
   } else {
     console.log(`Handshake        : FAILED ❌  ${hs.note || ''}`);
-    console.log('   → the provider row is enabled but the Google client ID/secret may be wrong.');
-    console.log('   → Supabase → Authentication → Providers → Google: re-paste the Client ID + secret.');
+    console.log('   → the provider is enabled but Supabase could not start the Google redirect.');
+    console.log('   → check the Client ID and Google callback URI in Google Cloud + Supabase.');
   }
 
-  console.log('\n✅ Google login is wired up.');
-  console.log('   Last mile, only you can confirm it (needs a real Google account):');
+  console.log('\n✅ Google provider and public OAuth redirect are configured.');
+  console.log('   The client secret and consent-screen status still need a real sign-in to verify:');
   console.log(`   1. Open ${appUrl || 'your deployed site'} and press “Continue with Google”.`);
-  console.log('   2. You should land back on the app, signed in (a brief “Signing you in…” screen is normal).');
+  console.log('   2. Complete sign-in. Success means the secret exchange and app callback both worked.');
   if (appUrl) {
     console.log(`   3. If it bounces to the wrong page, ${appUrl}/** is missing from`);
     console.log('      Supabase → Authentication → URL Configuration → Redirect URLs.');

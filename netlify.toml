@@ -13,9 +13,8 @@
   # protects the data. Never put the service-role key here.
   VITE_SUPABASE_URL = "https://voyvalrnxmdogsllarnz.supabase.co"
   VITE_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZveXZhbHJueG1kb2dzbGxhcm56Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyMjgxOTAsImV4cCI6MjEwNTgwNDE5MH0.Ma0sJbzkoXLhEyDFKEYJdLym8kD9Jlfhfxg6Ev2O0no"
-  # Public OAuth client ID (safe in the browser). The client secret is NOT here —
-  # it belongs in Supabase → Authentication → Providers → Google.
-  VITE_GOOGLE_CLIENT_ID = "854985942115-ns0npfc14kimq2nno8n10qkgagr85cfg.apps.googleusercontent.com"
+  # Google OAuth Client ID + secret are stored in Supabase Auth, not the
+  # static frontend build environment.
 
 # Security headers for all pages — high-tech hardening
 [[headers]]
@@ -33,11 +32,10 @@
     Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), speaker=()"
     # HSTS — force HTTPS for 1 year, include subdomains
     Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
-    # Content Security Policy — strict, no inline scripts, no external except self
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://accounts.google.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' blob: https://*.supabase.co wss://*.supabase.co https://accounts.google.com; frame-src 'self' https://accounts.google.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
-    # COEP require-corp blocks Google's sign-in iframe and the Supabase token
-    # exchange. same-origin-allow-popups keeps OAuth popups from being severed
-    # by our own policy (Google still isolates its own pages).
+    # Content Security Policy — strict; external script/connect access is disabled.
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' blob: https://*.supabase.co wss://*.supabase.co; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+    # Keep the opener policy compatible with the top-level OAuth tab used by
+    # embedded previews; the sign-in page is never loaded inside an iframe.
     Cross-Origin-Opener-Policy = "same-origin-allow-popups"
     Cross-Origin-Resource-Policy = "same-origin"
     # Cache control for HTML — no cache, must revalidate (security)
