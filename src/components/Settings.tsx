@@ -75,7 +75,7 @@ export default function Settings() {
         <div className="spread" style={{ marginTop: 8 }}>
           <div style={{ minWidth: 0, flex: '1 1 200px' }}>
             <b style={{ color: 'var(--navy-800)', wordBreak: 'break-all' }}>{user?.name}</b>
-            <div className="hint" style={{ wordBreak: 'break-all' }}>{user?.email} · signed in with {user?.provider === 'google' ? 'Google' : user?.provider === 'guest' ? 'a guest session (this browser only)' : 'email'}</div>
+            <div className="hint" style={{ wordBreak: 'break-all' }}>{user?.email} · signed in with {user?.provider === 'google' ? 'Google' : 'email'}</div>
           </div>
           <button className="btn" style={{ flex: '0 0 auto' }} onClick={() => { logout(); location.hash = '#/'; location.reload(); }}>Logout</button>
         </div>
@@ -112,7 +112,7 @@ export default function Settings() {
       <div className="card pad" style={{ marginTop: 18 }}>
         <h3 style={{ color: 'var(--navy-900)' }}>🔵 Google login</h3>
         <p className="hint">
-          You are signed in with <b>{user?.provider === 'google' ? 'Google' : user?.provider === 'guest' ? 'a guest session (this browser only)' : 'email + password'}</b>. Google sign-in goes
+          You are signed in with <b>{user?.provider === 'google' ? 'Google' : 'email + password'}</b>. Google sign-in goes
           through your Supabase project, which must have the Google provider enabled — check the state below and fix it here
           if needed (email + password keeps working either way).
         </p>

@@ -150,11 +150,18 @@ check(`FAQ count matches between Landing.tsx (${landingFaqCount}) and JSON-LD ($
 
 const testimonialsEmpty = !/const TESTIMONIALS[^=]*=\s*\[\s*\]/.test(landingSrc) === false;
 check('TESTIMONIALS ships empty (no invented reviews)', testimonialsEmpty);
-check('landing offers a no-signup guest start', landingSrc.includes('no signup'));
+check('landing requires an account and offers no guest start',
+  landingSrc.includes('Sign in or create a free account') && !landingSrc.includes('onStartGuest') && !landingSrc.includes('no signup'));
 check('logged-out home renders Landing instead of the login wall',
   appSrc.includes('import Landing') && appSrc.includes('<Landing'));
-check('guest sessions survive the cloud boot (provider guard)',
-  appSrc.includes("provider !== 'guest'"));
+check('landing actions navigate through the authentication gate',
+  appSrc.includes("onStart={(target) => navigate(target || '/editor/new')}") &&
+  appSrc.includes('if (!user)') && appSrc.includes('<AuthPage') && !appSrc.includes('guest_start'));
+const authSrc = readFileSync(join(root, 'src/lib/auth.ts'), 'utf8');
+check('legacy guest sessions are rejected',
+  authSrc.includes("u.provider !== 'email' && u.provider !== 'google'") &&
+  authSrc.includes('localStorage.removeItem(SESSION_KEY)'));
+check('SEO no longer advertises guest access', !indexHtml.includes('Start as a guest'));
 
 const robots = join(root, 'public', 'robots.txt');
 const sitemap = join(root, 'public', 'sitemap.xml');

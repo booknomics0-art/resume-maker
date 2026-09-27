@@ -18,7 +18,6 @@ import { cloudBootAuth, cloudCurrentUser, touchProfile } from './lib/cloud';
 import { hasAuthCallback } from './lib/authRedirect';
 import type { GoogleAuthIssue } from './lib/googleAuth';
 import { syncWithCloud } from './lib/store';
-import { trackEvent } from './lib/track';
 
 function useHashRoute() {
   const [hash, setHash] = useState(window.location.hash || '#/');
@@ -87,15 +86,9 @@ export default function App() {
         void touchProfile();
         await syncWithCloud();
       } else if (currentUser()) {
-        // Local session exists but no cloud session:
-        //  · a real (email/Google) session must re-login so data keeps syncing
-        //  · a guest session ("start without account", provider === 'guest') is
-        //    browser-only by design — leaving them in is the whole point, and
-        //    everything they build syncs up later if they sign in for real.
-        if (currentUser()?.provider !== 'guest') {
-          logout();
-          setUser(null);
-        }
+        // A local session without its cloud session must sign in again.
+        logout();
+        setUser(null);
       }
       setBooting(false);
     })();
@@ -138,15 +131,7 @@ export default function App() {
       return (
         <Landing
           notice={authNotice}
-          onStartGuest={(target) => {
-            // Guest mode: a browser-only session (provider 'guest'). The whole
-            // app works offline; if the visitor later signs in for real, the
-            // existing cloud sync merges everything they built as a guest.
-            setLocalSession('Guest', 'guest@craftcv.local', 'guest');
-            trackEvent('guest_start');
-            setUser(currentUser());
-            navigate(target || '/editor/new');
-          }}
+          onStart={(target) => navigate(target || '/editor/new')}
         />
       );
     }
