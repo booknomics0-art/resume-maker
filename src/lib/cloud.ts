@@ -449,14 +449,14 @@ export async function cloudSignInWithGoogleIdToken(
       token: idToken,
       ...(useNonce ? { nonce: useNonce } : {}),
     });
-    let { data, error } = await attempt(nonce);
+    let result = await attempt(nonce);
     // A project with "skip nonce check" rejects a nonce, and the reverse
     // rejects a missing one. One retry covers both without a second Google prompt.
-    if (error && nonce && /nonce/i.test(error.message)) {
-      ({ data, error } = await attempt(undefined));
+    if (result.error && nonce && /nonce/i.test(result.error.message)) {
+      result = await attempt(undefined);
     }
-    if (error) return { ok: false, issue: providerIssueFrom(error.message, error.code ?? '', error.status) };
-    const user = toCloudUser(data.user ?? data.session?.user ?? null);
+    if (result.error) return { ok: false, issue: providerIssueFrom(result.error.message, result.error.code ?? '', result.error.status) };
+    const user = toCloudUser(result.data.user ?? result.data.session?.user ?? null);
     if (!user) return { ok: false, issue: classifyAuthError('Supabase returned no user for this sign-in') };
     clearPendingFlow();
     auditLog('CLOUD_GOOGLE_OK', { email: user.email, via: 'id_token' });
