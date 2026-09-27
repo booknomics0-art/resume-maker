@@ -8,6 +8,7 @@ import {
 import { hasAuthCallback } from '../lib/authRedirect';
 import { providerStateNote, type GoogleAuthIssue, type GoogleProviderState } from '../lib/googleAuth';
 import { syncWithCloud } from '../lib/store';
+import { trackEvent } from '../lib/track';
 import GoogleSetupPanel from './GoogleSetupPanel';
 import Footer from './Footer';
 
@@ -127,7 +128,10 @@ export default function AuthPage({ onAuth, notice }: { onAuth: () => void; notic
     }
     // Offline / demo mode — local account in this browser only.
     const res = mode === 'signup' ? signup(name, email, pass) : login(email, pass);
-    if (res.ok) onAuth();
+    if (res.ok) {
+      if (mode === 'signup') trackEvent('signup');
+      onAuth();
+    }
     else setError(res.error || 'Something went wrong.');
   };
 

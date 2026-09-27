@@ -1,6 +1,8 @@
 // AI writing help — routed through the user's own n8n webhook.
 // The app never calls OpenAI/Gemini directly; n8n holds the API keys.
 
+import type { Resume } from './types';
+
 export interface AiSettings {
   webhookUrl: string;
   apiKey: string;
@@ -137,3 +139,68 @@ RULES FOR WRITING (non-negotiable):
 9. No summary sentences like "Seeking an opportunity to contribute...".
 10. Return ONLY the final text. No headings, no quotes, no markdown, no explanations.
 `.trim();
+
+// ---------------------------------------------------------------------------
+// Offline helpers — the AI buttons stay useful with no webhook configured.
+// They never invent facts: everything is tidy-up of the user's own text, or a
+// draft assembled strictly from what the resume already contains.
+// ---------------------------------------------------------------------------
+
+/** Tidy the user's own lines: strip "Responsible for", capitalise, punctuate. */
+export function localPolish(text: string): string {
+  return text
+    .split('\n')
+    .map((line) => {
+      let t = humanize(line.trim());
+      if (!t) return '';
+      t = t.replace(/^responsible for\s+/i, '').replace(/^worked on\s+/i, '').replace(/^tasked with\s+/i, '');
+      t = t.charAt(0).toUpperCase() + t.slice(1);
+      if (t.length > 12 && !/[.!?]$/.test(t)) t += '.';
+      return t;
+    })
+    .filter(Boolean)
+    .join('\n');
+}
+
+function yearsAcross(r: Resume): number | null {
+  const years = r.experience
+    .map((e) => e.start.match(/(\d{4})/)?.[1])
+    .filter((y): y is string => !!y)
+    .map(Number)
+    .filter((y) => y > 1950 && y <= new Date().getFullYear());
+  if (years.length === 0) return null;
+  const span = new Date().getFullYear() - Math.min(...years);
+  return span >= 1 ? Math.min(span, 40) : null;
+}
+
+/**
+ * A summary drafted only from facts already on the resume (role, years,
+ * skills, one quantified bullet). Returns '' when there is not enough on the
+ * record to say anything honest — the caller then asks the user to fill more.
+ */
+export function localSummaryDraft(r: Resume): string {
+  const headline = r.personal.headline.trim();
+  const skills = r.skills.filter(Boolean).slice(0, 4);
+  if (!headline || skills.length === 0) return '';
+
+  const skillList = skills.length === 1 ? skills[0]
+    : `${skills.slice(0, -1).join(', ')} and ${skills[skills.length - 1]}`;
+  const quant = r.experience
+    .flatMap((e) => e.bullets)
+    .map((b) => b.trim())
+    .find((b) => /\d/.test(b) && b.length > 20);
+
+  const sentences: string[] = [];
+  const years = yearsAcross(r);
+  if (r.fresher || !years) {
+    sentences.push(`${headline} with hands-on work in ${skillList}.`);
+  } else {
+    sentences.push(`${headline} with ${years}+ years across ${skillList}.`);
+  }
+  if (quant) {
+    const q = quant.charAt(0).toLowerCase() + quant.slice(1);
+    sentences.push(`Recent work: ${q.endsWith('.') ? q : `${q}.`}`);
+  }
+  sentences.push(`Looking for a ${headline} role where these skills deliver from day one.`);
+  return humanize(sentences.join(' '));
+}

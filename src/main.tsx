@@ -21,3 +21,17 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     </ErrorBoundary>
   </React.StrictMode>,
 );
+
+// The static #seo-content block in index.html exists for crawlers and no-JS
+// visitors. Once the app mounts it would just duplicate the rendered landing
+// page — so remove it. If JS never runs (crawler snapshot, broken bundle),
+// the static block stays and still tells the whole story.
+document.getElementById('seo-content')?.remove();
+
+// PWA: installable + offline-resilient. Only in production builds — a service
+// worker in `npm run dev` would serve stale modules and drive everyone mad.
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => { /* installability is a bonus, never a requirement */ });
+  });
+}

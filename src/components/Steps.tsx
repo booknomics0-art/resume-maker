@@ -5,7 +5,7 @@ import {
 } from '../lib/types';
 import { COMMON_SKILLS, FIELDS, fieldById } from '../lib/fields';
 import { LAYOUT_META, TEMPLATE_COUNT, templateById } from '../lib/templates';
-import { callAi, loadAiSettings } from '../lib/ai';
+import { callAi, loadAiSettings, localPolish, localSummaryDraft } from '../lib/ai';
 import TemplateGallery from './TemplateGallery';
 import DeviceSheet, { DeviceTabs, type DeviceMode } from './DeviceSheet';
 
@@ -52,22 +52,49 @@ function MoveButtons({ index, count, onMove }: { index: number; count: number; o
 }
 
 export function AiButton({
-  section, r, text, onResult, label = '✦ Improve with AI',
+  section, r, text, onResult,
 }: {
   section: string; r: Resume; text: string; onResult: (t: string) => void; label?: string;
 }) {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
   const cfg = loadAiSettings();
-  if (!cfg.enabled || !cfg.webhookUrl) return null;
+  // AI is always visible now: with a webhook it does a full model rewrite;
+  // without one it falls back to the on-device polish/draft helpers so the
+  // feature never disappears for the people who have not configured n8n.
+  const offline = !cfg.enabled || !cfg.webhookUrl;
+  const label = offline ? '✦ Quick polish (offline)' : '✦ Improve with AI';
   return (
     <span>
       <button
         type="button"
         className="btn small"
-        disabled={busy || !text.trim()}
+        disabled={busy || (!text.trim() && offline)}
         onClick={async () => {
           setBusy(true); setMsg('');
+          if (offline) {
+            // On-device fallback — instant, private, no fabricated facts.
+            if (section === 'summary') {
+              const polished = text.trim().length >= 40 ? localPolish(text) : localSummaryDraft(r);
+              setBusy(false);
+              if (polished) {
+                onResult(polished);
+                setMsg('✓ Drafted on-device — connect an AI webhook in Settings for full rewrites.');
+              } else {
+                setMsg('Add your target title and 3+ skills first — then I can draft from them.');
+              }
+            } else {
+              const polished = localPolish(text);
+              setBusy(false);
+              if (polished && polished !== text.trim()) {
+                onResult(polished);
+                setMsg('✓ Polished on-device — connect an AI webhook in Settings for full rewrites.');
+              } else {
+                setMsg('Nothing to change on-device. An AI webhook (Settings) can rewrite it fully.');
+              }
+            }
+            return;
+          }
           const res = await callAi({
             task: 'enhance',
             section,

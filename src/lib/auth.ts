@@ -7,7 +7,10 @@ import { hashPassword, verifyPassword, checkRateLimit, auditLog, sanitizeInput, 
 export interface User {
   name: string;
   email: string;
-  provider: 'email' | 'google';
+  // 'guest' = the browser-only "start without account" session created by the
+  // landing page. Guests never touch the cloud; signing in for real replaces
+  // the session and the cloud sync then merges whatever they built.
+  provider: 'email' | 'google' | 'guest';
   createdAt: number;
 }
 
@@ -302,7 +305,7 @@ export function logout() {
  * synchronous `currentUser()` keeps working everywhere in the UI.
  * No password is stored — the cloud owns credentials.
  */
-export function setLocalSession(name: string, email: string, provider: 'email' | 'google'): void {
+export function setLocalSession(name: string, email: string, provider: 'email' | 'google' | 'guest'): void {
   const cleanEmail = sanitizeInput(email, 254).toLowerCase().trim();
   const cleanName = sanitizeInput(name, 100).trim() || cleanEmail.split('@')[0];
   const users = loadUsers();
