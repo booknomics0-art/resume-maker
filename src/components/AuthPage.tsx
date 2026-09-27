@@ -364,23 +364,25 @@ export default function AuthPage({ onAuth, notice }: { onAuth: () => void; notic
             </div>
 
             {embedded ? (
-              <a
-                className="btn"
-                href={withGoogleStart(window.location.href)}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ justifyContent: 'center', padding: '10px 16px' }}
-                onClick={() => {
-                  setGoogleIssue(null);
-                  setAwaitingTab(true);
-                  setInfo('Google opened in a new tab. Finish sign-in there — that tab is where you will be signed in (this preview cannot show Google’s page).');
-                }}
-              >
-                <GoogleIcon /> Continue with Google
-              </a>
-              <div className="hint" style={{ textAlign: 'center', fontSize: 11.5 }}>
-                Opens in a new tab — Google blocks its sign-in page inside this preview.
-              </div>
+              <>
+                <a
+                  className="btn"
+                  href={withGoogleStart(window.location.href)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ justifyContent: 'center', padding: '10px 16px' }}
+                  onClick={() => {
+                    setGoogleIssue(null);
+                    setAwaitingTab(true);
+                    setInfo('Google opened in a new tab. Finish sign-in there — that tab is where you will be signed in (this preview cannot show Google’s page).');
+                  }}
+                >
+                  <GoogleIcon /> Continue with Google
+                </a>
+                <div className="hint" style={{ textAlign: 'center', fontSize: 11.5 }}>
+                  Opens in a new tab — Google blocks its sign-in page inside this preview.
+                </div>
+              </>
             ) : (
               <>
                 <div

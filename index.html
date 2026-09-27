@@ -9,13 +9,13 @@
     <meta name="author" content="CraftCV" />
     <meta name="robots" content="index, follow" />
     
-    <!-- Security Meta Tags — High-tech hardening -->
-    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
-    <meta http-equiv="X-Frame-Options" content="DENY" />
-    <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
-    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
-    <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=(), usb=()" />
-    
+    <!-- NOTE: X-Frame-Options, X-Content-Type-Options, X-XSS-Protection,
+         Referrer-Policy and Permissions-Policy only take effect as real HTTP
+         headers — browsers ignore them inside <meta> (and warn in the console).
+         They are set for every response in netlify.toml / vercel.json.
+         The CSP below IS one of the few policies that works from a <meta> tag,
+         so it stays here (dev servers send no headers of their own). -->
+
     <!-- Content Security Policy — strict.
          The OCR engine (worker + wasm core + English model) is served from our
          own origin under /ocr/, precisely so it keeps working under this policy.
