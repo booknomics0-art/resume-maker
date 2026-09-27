@@ -1,0 +1,53 @@
+{
+  "name": "craftcv",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "CraftCV \u2014 free professional resume studio. 50 professional templates across 20 layout families, 10 career fields, Supabase cloud sync, n8n AI webhook, offline PDF + photo OCR import.",
+  "scripts": {
+    "predev": "node scripts/predev.mjs",
+    "dev": "vite",
+    "prebuild": "node scripts/predev.mjs",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test:ocr": "node tests/test-image-ocr.mjs",
+    "test:pdf": "node tests/test-pdf-parse.mjs",
+    "test": "npm run test:auth && npm run test:templates && npm run test:score && npm run test:letter && npm run test:clean && npm run test:ats && npm run test:ocr && npm run test:pdf && npm run test:autofill && npm run test:studio",
+    "test:autofill": "node tests/test-autofill.mjs",
+    "seed:templates": "node scripts/seed-templates.mjs",
+    "seed:templates:push": "node scripts/seed-templates.mjs --push",
+    "test:auth": "node tests/test-google-auth.mjs",
+    "check:auth": "node scripts/check-google-auth.mjs",
+    "test:templates": "node tests/test-templates.mjs",
+    "test:clean": "node tests/test-clean-export.mjs",
+    "test:ats": "node tests/test-ats.mjs",
+    "test:score": "node tests/test-score-landing.mjs",
+    "test:letter": "node tests/test-cover-letter.mjs",
+    "preview:templates": "node scripts/render-templates.mjs",
+    "typecheck": "tsc --noEmit",
+    "test:studio": "node tests/test-studio.mjs",
+    "test:browser": "node tests/test-studio-browser.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.117.1",
+    "@tesseract.js-data/eng": "^1.0.0",
+    "pdfjs-dist": "^4.10.38",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tesseract.js": "^5.1.1",
+    "tesseract.js-core": "^5.1.1"
+  },
+  "devDependencies": {
+    "@napi-rs/canvas": "^1.0.9",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "playwright": "1.62.1",
+    "typescript": "^5.5.4",
+    "vite": "^5.4.8"
+  },
+  "allowScripts": {
+    "esbuild": true,
+    "tesseract.js": true
+  }
+}
