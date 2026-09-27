@@ -3,8 +3,8 @@
 // Why this exists: previously the first screen every visitor saw was the login
 // form. Competitors (Naukri Resume Maker, Zety, Resume.io…) show a full sales
 // page first — hero, templates, benefits, social proof, FAQ — and only then ask
-// for an account. This page is that sales page, and the "Start free" CTA drops
-// the visitor straight into the editor as a guest (no signup wall).
+// for an account. The "Start free" CTA asks visitors to sign in before
+// continuing to the editor or import page.
 //
 // Everything here is static + reuses existing pieces (Thumb, sampleResume,
 // Footer) so there is zero impact on the editor, the print pipeline or tests.
@@ -64,7 +64,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: 'Do I need an account to try it?',
-    a: 'No. Start as a guest and build your complete resume without signing up. Create an account only when you want your resumes synced across devices.',
+    a: 'Yes. Sign in or create a free account to build or import your resume. Resume building and downloads are completely free.',
   },
 ];
 
@@ -73,10 +73,10 @@ function Stars({ n }: { n: number }) {
 }
 
 export default function Landing({
-  onStartGuest,
+  onStart,
   notice,
 }: {
-  onStartGuest: (target?: string) => void;
+  onStart: (target?: string) => void;
   notice?: GoogleAuthIssue | null;
 }) {
   const hero = sampleResume();
@@ -101,7 +101,7 @@ export default function Landing({
           </nav>
           <div className="land-top-actions">
             <a className="btn small" href="#/login">Sign in</a>
-            <button type="button" className="btn small primary" onClick={() => onStartGuest('/editor/new')}>
+            <button type="button" className="btn small primary" onClick={() => onStart('/editor/new')}>
               Start free
             </button>
           </div>
@@ -127,10 +127,10 @@ export default function Landing({
               unlimited PDF downloads. No plans. No card. No watermark.
             </p>
             <div className="land-cta-row">
-              <button type="button" className="btn primary land-cta" onClick={() => onStartGuest('/editor/new')}>
-                Start free — no signup
+              <button type="button" className="btn primary land-cta" onClick={() => onStart('/editor/new')}>
+                Start free
               </button>
-              <button type="button" className="btn land-cta" onClick={() => onStartGuest('/import')}>
+              <button type="button" className="btn land-cta" onClick={() => onStart('/import')}>
                 📤 Upload my old resume
               </button>
             </div>
@@ -237,7 +237,7 @@ export default function Landing({
           ))}
         </div>
         <div className="land-center">
-          <button type="button" className="btn primary" onClick={() => onStartGuest('/editor/new')}>
+          <button type="button" className="btn primary" onClick={() => onStart('/editor/new')}>
             Browse all {TEMPLATE_COUNT} inside — free
           </button>
         </div>
@@ -260,7 +260,7 @@ export default function Landing({
           <p>
             Parsing, OCR and ATS scoring run entirely on your device. Your resumes live in your browser —
             and if you choose to sign in, in <em>your own</em> cloud database, protected by row-level security.
-            We don’t sell data, we don’t share resumes with recruiters, and there’s no account required to try.
+            We don’t sell data, we don’t share resumes with recruiters, and creating an account is free.
           </p>
         </div>
       </section>
@@ -299,7 +299,7 @@ export default function Landing({
         <h2>Your next job starts with one honest page.</h2>
         <p>No card. No trial. No watermark. Just a resume you can stand behind.</p>
         <div className="land-cta-row land-center">
-          <button type="button" className="btn primary land-cta" onClick={() => onStartGuest('/editor/new')}>
+          <button type="button" className="btn primary land-cta" onClick={() => onStart('/editor/new')}>
             Build my resume — free
           </button>
           <a className="btn land-cta" href="#/login">Sign in / Create account</a>
