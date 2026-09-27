@@ -70,10 +70,13 @@ project it **is now enabled** (see the live status above).
    address* to copy.
 3. **The app is shown inside an iframe** (preview panels, dashboards, embeds).
    Google sends its sign-in pages with `X-Frame-Options: DENY`, so the frame can
-   never show them. `cloudStartGoogleSignIn()` detects the embed, opens the flow
-   in a **real top-level tab**, and the original tab follows the session as soon
-   as it appears (`cloudOnAuthChange`). If a popup blocker stops the tab, the app
-   says so and offers a plain “Open the app in a new tab ↗” link.
+   never show them. `cloudStartGoogleSignIn()` detects the embed and reserves a
+   **real top-level tab synchronously on click**, before any asynchronous provider
+   checks (opening the tab *after* those checks loses browser user activation and
+   is blocked as a popup). Once the PKCE verifier is stored and the authorize URL
+   checked, it navigates that tab; on failure it closes it. The original tab
+   follows the session as soon as it appears (`cloudOnAuthChange`). If a popup
+   blocker stops the tab, the app offers “Open the app in a new tab ↗”.
 4. **A plain `http://` address** (LAN preview, old host). Browsers only expose
    `crypto.subtle` in a secure context, and PKCE needs it — the app now refuses
    up front with *“This page is not on a secure (HTTPS) address”* instead of

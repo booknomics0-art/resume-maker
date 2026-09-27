@@ -329,18 +329,37 @@ export async function cloudStartGoogleSignIn(): Promise<{ ok: boolean; issue?: G
   const sb = supabase();
   if (!sb) return { ok: false, issue: classifyAuthError('cloud not configured', { cloudMissing: true }) };
 
+  // Reserve the tab synchronously while the click still has user activation.
+  // Opening it after the provider probe + PKCE + network guard is blocked by
+  // browsers (the previous implementation always reached window.open too late).
+  // Keep it same-origin until the verifier is stored; close it on any failure.
+  const embedded = isEmbedded();
+  let tab: Window | null = null;
+  if (embedded) {
+    try { tab = window.open('', '_blank'); } catch { /* popup blocked */ }
+    if (!tab) return { ok: false, issue: providerIssueFrom('embedded_preview') };
+    try {
+      tab.document.title = 'Connecting to Google…';
+      tab.document.body.textContent = 'Connecting to Google… Please keep this tab open.';
+    } catch { /* a browser may restrict the new tab */ }
+  }
+  const fail = (issue: GoogleAuthIssue) => {
+    try { tab?.close(); } catch { /* tab may have been closed already */ }
+    return { ok: false, issue };
+  };
+
   // 0. Environment checks first — both of these make the handshake impossible
   //    regardless of how well the Supabase project is configured.
   if (!pkceAvailable()) {
     auditLog('CLOUD_GOOGLE_BLOCKED', { reason: 'no crypto.subtle (insecure context)' });
-    return { ok: false, issue: providerIssueFrom('insecure_context crypto.subtle unavailable') };
+    return fail(providerIssueFrom('insecure_context crypto.subtle unavailable'));
   }
 
   // 1. Cheapest, friendliest check: is the provider enabled at all?
   const probe = await cloudGoogleProviderState();
   if (probe.state === 'disabled') {
     auditLog('CLOUD_GOOGLE_BLOCKED', { reason: 'google provider disabled in Supabase' });
-    return { ok: false, issue: classifyAuthError('provider is not enabled') };
+    return fail(classifyAuthError('provider is not enabled'));
   }
 
   // 2. Build the authorize URL through supabase-js so the PKCE verifier is stored.
@@ -356,37 +375,35 @@ export async function cloudStartGoogleSignIn(): Promise<{ ok: boolean; issue?: G
         queryParams: { prompt: 'select_account' },
       },
     });
-    if (error) return { ok: false, issue: providerIssueFrom(error.message, error.code ?? '', error.status) };
+    if (error) return fail(providerIssueFrom(error.message, error.code ?? '', error.status));
     authorizeUrl = data?.url ?? '';
   } catch (err) {
-    return { ok: false, issue: classifyAuthError(errorText(err)) };
+    return fail(classifyAuthError(errorText(err)));
   }
-  if (!authorizeUrl) return { ok: false, issue: classifyAuthError('Supabase did not return a sign-in URL') };
+  if (!authorizeUrl) return fail(classifyAuthError('Supabase did not return a sign-in URL'));
 
   // 3. Validate, then hand the browser over to Supabase/Google.
   const guard = await guardAuthorizeUrl(authorizeUrl);
-  if (!guard.ok) return { ok: false, issue: guard.issue };
+  if (!guard.ok) return fail(guard.issue ?? classifyAuthError('Google authorization failed')); 
   auditLog('CLOUD_GOOGLE_START', { redirectTo: authRedirectUrl(), embedded: isEmbedded() });
 
   // Embedded preview: Google refuses to render inside a frame, so open the flow
   // in a real top-level tab. This runs inside the click handler, so the popup is
   // allowed by the browser; if a blocker refuses anyway there is no other way to
   // reach Google from inside a frame, and the caller explains that instead.
-  if (isEmbedded()) {
-    let tab: Window | null = null;
-    try { tab = window.open(authorizeUrl, '_blank'); } catch { tab = null; }
-    if (tab) {
+  if (embedded && tab) {
+    try {
+      // The new tab shares origin/storage with the preview so the PKCE verifier
+      // written by signInWithOAuth is available when its callback loads.
+      tab.location.replace(authorizeUrl);
       try { tab.opener = null; } catch { /* cross-origin: nothing to do */ }
       // mode:'tab' — do NOT treat a later remount of this page as “Google blocked
       // us”. The other tab owns the callback; this page just waits for the session.
       markPendingFlow(authRedirectUrl(), 'tab');
       return { ok: true, openedInNewTab: true };
+    } catch (err) {
+      return fail(classifyAuthError(errorText(err)));
     }
-    // Popup blocked and a frame can never show Google's sign-in page: stop here
-    // with an explanation instead of navigating into a blank “refused to
-    // connect” area.
-    auditLog('CLOUD_GOOGLE_BLOCKED', { reason: 'embedded preview, popup blocked' });
-    return { ok: false, issue: providerIssueFrom('embedded_preview') };
   }
 
   markPendingFlow(authRedirectUrl(), 'navigate');
