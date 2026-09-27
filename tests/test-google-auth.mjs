@@ -433,22 +433,35 @@ const diagBad = await diagBadRun.mod.cloudGoogleDiagnostics();
 //      screen can explain the silence instead of doing nothing.
 //      The last module instance in the file keeps the mounted browser, so all
 //      reads happen here.
+//
+//      New-tab / popup flows write `mode: 'tab'` and must NOT trigger the
+//      “came back empty” notice (the original page never left).
 const pendingRun = await loadCloud('https://app.example/', fakeGateway({ googleEnabled: true }));
 const marker = JSON.parse(framedRun.win.localStorage.getItem('craftcv.google.pending') || 'null');
 const pendingNone = pendingRun.mod.pendingFlowInterrupted();
 const staleKey = 'craftcv.google.pending';
-pendingRun.win.localStorage.setItem(staleKey, JSON.stringify({ at: Date.now() - 60 * 60 * 1000, redirectTo: 'https://app.example/' }));
+pendingRun.win.localStorage.setItem(staleKey, JSON.stringify({ at: Date.now() - 60 * 60 * 1000, redirectTo: 'https://app.example/', mode: 'navigate' }));
 const pendingStale = pendingRun.mod.pendingFlowInterrupted();
-pendingRun.win.localStorage.setItem(staleKey, JSON.stringify({ at: Date.now(), redirectTo: 'https://app.example/' }));
+// Fresh-but-settled same-tab leave (older than the 1.5s min-age guard).
+pendingRun.win.localStorage.setItem(staleKey, JSON.stringify({ at: Date.now() - 3000, redirectTo: 'https://app.example/', mode: 'navigate' }));
 const pendingFirst = pendingRun.mod.pendingFlowInterrupted();
 const pendingSecond = pendingRun.mod.pendingFlowInterrupted();
+// New-tab marker must never look like an interrupted same-tab round-trip.
+pendingRun.win.localStorage.setItem(staleKey, JSON.stringify({ at: Date.now() - 5000, redirectTo: 'https://app.example/', mode: 'tab' }));
+const pendingTab = pendingRun.mod.pendingFlowInterrupted();
+// Brand-new same-tab marker (just written) is ignored — avoids racing a fast Back.
+pendingRun.win.localStorage.setItem(staleKey, JSON.stringify({ at: Date.now(), redirectTo: 'https://app.example/', mode: 'navigate' }));
+const pendingTooFresh = pendingRun.mod.pendingFlowInterrupted();
 
 const fChecks = [
   ['leaving for Google is recorded (with the return address)', marker?.redirectTo === 'https://app.example/' && typeof marker?.at === 'number'],
+  ['preview iframe records mode=tab (not a same-tab leave)', marker?.mode === 'tab'],
   ['unfinished Google round-trip is detected', pendingFirst.interrupted === true && pendingFirst.redirectTo === 'https://app.example/'],
   ['the notice is one-shot (no repeat nagging)', pendingSecond.interrupted === false],
   ['no notice when no flow was started', pendingNone.interrupted === false],
   ['stale marker (an hour old) is ignored', pendingStale.interrupted === false],
+  ['new-tab / popup marker never triggers “came back empty”', pendingTab.interrupted === false],
+  ['brand-new same-tab marker is ignored (min-age guard)', pendingTooFresh.interrupted === false],
   ['preview iframe: flow continues in a real tab (Google cannot be framed)', startFramed.ok === true && startFramed.openedInNewTab === true],
   ['preview iframe: the tab points at the Supabase authorize URL', /\/auth\/v1\/authorize\?provider=google/.test(framedRun.opened[0] || '')],
   ['preview iframe: the frame itself is never navigated', framedRun.navigations.length === 0],

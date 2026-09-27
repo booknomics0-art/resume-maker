@@ -34,13 +34,25 @@ export const CLOUD_STATUS_EVENT = 'craftcv:cloud-status';
 // screen with no callback parameters and no explanation. Recording that the
 // browser left for Google lets the login screen say what most likely happened
 // instead of silently doing nothing.
+//
+// Only same-tab navigations set this marker. The embedded-preview path opens a
+// *new* tab and keeps this page alive; treating that as “came back empty” would
+// flash a scary consent-screen error the moment the login form remounts, even
+// when the user simply closed the popup. That path uses session-sync instead.
 
 const PENDING_FLOW_KEY = 'craftcv.google.pending';
-const PENDING_FLOW_TTL_MS = 20 * 60 * 1000;
+/** Ignore markers younger than this — a fast Back can race the write. */
+const PENDING_FLOW_MIN_AGE_MS = 1500;
+const PENDING_FLOW_TTL_MS = 15 * 60 * 1000;
 
-function markPendingFlow(redirectTo: string): void {
+type PendingFlowMode = 'navigate' | 'tab';
+
+function markPendingFlow(redirectTo: string, mode: PendingFlowMode = 'navigate'): void {
   try {
-    localStorage.setItem(PENDING_FLOW_KEY, JSON.stringify({ at: Date.now(), redirectTo }));
+    localStorage.setItem(
+      PENDING_FLOW_KEY,
+      JSON.stringify({ at: Date.now(), redirectTo, mode }),
+    );
   } catch { /* private mode / storage full — the marker is a nicety, not a requirement */ }
 }
 
@@ -51,8 +63,12 @@ export function clearPendingFlow(): void {
 
 /**
  * One-shot check, meant to run once when the login screen appears: did this
- * browser leave for Google recently and come back with nothing? The marker is
- * consumed either way so the notice never repeats.
+ * browser leave for Google (same-tab redirect) recently and come back with
+ * nothing? The marker is consumed either way so the notice never repeats.
+ *
+ * New-tab / popup flows (`mode: 'tab'`) are ignored here — those stay on the
+ * login screen and either pick up the session via `cloudOnAuthChange` or the
+ * user simply closes the extra tab.
  */
 export function pendingFlowInterrupted(): { interrupted: boolean; redirectTo: string } {
   const nothing = { interrupted: false, redirectTo: '' };
@@ -60,13 +76,36 @@ export function pendingFlowInterrupted(): { interrupted: boolean; redirectTo: st
     const raw = localStorage.getItem(PENDING_FLOW_KEY);
     if (!raw) return nothing;
     clearPendingFlow();
-    const parsed = JSON.parse(raw) as { at?: number; redirectTo?: string };
+    const parsed = JSON.parse(raw) as { at?: number; redirectTo?: string; mode?: string };
+    // Popup / new-tab flow never “comes back empty” on this page.
+    if (parsed.mode === 'tab') return nothing;
     const age = Date.now() - (parsed.at ?? 0);
-    if (!Number.isFinite(age) || age < 0 || age > PENDING_FLOW_TTL_MS) return nothing;
+    if (!Number.isFinite(age) || age < PENDING_FLOW_MIN_AGE_MS || age > PENDING_FLOW_TTL_MS) {
+      return nothing;
+    }
     return { interrupted: true, redirectTo: parsed.redirectTo ?? '' };
   } catch {
     return nothing;
   }
+}
+
+/** True when an error looks like the browser could not reach Supabase at all. */
+export function isCloudUnreachableError(msg: string): boolean {
+  const m = (msg || '').toLowerCase();
+  return (
+    m.includes('failed to fetch') ||
+    m.includes('networkerror') ||
+    m.includes('network request failed') ||
+    m.includes('load failed') ||
+    m.includes('fetch failed') ||
+    m.includes('network error') ||
+    m.includes('err_connection') ||
+    m.includes('err_name_not_resolved') ||
+    m.includes('err_internet_disconnected') ||
+    m.includes('timeout') ||
+    m.includes('aborted') ||
+    m.includes('offline')
+  );
 }
 
 export type CloudStatus = 'off' | 'signed-out' | 'syncing' | 'synced' | 'error';
@@ -138,28 +177,56 @@ function isProviderIssue(msg: string): boolean {
   return issue.code === 'provider_disabled' || issue.code === 'provider_misconfigured' || issue.code === 'redirect_not_allowed';
 }
 
-export async function cloudSignUp(name: string, email: string, password: string): Promise<{ ok: boolean; error?: string; needsConfirm?: boolean; user?: CloudUser }> {
+export async function cloudSignUp(name: string, email: string, password: string): Promise<{ ok: boolean; error?: string; needsConfirm?: boolean; user?: CloudUser; unreachable?: boolean }> {
   const sb = supabase();
-  if (!sb) return { ok: false, error: 'Cloud not configured' };
-  const { data, error } = await sb.auth.signUp({
-    email,
-    password,
-    options: { data: { full_name: name } },
-  });
-  if (error) { auditLog('CLOUD_SIGNUP_FAILED', { email, error: error.message }); return { ok: false, error: friendlyAuthError(error.message) }; }
-  const user = toCloudUser(data.user);
-  auditLog('CLOUD_SIGNUP_OK', { email });
-  // When "Confirm email" is ON in Supabase Auth settings, session is null until confirmed.
-  return { ok: true, needsConfirm: !data.session, user: user ?? undefined };
+  if (!sb) return { ok: false, error: 'Cloud not configured', unreachable: true };
+  try {
+    const { data, error } = await sb.auth.signUp({
+      email,
+      password,
+      options: { data: { full_name: name } },
+    });
+    if (error) {
+      auditLog('CLOUD_SIGNUP_FAILED', { email, error: error.message });
+      const unreachable = isCloudUnreachableError(error.message);
+      return { ok: false, error: friendlyAuthError(error.message), unreachable };
+    }
+    const user = toCloudUser(data.user);
+    auditLog('CLOUD_SIGNUP_OK', { email });
+    // When "Confirm email" is ON in Supabase Auth settings, session is null until confirmed.
+    return { ok: true, needsConfirm: !data.session, user: user ?? undefined };
+  } catch (err) {
+    const msg = errorText(err);
+    auditLog('CLOUD_SIGNUP_FAILED', { email, error: msg });
+    return {
+      ok: false,
+      error: friendlyAuthError(msg),
+      unreachable: isCloudUnreachableError(msg),
+    };
+  }
 }
 
-export async function cloudSignIn(email: string, password: string): Promise<{ ok: boolean; error?: string; user?: CloudUser }> {
+export async function cloudSignIn(email: string, password: string): Promise<{ ok: boolean; error?: string; user?: CloudUser; unreachable?: boolean }> {
   const sb = supabase();
-  if (!sb) return { ok: false, error: 'Cloud not configured' };
-  const { data, error } = await sb.auth.signInWithPassword({ email, password });
-  if (error) { auditLog('CLOUD_LOGIN_FAILED', { email, error: error.message }); return { ok: false, error: friendlyAuthError(error.message) }; }
-  auditLog('CLOUD_LOGIN_OK', { email });
-  return { ok: true, user: toCloudUser(data.user) ?? undefined };
+  if (!sb) return { ok: false, error: 'Cloud not configured', unreachable: true };
+  try {
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) {
+      auditLog('CLOUD_LOGIN_FAILED', { email, error: error.message });
+      const unreachable = isCloudUnreachableError(error.message);
+      return { ok: false, error: friendlyAuthError(error.message), unreachable };
+    }
+    auditLog('CLOUD_LOGIN_OK', { email });
+    return { ok: true, user: toCloudUser(data.user) ?? undefined };
+  } catch (err) {
+    const msg = errorText(err);
+    auditLog('CLOUD_LOGIN_FAILED', { email, error: msg });
+    return {
+      ok: false,
+      error: friendlyAuthError(msg),
+      unreachable: isCloudUnreachableError(msg),
+    };
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -310,7 +377,9 @@ export async function cloudStartGoogleSignIn(): Promise<{ ok: boolean; issue?: G
     try { tab = window.open(authorizeUrl, '_blank'); } catch { tab = null; }
     if (tab) {
       try { tab.opener = null; } catch { /* cross-origin: nothing to do */ }
-      markPendingFlow(authRedirectUrl());
+      // mode:'tab' — do NOT treat a later remount of this page as “Google blocked
+      // us”. The other tab owns the callback; this page just waits for the session.
+      markPendingFlow(authRedirectUrl(), 'tab');
       return { ok: true, openedInNewTab: true };
     }
     // Popup blocked and a frame can never show Google's sign-in page: stop here
@@ -320,7 +389,7 @@ export async function cloudStartGoogleSignIn(): Promise<{ ok: boolean; issue?: G
     return { ok: false, issue: providerIssueFrom('embedded_preview') };
   }
 
-  markPendingFlow(authRedirectUrl());
+  markPendingFlow(authRedirectUrl(), 'navigate');
   window.location.assign(authorizeUrl);
   return { ok: true };
 }

@@ -22,6 +22,8 @@ interface StoredUser extends User {
 
 const USERS_KEY = 'craftcv.users.v2';
 const SESSION_KEY = 'craftcv.session.v2';
+/** Set when the account was created/used because Supabase was unreachable. */
+const OFFLINE_SESSION_KEY = 'craftcv.session.offline';
 
 function loadUsers(): Record<string, StoredUser> {
   try {
@@ -294,7 +296,26 @@ export function logout() {
   const session = localStorage.getItem(SESSION_KEY);
   auditLog('LOGOUT', { email: session });
   localStorage.removeItem(SESSION_KEY);
+  clearOfflineSessionFlag();
   void cloudSignOut();
+}
+
+/**
+ * Mark the current local session as “offline fallback” — used when Supabase
+ * could not be reached. App boot must NOT wipe these just because there is no
+ * cloud session yet; the user can keep working and sync later.
+ */
+export function markOfflineSession(): void {
+  try { localStorage.setItem(OFFLINE_SESSION_KEY, '1'); } catch { /* ignore */ }
+}
+
+export function clearOfflineSessionFlag(): void {
+  try { localStorage.removeItem(OFFLINE_SESSION_KEY); } catch { /* ignore */ }
+}
+
+/** True when the active session was established without a live cloud round-trip. */
+export function isOfflineSession(): boolean {
+  try { return localStorage.getItem(OFFLINE_SESSION_KEY) === '1'; } catch { return false; }
 }
 
 /**
@@ -313,6 +334,8 @@ export function setLocalSession(name: string, email: string, provider: 'email' |
   };
   saveUsers(users);
   localStorage.setItem(SESSION_KEY, cleanEmail);
+  // A real cloud session replaces any offline-fallback marker.
+  clearOfflineSessionFlag();
 }
 
 export function currentUser(): User | null {
