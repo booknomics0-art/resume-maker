@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import { login, signup, setLocalSession } from '../lib/auth';
+import { login, signup, setLocalSession, markOfflineSession } from '../lib/auth';
 import { cloudEnabled } from '../lib/supabase';
 import {
   cloudSignIn, cloudSignUp, cloudStartGoogleSignIn, cloudGoogleProviderState,
-  cloudOnAuthChange, pendingFlowInterrupted, touchProfile,
+  cloudOnAuthChange, pendingFlowInterrupted, clearPendingFlow, touchProfile,
 } from '../lib/cloud';
 import { hasAuthCallback } from '../lib/authRedirect';
 import { providerStateNote, type GoogleAuthIssue, type GoogleProviderState } from '../lib/googleAuth';
@@ -74,10 +74,12 @@ export default function AuthPage({ onAuth, notice }: { onAuth: () => void; notic
     return cloudOnAuthChange(() => onAuth());
   }, [awaitingTab, onAuth]);
 
-  // Did this browser leave for Google and come back with nothing? Google's own
-  // “Access blocked” page (consent screen still in Testing) never redirects back
-  // to us, so without this the user would just see the login form again and no
-  // reason. A real callback is handled by App instead — see cloudBootAuth().
+  // Did this browser leave for Google (same-tab redirect) and come back with
+  // nothing? Google's own “Access blocked” page (consent screen still in
+  // Testing) never redirects back to us, so without this the user would just
+  // see the login form again and no reason. A real callback is handled by App
+  // instead — see cloudBootAuth(). New-tab popup flows are ignored by
+  // pendingFlowInterrupted() so they do not false-alarm here.
   useEffect(() => {
     if (!cloudEnabled() || hasAuthCallback()) return;
     const pending = pendingFlowInterrupted();
@@ -87,37 +89,98 @@ export default function AuthPage({ onAuth, notice }: { onAuth: () => void; notic
       title: 'You came back from Google without finishing',
       message:
         'The tab returned through no callback of ours, which is what happens when Google refuses to show the sign-in screen — most often because the OAuth consent screen is still in “Testing”.',
-      hint: 'Press “Publish app” in Google Cloud → APIs & Services → OAuth consent screen (or add your email as a test user), then try again. Step 2 below walks you through it.',
+      hint:
+        'Email + password works right now (form above). To fix Google: press “Publish app” in Google Cloud → APIs & Services → OAuth consent screen (or add your email as a test user). Step 2 below walks you through it.',
       showSetup: true,
       raw: `left for Google (${pending.redirectTo || 'unknown address'}) and returned with no code`,
     });
-    setShowSetup(true);
+    // Do NOT force the full setup panel open — keep the email form usable.
+    // The user can open it with “Show me the fix”.
+    setShowSetup(false);
   }, []);
+
+  /**
+   * Local (browser-only) account — used when Supabase is unreachable, or when
+   * cloud is not configured at all. `offlineFallback` marks the session so a
+   * later page load does not wipe it just because there is no cloud token.
+   */
+  const finishLocal = (res: { ok: boolean; error?: string }, asSignup: boolean, offlineFallback = false) => {
+    if (res.ok) {
+      clearPendingFlow();
+      setGoogleIssue(null);
+      setShowSetup(false);
+      if (offlineFallback) markOfflineSession();
+      if (asSignup) trackEvent('signup');
+      onAuth();
+      return true;
+    }
+    setError(res.error || 'Something went wrong.');
+    return false;
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setInfo('');
+
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanName = name.trim();
+
     if (cloudEnabled()) {
       // Cloud account (Supabase Auth) — resumes sync across devices.
+      // If Supabase cannot be reached (network / paused project / offline), fall
+      // back to a local account so the user is never locked out of the app.
       setBusy(true);
       try {
-        const cleanEmail = email.trim().toLowerCase();
         if (mode === 'signup') {
-          if (!name.trim()) { setError('Please enter your name.'); return; }
-          const res = await cloudSignUp(name.trim(), cleanEmail, pass);
-          if (!res.ok) { setError(res.error || 'Sign up failed.'); return; }
+          if (!cleanName) { setError('Please enter your name.'); return; }
+          const res = await cloudSignUp(cleanName, cleanEmail, pass);
+          if (!res.ok) {
+            if (res.unreachable) {
+              const local = signup(cleanName, cleanEmail, pass);
+              if (local.ok) {
+                setInfo('Signed up offline — cloud is unreachable right now. Your account is saved in this browser; it will sync when the connection returns.');
+                finishLocal(local, true, true);
+                return;
+              }
+              setError(local.error || res.error || 'Sign up failed.');
+              return;
+            }
+            setError(res.error || 'Sign up failed.');
+            return;
+          }
           if (res.needsConfirm) {
             setInfo('Account created! Check your email for a confirmation link, then log in.');
             setMode('login');
             return;
           }
-          setLocalSession(name.trim(), cleanEmail, 'email');
+          clearPendingFlow();
+          setLocalSession(cleanName, cleanEmail, 'email');
         } else {
           const res = await cloudSignIn(cleanEmail, pass);
-          if (!res.ok) { setError(res.error || 'Login failed.'); return; }
+          if (!res.ok) {
+            if (res.unreachable) {
+              const local = login(cleanEmail, pass);
+              if (local.ok) {
+                setInfo('Signed in offline — cloud is unreachable right now. Your local account works in this browser.');
+                finishLocal(local, false, true);
+                return;
+              }
+              // No local account either — offer a clear path instead of a raw network error.
+              setError(
+                local.error
+                  || 'Could not reach the cloud sign-in service. Check your internet, or create an account (Sign up) to use CraftCV offline in this browser.',
+              );
+              return;
+            }
+            setError(res.error || 'Login failed.');
+            return;
+          }
+          clearPendingFlow();
           setLocalSession(res.user?.name || cleanEmail, cleanEmail, 'email');
         }
+        setGoogleIssue(null);
+        setShowSetup(false);
         void touchProfile();
         void syncWithCloud();
         onAuth();
@@ -127,12 +190,8 @@ export default function AuthPage({ onAuth, notice }: { onAuth: () => void; notic
       return;
     }
     // Offline / demo mode — local account in this browser only.
-    const res = mode === 'signup' ? signup(name, email, pass) : login(email, pass);
-    if (res.ok) {
-      if (mode === 'signup') trackEvent('signup');
-      onAuth();
-    }
-    else setError(res.error || 'Something went wrong.');
+    const res = mode === 'signup' ? signup(cleanName, cleanEmail, pass) : login(cleanEmail, pass);
+    finishLocal(res, mode === 'signup');
   };
 
   /**
@@ -288,18 +347,30 @@ export default function AuthPage({ onAuth, notice }: { onAuth: () => void; notic
                 <b>{googleIssue.title}</b>
                 <div style={{ marginTop: 2 }}>{googleIssue.message}</div>
                 {googleIssue.hint && <div style={{ marginTop: 4, opacity: 0.85 }}>{googleIssue.hint}</div>}
-                {googleIssue.code === 'embedded_preview' && (
-                  // Plain anchor with target="_blank": works even when scripts
-                  // are not allowed to open windows from inside the frame.
-                  <a className="btn small primary" style={{ marginTop: 8 }} href={window.location.href} target="_blank" rel="noreferrer noopener">
-                    Open the app in a new tab ↗
-                  </a>
-                )}
-                {googleIssue.code !== 'embedded_preview' && (
-                  <button type="button" className="btn small" style={{ marginTop: 8 }} onClick={() => setShowSetup(true)}>
-                    Show me the fix
+                <div style={{ marginTop: 8, fontSize: 12, opacity: 0.9 }}>
+                  💡 <b>Email + password still works</b> — use the form above while Google is fixed.
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
+                  {googleIssue.code === 'embedded_preview' && (
+                    // Plain anchor with target="_blank": works even when scripts
+                    // are not allowed to open windows from inside the frame.
+                    <a className="btn small primary" href={window.location.href} target="_blank" rel="noreferrer noopener">
+                      Open the app in a new tab ↗
+                    </a>
+                  )}
+                  {googleIssue.code !== 'embedded_preview' && (
+                    <button type="button" className="btn small" onClick={() => setShowSetup(true)}>
+                      Show me the fix
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className="btn small ghost"
+                    onClick={() => { setGoogleIssue(null); setShowSetup(false); }}
+                  >
+                    Dismiss
                   </button>
-                )}
+                </div>
               </div>
             )}
 

@@ -247,15 +247,18 @@ export function classifyAuthError(raw: string, extra: { code?: string; status?: 
     m.includes('test users') ||
     m.includes('org_internal') ||
     m.includes('admin_policy_enforced') ||
-    m.includes('unverified app')
+    m.includes('unverified app') ||
+    // Same-tab leave + Back with no callback (AuthPage pending-flow notice).
+    m.includes('came back from google without finishing') ||
+    m.includes('returned with no code')
   ) {
     return out({
       code: 'consent_testing',
       title: 'Google is blocking the app — the consent screen is still in “Testing”',
       message:
-        'Google accepted the sign-in request but refused to show it, because this Google Cloud project’s OAuth consent screen has not been published. In “Testing” only the emails you listed as test users are allowed in.',
+        'Google accepted the sign-in request but refused to show it, because this Google Cloud project’s OAuth consent screen has not been published. In “Testing” only the emails you listed as test users are allowed in. Email + password still works on the form above.',
       hint:
-        'Open Google Cloud Console → APIs & Services → OAuth consent screen and press “Publish app” (or add this email under “Test users”). It takes effect immediately — no review needed for the basic email/profile scopes this app uses.',
+        'Open Google Cloud Console → APIs & Services → OAuth consent screen and press “Publish app” (or add this email under “Test users”). It takes effect immediately — no review needed for the basic email/profile scopes this app uses. Meanwhile, use email + password to sign in.',
       showSetup: true,
     });
   }

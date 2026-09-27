@@ -11,7 +11,7 @@ import {
   AboutPage, ContactPage, FaqPage, PrivacyPage, TermsPage,
   DisclaimerPage, CookiePage, EulaPage,
 } from './components/LegalPages';
-import { currentUser, logout, setLocalSession, type User } from './lib/auth';
+import { currentUser, logout, setLocalSession, isOfflineSession, type User } from './lib/auth';
 import { initSecurity } from './lib/security';
 import { cloudEnabled } from './lib/supabase';
 import { cloudBootAuth, cloudCurrentUser, touchProfile } from './lib/cloud';
@@ -85,8 +85,10 @@ export default function App() {
         }
         void touchProfile();
         await syncWithCloud();
-      } else if (currentUser()) {
-        // A local session without its cloud session must sign in again.
+      } else if (currentUser() && !isOfflineSession()) {
+        // A local session without its cloud session must sign in again —
+        // unless it was an intentional offline fallback (cloud unreachable at
+        // signup/login). Those stay so the user is never locked out of CraftCV.
         logout();
         setUser(null);
       }
