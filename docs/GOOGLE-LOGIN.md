@@ -116,7 +116,7 @@ fixed in code:
    https://<your-project-ref>.supabase.co/auth/v1/callback
    ```
 
-   (For CraftCV: `https://voyvalrnxmdogsllarnz.supabase.co/auth/v1/callback`.)
+   (For CraftCV: `https://icomxfiqurrgqksbcnin.supabase.co/auth/v1/callback`.)
    Copy the **Client ID** and **Client secret**.
 
 2. **Supabase → Authentication → Providers → Google** → enable it, paste the
