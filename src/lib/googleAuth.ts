@@ -177,6 +177,7 @@ export type GoogleAuthIssueCode =
   | 'cancelled'
   | 'signups_disabled'
   | 'cloud_missing'
+  | 'cloud_key_invalid'
   | 'rate_limited'
   | 'network'
   | 'unknown';
@@ -213,6 +214,35 @@ export function classifyAuthError(raw: string, extra: { code?: string; status?: 
       message: 'Google sign-in runs through Supabase, and this build has no Supabase project configured.',
       hint: 'Use email + password (offline mode) or set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY, then reload.',
       showSetup: false,
+    });
+  }
+
+  // Supabase returns `401 {"message":"Invalid API key"}` when the anon JWT in
+  // the browser does not match what the API Gateway expects for the project.
+  // Three things can cause it (in order of how often they bite a new deploy):
+  //   1. The project was rotated / re-keyed in Supabase and the hardcoded
+  //      fallback in src/lib/supabase.ts is stale. The Vercel/Netlify build
+  //      was made before the rotation.
+  //   2. The VITE_SUPABASE_ANON_KEY env var on the hosting platform points
+  //      at a different (older, paused, or wrong) Supabase project.
+  //   3. The Supabase project itself is paused — a paused project answers
+  //      every Auth call with 401 "Invalid API key" until it is restored.
+  // Tell the user which one they likely have, with a one-click path to fix it.
+  if (
+    m.includes('invalid api key') ||
+    m.includes('invalid_api_key') ||
+    (m.includes('apikey') && m.includes('invalid')) ||
+    (m.includes('401') && m.includes('apikey')) ||
+    (m.includes('apikey') && m.includes('hint') && m.includes('supabase'))
+  ) {
+    return out({
+      code: 'cloud_key_invalid',
+      title: 'Supabase rejected the API key in this build',
+      message:
+        'The Supabase project answered with “Invalid API key”. That means the anon key shipped in this build no longer matches the project — usually because the key was rotated in Supabase, the project is paused, or the build is pointing at the wrong Supabase URL.',
+      hint:
+        'Two fixes — try them in order: (1) Open the Supabase dashboard for this project — Project Settings → API — and confirm the project is not paused. If it is paused, restore it and reload. (2) Re-copy the anon key from Project Settings → API and update VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY in your hosting platform (Vercel → Settings → Environment Variables, or Netlify → Site settings → Environment), then redeploy. Email + password still works offline while you fix it.',
+      showSetup: true,
     });
   }
 

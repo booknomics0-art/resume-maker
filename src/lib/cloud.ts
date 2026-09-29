@@ -158,6 +158,12 @@ function friendlyAuthError(msg: string): string {
   // Provider problems (Google off, redirect URI wrong, …) get the full
   // explanation + setup steps instead of a raw server string.
   if (isProviderIssue(msg)) return providerIssueFrom(msg).message;
+  // "Invalid API key" surfaces for paused / rotated Supabase projects — same
+  // big explanation every time, so the user sees the fix instead of a single
+  // cryptic word.
+  if (m.includes('invalid api key') || m.includes('invalid_api_key')) {
+    return providerIssueFrom(msg).message;
+  }
   if (m.includes('password')) return msg;
   return msg || 'Something went wrong. Please try again.';
 }

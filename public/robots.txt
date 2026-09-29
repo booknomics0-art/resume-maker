@@ -1,7 +1,8 @@
 # CraftCV — crawl everything public.
 User-agent: *
 Allow: /
+Disallow: /.well-known/
 
-# NOTE: replace the domain below with your production domain after first
-# deploy (it must be an absolute URL).
-Sitemap: https://craftcv.netlify.app/sitemap.xml
+# Sitemap of the live production deployment. Update this when you switch the
+# primary domain.
+Sitemap: https://resume-maker-ivory-ten.vercel.app/sitemap.xml
