@@ -135,7 +135,7 @@ export function emptyResume(): Resume {
   };
 }
 
-/** All mandatory checks, used by progress meter and step validation. */
+/** Optional-content suggestions (progress meter, import checklist, score). */
 export interface Missing {
   step: StepId;
   label: string;

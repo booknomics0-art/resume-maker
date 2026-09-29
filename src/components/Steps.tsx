@@ -19,11 +19,11 @@ export interface StepProps {
 
 /* ---------- small helpers ---------- */
 
-function F({ label, req, children, hint }: { label: string; req?: boolean; children: React.ReactNode; hint?: string }) {
+function F({ label, children, hint }: { label: string; children: React.ReactNode; hint?: string }) {
   return (
     <div>
       <label className="f">
-        {label}{req && <span className="req">*</span>}
+        {label}
       </label>
       {children}
       {hint && <div className="hint">{hint}</div>}
@@ -146,8 +146,9 @@ export function StepBasics({ r, set }: StepProps) {
   return (
     <div>
       <div className="notice">
-        <b>10-minute plan:</b> 7 short steps. Fields marked <span style={{ color: 'var(--err)' }}>*</span> are mandatory —
-        everything else can wait. Your field below decides which templates and examples we suggest.
+        <b>10-minute plan:</b> 7 short steps — fill what you know now and complete
+        the rest as you go. Nothing is compulsory and you can download the PDF at
+        any time. Your field below decides which templates and examples we suggest.
       </div>
 
       <div className="form-grid">
@@ -182,24 +183,24 @@ export function StepBasics({ r, set }: StepProps) {
           <div className="hint">Shown as a round photo on the resume. IT/product companies often prefer without photo — your call.</div>
         </div>
 
-        <F label="Full name" req>
+        <F label="Full name">
           <input className="input" value={p.fullName} placeholder="e.g. Amit Shukla"
             onChange={(e) => upd({ fullName: e.target.value })} />
         </F>
-        <F label="Target job title" req hint="The role you are applying for">
+        <F label="Target job title" hint="The role you are applying for">
           <input className="input" value={p.headline} placeholder="e.g. Senior Software Engineer"
             onChange={(e) => upd({ headline: e.target.value })} />
         </F>
-        <F label="Email" req>
+        <F label="Email">
           <input className={`input ${!emailOk ? 'invalid' : ''}`} value={p.email} placeholder="you@example.com"
             onChange={(e) => upd({ email: e.target.value })} />
           {!emailOk && <div className="err-msg">Enter a valid email address</div>}
         </F>
-        <F label="Phone" req>
+        <F label="Phone">
           <input className="input" value={p.phone} placeholder="+91 98765 43210"
             onChange={(e) => upd({ phone: e.target.value })} />
         </F>
-        <F label="City" req>
+        <F label="City">
           <input className="input" value={p.city} placeholder="e.g. Pune" onChange={(e) => upd({ city: e.target.value })} />
         </F>
         <F label="LinkedIn">
@@ -211,7 +212,7 @@ export function StepBasics({ r, set }: StepProps) {
             onChange={(e) => upd({ website: e.target.value })} />
         </F>
         <div className="full">
-          <F label="Career field" req hint="This tunes the templates, suggested skills and examples">
+          <F label="Career field" hint="This tunes the templates, suggested skills and examples">
             <div className="chips">
               {FIELDS.map((f) => (
                 <button type="button" key={f.id}
@@ -238,12 +239,12 @@ export function StepSummary({ r, set }: StepProps) {
   const tooShort = r.summary.trim().length > 0 && r.summary.trim().length < 40;
   return (
     <div>
-      <F label="Professional summary" req hint="2–3 sentences. Who you are, your strongest proof, one clear number.">
+      <F label="Professional summary" hint="2–3 sentences. Who you are, your strongest proof, one clear number.">
         <textarea className="textarea" rows={6} value={r.summary}
           placeholder="Pick a template below or write your own…"
           onChange={(e) => set({ summary: e.target.value })} />
       </F>
-      {tooShort && <div className="err-msg">A little longer — add one concrete result to reach at least 2 lines.</div>}
+      {tooShort && <div className="hint">Tip: 2–3 lines with one concrete result read best.</div>}
 
       <label className="f" style={{ marginTop: 14 }}>Start from a {f.label} template</label>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -316,11 +317,11 @@ export function StepExperience({ r, set }: StepProps) {
               </button>
             </div>
             <div className="form-grid">
-              <F label="Role / title" req>
+              <F label="Role / title">
                 <input className="input" value={e.role} placeholder={f.roles[0]}
                   onChange={(ev) => updItem(e.id, { role: ev.target.value })} />
               </F>
-              <F label="Company" req>
+              <F label="Company">
                 <input className="input" value={e.company} placeholder="Company name"
                   onChange={(ev) => updItem(e.id, { company: ev.target.value })} />
               </F>
@@ -328,7 +329,7 @@ export function StepExperience({ r, set }: StepProps) {
                 <input className="input" value={e.location} placeholder="City"
                   onChange={(ev) => updItem(e.id, { location: ev.target.value })} />
               </F>
-              <F label="Start" req>
+              <F label="Start">
                 <input className="input" value={e.start} placeholder="Mar 2022"
                   onChange={(ev) => updItem(e.id, { start: ev.target.value })} />
               </F>
@@ -378,7 +379,7 @@ export function StepExperience({ r, set }: StepProps) {
         <button type="button" className="btn" onClick={add}>+ Add job</button>
       )}
       {!r.fresher && r.experience.length === 0 && (
-        <div className="err-msg" style={{ marginTop: 8 }}>Add at least one job, or tick “I'm a fresher”.</div>
+        <div className="hint" style={{ marginTop: 8 }}>Tip: add a job entry, or tick “I'm a fresher”.</div>
       )}
     </div>
   );
@@ -409,11 +410,11 @@ export function StepEducation({ r, set }: StepProps) {
             </button>
           </div>
           <div className="form-grid">
-            <F label="Degree / qualification" req>
+            <F label="Degree / qualification">
               <input className="input" value={e.degree} placeholder="B.Tech, Computer Science"
                 onChange={(ev) => updItem(e.id, { degree: ev.target.value })} />
             </F>
-            <F label="School / college" req>
+            <F label="School / college">
               <input className="input" value={e.school} placeholder="Institute name"
                 onChange={(ev) => updItem(e.id, { school: ev.target.value })} />
             </F>
@@ -421,7 +422,7 @@ export function StepEducation({ r, set }: StepProps) {
               <input className="input" value={e.location} placeholder="City"
                 onChange={(ev) => updItem(e.id, { location: ev.target.value })} />
             </F>
-            <F label="Year of completion" req>
+            <F label="Year of completion">
               <input className="input" value={e.year} placeholder="2021"
                 onChange={(ev) => updItem(e.id, { year: ev.target.value })} />
             </F>
@@ -454,7 +455,7 @@ export function StepSkills({ r, set }: StepProps) {
   const suggestions = [...f.skills, ...COMMON_SKILLS].filter((s) => !r.skills.includes(s));
   return (
     <div>
-      <F label="Your skills (at least 3, up to ~12 is clean)" req>
+      <F label="Your skills (3–12 reads clean)">
         <div className="chips" style={{ marginBottom: 10 }}>
           {r.skills.filter(Boolean).map((s) => (
             <button type="button" key={s} className="chip on" onClick={() => toggle(s)}>

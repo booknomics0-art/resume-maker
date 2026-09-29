@@ -149,7 +149,7 @@ img { max-width: 100%; }
 .input.invalid { border-color: var(--err); background: #fff8f8; }
 .select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2376839a' d='M1 1l5 5 5-5' stroke='%2376839a' stroke-width='1.2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
 label.f { display: block; font-size: 12.5px; font-weight: 700; color: var(--navy-800); margin: 0 0 5px; letter-spacing: .2px; }
-label.f .req { color: var(--err); margin-left: 2px; }
+
 .hint { font-size: 12.5px; color: var(--silver-500); margin-top: 4px; line-height: 1.45; }
 .err-msg { font-size: 12.5px; color: var(--err); margin-top: 4px; font-weight: 600; }
 
@@ -428,7 +428,7 @@ label.f .req { color: var(--err); margin-left: 2px; }
    the way a PDF viewer on a phone shows it (whole page on screen), the desktop
    frame does the same for a laptop window. Chrome around them is pure frame. */
 .dev-tabs { gap: 6px; }
-.dev-chip { padding: 6px 12px; min-height: 32px; font-size: 12.5px; font-weight: 600; }
+.dev-chip { padding: 6px 12px; min-height: 32px; font-size: 12.5px; font-weight: 600; white-space: nowrap; }
 .dev-holder {
   display: flex; justify-content: center; align-items: center; width: 100%;
   padding: 8px 0; min-height: 200px;
@@ -627,7 +627,10 @@ pre.code .c { color: #8fa3c7; }
 
 /* ---------- tablet ---------- */
 @media (max-width: 1180px) {
-  .editor-grid { grid-template-columns: 1fr; gap: 18px; }
+  /* minmax(0, …): the track may shrink below the pane's min-content (nowrap
+     chip rows), otherwise the sheet gets pushed wider than the phone screen */
+  .editor-grid { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  .editor-grid > * { min-width: 0; }
   .panel { position: static; }
   .main { padding: 22px 20px 40px; }
   /* 4 columns get cramped once the side column is gone — step down to 3 */
@@ -711,6 +714,22 @@ pre.code .c { color: #8fa3c7; }
     position: sticky; top: calc(56px + var(--safe-top)); z-index: 30;
     box-shadow: 0 6px 16px rgba(10, 22, 48, .10);
   }
+  /* On stacked layouts the fields come FIRST — the ATS / score cards are
+     advice, so they sit after the form instead of pushing it below the fold */
+  .editor-form { display: flex; flex-direction: column; }
+  .editor-form .step-body { order: 1; }
+  .editor-form .ats-check { order: 2; margin-top: 0; }
+  .editor-form .score-card { order: 3; margin-top: 12px; }
+  .editor-form .step-foot { order: 4; }
+  /* preview pane: less chrome, more sheet — the whole A4 page must fit */
+  .preview-pane { padding: 10px; gap: 8px; min-width: 0; }
+  .preview-toolbar b { font-size: 12px; }
+  /* compact chip rows: chips stay on one line each, the groups may wrap to two
+     rows — never wider than the pane */
+  .editor-view-tabs { gap: 6px; min-width: 0; }
+  .editor-view-tabs .chips { gap: 5px; }
+  .editor-view-tabs .dev-chip { padding: 4px 10px; min-height: 28px; font-size: 11.5px; white-space: nowrap; }
+  .preview-pane .hint { font-size: 11px; }
   /* one sticky bar per screen: the jump chips stay in flow below the tabs */
   .import-jump { position: static; box-shadow: none; }
   .editor-mobile-tabs button {
@@ -813,7 +832,7 @@ pre.code .c { color: #8fa3c7; }
 
   /* editor */
   .editor-grid { gap: 16px; }
-  .preview-pane { padding: 12px; min-height: 360px; }
+  .preview-pane { padding: 10px; min-height: 360px; }
   .preview-toolbar { font-size: 12.5px; }
   .sheet-holder { margin: 0; }
   .step-foot { flex-direction: column-reverse; align-items: stretch; }
@@ -895,11 +914,17 @@ pre.code .c { color: #8fa3c7; }
   .tpl-search .input { height: 38px; min-height: 38px; }
   .design-device { padding: 12px; }
   .design-device-head { flex-direction: column; align-items: stretch; }
+  /* column-stretch sized children by their max-content (a nowrap chip row) and
+     leaked past the card — cap them at the container and let the chips scroll */
+  .design-device-head > * { max-width: 100%; min-width: 0; }
+  .design-device-head .dev-tabs { overflow-x: auto; scrollbar-width: none; }
+  .design-device-head .dev-tabs::-webkit-scrollbar { display: none; }
 }
 
 /* ---------- small mobile ---------- */
 @media (max-width: 380px) {
   .main { padding-left: 10px; padding-right: 10px; }
+  .stepper { margin: 0 -10px; padding: 0 10px 8px; }
   .stats { grid-template-columns: 1fr 1fr; gap: 8px; }
   .stat { padding: 11px 12px; }
   .stat b { font-size: 19px; }
