@@ -40,7 +40,7 @@ const redirect = await import(pathToFileURL(join(tmpDir, 'authRedirect.js')).hre
 const google = await import(pathToFileURL(join(tmpDir, 'googleAuth.js')).href);
 
 const APP = 'https://craftcv.netlify.app';
-const SB = 'https://voyvalrnxmdogsllarnz.supabase.co';
+const SB = 'https://icomxfiqurrgqksbcnin.supabase.co';
 const authPageSource = readFileSync(join(root, 'src', 'components', 'AuthPage.tsx'), 'utf8');
 const viteConfigSource = readFileSync(join(root, 'vite.config.ts'), 'utf8');
 const indexSource = readFileSync(join(root, 'index.html'), 'utf8');
