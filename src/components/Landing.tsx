@@ -262,6 +262,20 @@ export default function Landing({
             and if you choose to sign in, in <em>your own</em> cloud database, protected by row-level security.
             We don’t sell data, we don’t share resumes with recruiters, and creating an account is free.
           </p>
+          <p style={{ marginTop: 10, fontSize: 14 }}>
+            Read the full policy:{' '}
+            <a href="#/privacy" style={{ color: 'inherit', textDecoration: 'underline', fontWeight: 600 }}>
+              Privacy Policy
+            </a>
+            {' · '}
+            <a href="#/terms" style={{ color: 'inherit', textDecoration: 'underline', fontWeight: 600 }}>
+              Terms of Service
+            </a>
+            {' · '}
+            <a href="#/cookies" style={{ color: 'inherit', textDecoration: 'underline', fontWeight: 600 }}>
+              Cookie Policy
+            </a>
+          </p>
         </div>
       </section>
 

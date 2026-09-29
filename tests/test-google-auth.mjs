@@ -171,7 +171,7 @@ const selfHosted = google.googleSetupInfo(APP, 'https://auth.my-company.internal
 
 const dChecks = [
   ['callback URI matches Supabase’s documented value', info.callbackUrl === `${SB}/auth/v1/callback`],
-  ['project dashboard deep link carries the project ref', info.providersUrl === 'https://supabase.com/dashboard/project/voyvalrnxmdogsllarnz/auth/providers'],
+  ['project dashboard deep link carries the project ref', info.providersUrl === 'https://supabase.com/dashboard/project/icomxfiqurrgqksbcnin/auth/providers'],
   ['URL configuration deep link present', Boolean(info.urlConfigUrl?.includes('/auth/url-configuration'))],
   ['site URL derived from the current origin', info.siteUrl === `${APP}/`],
   ['redirect pattern for the allow-list', info.redirectUrlPattern === `${APP}/**`],
@@ -243,10 +243,14 @@ async function loadCloud(href, fetchImpl, env = {}) {
     target: 'node20',
     external: ['@supabase/supabase-js'],
     // Vite injects these at build time; stand them in so the client is created.
+    // The key below is shaped like a real legacy JWT (3 dot-separated base64url
+    // sections starting with `eyJ`) so `looksLikeAnonKey()` in supabase.ts accepts
+    // it during the suite — the production safety net still fires for keys that
+    // do not match this shape.
     define: {
       'import.meta.env': JSON.stringify({
         VITE_SUPABASE_URL: 'https://fake.supabase.co',
-        VITE_SUPABASE_ANON_KEY: 'anon-test-key',
+        VITE_SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZha2UiLCJyb2xlIjoiYW5vbiJ9.dozjgNryPN0Y3UlSWn6vCfQ',
       }),
     },
     logLevel: 'error',

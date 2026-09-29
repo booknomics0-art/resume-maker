@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { login, signup, setLocalSession, markOfflineSession } from '../lib/auth';
-import { cloudEnabled } from '../lib/supabase';
+import { cloudEnabled, SUPABASE_KEY_MALFORMED } from '../lib/supabase';
 import {
   cloudSignIn, cloudSignUp, cloudStartGoogleSignIn,
   cloudGoogleProviderState, cloudOnAuthChange, pendingFlowInterrupted, clearPendingFlow,
@@ -308,7 +308,18 @@ export default function AuthPage({ onAuth, notice }: { onAuth: () => void; notic
             <button className="btn primary" type="submit" disabled={busy} style={{ justifyContent: 'center', padding: '11px 16px' }}>
               {busy ? 'Please wait…' : mode === 'login' ? 'Login →' : 'Create account →'}
             </button>
-            {!cloudEnabled() && (
+            {SUPABASE_KEY_MALFORMED && (
+              <div className="notice warn" style={{ margin: 0, fontSize: 12.5 }}>
+                <b>Cloud sign-in is unavailable in this build.</b>
+                <div style={{ marginTop: 4 }}>
+                  The Supabase anon key in this deployment does not look valid (it is missing, truncated, or rotated).
+                  Cloud features are paused — email + password still works offline in this browser. To restore cloud sign-in,
+                  set <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_ANON_KEY</code> in your hosting platform
+                  (Vercel → Settings → Environment Variables) using a fresh anon key from the Supabase dashboard, then redeploy.
+                </div>
+              </div>
+            )}
+            {!cloudEnabled() && !SUPABASE_KEY_MALFORMED && (
               <div className="hint" style={{ fontSize: 11.5, textAlign: 'center' }}>
                 Offline mode — account & resumes stay in this browser. Cloud sync turns on once Supabase is configured.
               </div>
