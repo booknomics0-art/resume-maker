@@ -13,8 +13,8 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 // Public defaults for the CraftCV production project. These are the *anon* (public)
 // credentials — they ship to every browser anyway; row-level security protects data.
 // Env vars override them (e.g. for a staging project). Never put a service-role key here.
-const DEFAULT_URL = 'https://voyvalrnxmdogsllarnz.supabase.co';
-const DEFAULT_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZveXZhbHJueG1kb2dzbGxhcm56Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyMjgxOTAsImV4cCI6MjEwNTgwNDE5MH0.Ma0sJbzkoXLhEyDFKEYJdLym8kD9Jlfhfxg6Ev2O0no';
+const DEFAULT_URL = 'https://icomxfiqurrgqksbcnin.supabase.co';
+const DEFAULT_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imljb214ZmlxdXJyZ3Frc2JjbmluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA2OTgxMDUsImV4cCI6MjEwNjI3NDEwNX0.uillzexiJ5tDtJtU28-wGA7D7XpoJ9EEc0ud8_6gDO0';
 
 const url = ((import.meta.env.VITE_SUPABASE_URL as string | undefined)?.trim() || DEFAULT_URL);
 const anon = ((import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined)?.trim() || DEFAULT_ANON);
