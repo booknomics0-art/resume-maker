@@ -34,7 +34,7 @@ const env = loadEnv();
 const clientId = env.GOOGLE_CLIENT_ID || '';
 const clientSecret = env.GOOGLE_CLIENT_SECRET || '';
 const token = env.SUPABASE_ACCESS_TOKEN || '';
-const supabaseUrl = (env.VITE_SUPABASE_URL || 'https://voyvalrnxmdogsllarnz.supabase.co').replace(/\/+$/, '');
+const supabaseUrl = (env.VITE_SUPABASE_URL || 'https://icomxfiqurrgqksbcnin.supabase.co').replace(/\/+$/, '');
 const projectRef = /^https:\/\/([a-z0-9-]+)\.supabase\.(co|in)$/i.exec(supabaseUrl)?.[1] || '';
 
 if (!clientId || !clientSecret) {
