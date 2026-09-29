@@ -428,7 +428,7 @@ export default function ResumeImporter() {
               🎯 {detected.length ? `${detected.length} groups auto-filled from your file` : 'Nothing could be auto-filled'}
             </b>
             <span className="hint" style={{ fontSize: 12 }}>
-              {missing.length ? `${missing.length} required item${missing.length > 1 ? 's' : ''} still missing: ${missing.slice(0, 3).map((m) => m.label).join(', ')}${missing.length > 3 ? '…' : ''}` : 'All mandatory fields are filled ✓'}
+              {missing.length ? `${missing.length} suggested item${missing.length > 1 ? 's' : ''} you may still want: ${missing.slice(0, 3).map((m) => m.label).join(', ')}${missing.length > 3 ? '…' : ''}` : 'Everything we suggest is filled ✓'}
             </span>
           </div>
           <div className="chips" style={{ marginTop: 10 }}>
@@ -479,7 +479,7 @@ export default function ResumeImporter() {
                 disabled={!missing.length}
                 onClick={() => missing[0] && jump(missing[0].step)}
               >
-                Jump to missing
+                Jump to next item
               </button>
               <div className="row" style={{ flex: '1 1 auto', justifyContent: 'flex-end' }}>
                 <button className="btn primary" onClick={handleSave}>💾 Save &amp; open in editor →</button>

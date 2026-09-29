@@ -16,35 +16,9 @@ import {
   StepBasics, StepDesign, StepEducation, StepExperience, StepExtras, StepSkills, StepSummary,
 } from './Steps';
 
-function stepValid(step: number, r: Resume): string[] {
-  const p = r.personal;
-  switch (STEPS[step].id) {
-    case 'basics': {
-      const errs: string[] = [];
-      if (!p.fullName.trim()) errs.push('Full name is required');
-      if (!p.headline.trim()) errs.push('Target job title is required');
-      if (!/^\S+@\S+\.\S+$/.test(p.email)) errs.push('A valid email is required');
-      if (!p.phone.trim()) errs.push('Phone number is required');
-      if (!p.city.trim()) errs.push('City is required');
-      return errs;
-    }
-    case 'summary':
-      return r.summary.trim().length < 40 ? ['Summary needs at least 2–3 lines (40+ characters)' as string] : [];
-    case 'experience': {
-      if (r.fresher) return [];
-      const ok = r.experience.some((e) => e.role.trim() && e.company.trim() && e.start.trim());
-      return ok ? [] : ['Add at least one job (role, company, start) or mark yourself a fresher'];
-    }
-    case 'education': {
-      const ok = r.education.some((e) => e.degree.trim() && e.school.trim() && e.year.trim());
-      return ok ? [] : ['Add at least one education entry (degree, institute, year)'];
-    }
-    case 'skills':
-      return r.skills.filter(Boolean).length >= 3 ? [] : ['Pick at least 3 skills'];
-    default:
-      return [];
-  }
-}
+// No step is ever "incomplete enough" to block the user: every field is
+// optional, the Next buttons and the PDF download always work. The progress
+// meter and the Resume score stay as gentle advice, never as gates.
 
 export default function Editor({ id }: { id: string }) {
   const initial = useMemo<Resume>(() => {
@@ -61,7 +35,6 @@ export default function Editor({ id }: { id: string }) {
   const [r, setR] = useState<Resume>(initial);
   const [step, setStep] = useState(Math.min(initial.step, STEPS.length - 1));
   const [maxVisited, setMaxVisited] = useState(Math.min(initial.step, STEPS.length - 1));
-  const [touched, setTouched] = useState(false);
   const [mobileTab, setMobileTab] = useState<'form' | 'preview'>('form');
   const dirtyRef = useRef(false);
 
@@ -69,8 +42,13 @@ export default function Editor({ id }: { id: string }) {
   // DeviceSheet lays the sheet out at true A4 px and scales it into an
   // exact-size frame, so the full page is always visible on any viewport.
   const [device, setDevice] = useState<DeviceMode>('a4');
+  // Phones default to "whole page": the complete A4 sheet visible at once,
+  // nothing cut off. Desktop keeps fit-width (readable) with the page fit one
+  // tap away — and landscape tablets behave like desktop.
   const [fitMode, setFitMode] = useState<A4Fit>(() =>
-    typeof window !== 'undefined' && window.innerWidth > window.innerHeight + 40 ? 'page' : 'width',
+    typeof window !== 'undefined' && (window.innerWidth <= 560 || window.innerWidth > window.innerHeight + 40)
+      ? 'page'
+      : 'width',
   );
   // how many A4 pages the resume currently spans — 1, 2 or 3, the user's call
   const [pages, setPages] = useState(1);
@@ -108,15 +86,11 @@ export default function Editor({ id }: { id: string }) {
   // The design step is a full-width gallery: every card is already a live
   // preview of this resume, so the side preview pane is not shown there.
   const isDesignStep = STEPS[step].id === 'design';
-  const errs = touched ? stepValid(step, r) : [];
-  const canNext = stepValid(step, r).length === 0;
   const pct = completeness(r);
   const remainingMin = STEPS.slice(step).reduce((a, s) => a + s.minutes, 0);
   const f = fieldById(r.fieldId);
 
   const go = (i: number) => {
-    if (i > step && !canNext) { setTouched(true); return; }
-    setTouched(false);
     setStep(i);
     setMaxVisited((m) => Math.max(m, i));
     setMobileTab('form');
@@ -191,8 +165,7 @@ export default function Editor({ id }: { id: string }) {
           </button>
           <button
             className="btn primary"
-            disabled={pct < 100}
-            title={pct < 100 ? 'Finish mandatory fields first' : 'Download PDF — free, unlimited, no watermark'}
+            title="Download PDF — free, unlimited, no watermark"
             onClick={handleDownload}
           >
             ⬇ Download PDF
@@ -204,11 +177,10 @@ export default function Editor({ id }: { id: string }) {
         {STEPS.map((s, i) => (
           <button
             key={s.id}
-            className={`step-pill ${i === step ? 'current' : i < step || stepValid(i, r).length === 0 ? 'done' : ''}`}
-            onClick={() => { if (i <= maxVisited || i <= step + 1) go(i); }}
-            disabled={i > maxVisited + 1}
+            className={`step-pill ${i === step ? 'current' : i < step ? 'done' : ''}`}
+            onClick={() => go(i)}
           >
-            <span className="dot">{i < step || (i !== step && stepValid(i, r).length === 0) ? '✓' : i + 1}</span>
+            <span className="dot">{i < step ? '✓' : i + 1}</span>
             {s.short}
           </button>
         ))}
@@ -230,32 +202,25 @@ export default function Editor({ id }: { id: string }) {
           <h3 style={{ color: 'var(--navy-900)', marginBottom: 4, fontSize: 16 }}>{STEPS[step].title}</h3>
           <div className="hint" style={{ marginBottom: 14 }}>Step {step + 1} of {STEPS.length} · ~{STEPS[step].minutes} min</div>
 
-          {errs.length > 0 && (
-            <div className="notice err">{errs.map((e) => <div key={e}>• {e}</div>)}</div>
-          )}
-
           {!isDesignStep && <AtsCheck r={r} />}
           {!isDesignStep && <ResumeScore r={r} />}
 
-          {stepBody}
+          <div className="step-body">{stepBody}</div>
 
           <div className="step-foot">
             <button className="btn" disabled={step === 0} onClick={() => go(step - 1)}>← Back</button>
             <div className="row" style={{ flex: '1 1 auto', justifyContent: 'flex-end' }}>
               {step === STEPS.length - 1 ? (
-                <button className="btn primary" disabled={pct < 100} onClick={handleDownload}>
+                <button className="btn primary" onClick={handleDownload}>
                   ⬇ Finish & download PDF
                 </button>
               ) : (
-                <button className="btn primary" onClick={() => { setTouched(true); if (canNext) go(step + 1); }}>
+                <button className="btn primary" onClick={() => go(step + 1)}>
                   Next: {STEPS[step + 1].short} →
                 </button>
               )}
             </div>
           </div>
-          {!canNext && touched && (
-            <div className="hint" style={{ marginTop: 8 }}>Fill required items above to continue — they are fields recruiters always look for.</div>
-          )}
         </div>
 
         {!isDesignStep && (
@@ -274,15 +239,15 @@ export default function Editor({ id }: { id: string }) {
                 <button
                   role="tab"
                   aria-selected={device === 'a4' && fitMode === 'width'}
-                  className={`chip ${device === 'a4' && fitMode === 'width' ? 'on' : ''}`}
-                  style={{ padding: '5px 11px', minHeight: 30, fontSize: 12 }}
+                  className={`chip dev-chip ${device === 'a4' && fitMode === 'width' ? 'on' : ''}`}
+                  
                   onClick={() => { setDevice('a4'); setFitMode('width'); }}
                 >▤ Fit width</button>
                 <button
                   role="tab"
                   aria-selected={device === 'a4' && fitMode === 'page'}
-                  className={`chip ${device === 'a4' && fitMode === 'page' ? 'on' : ''}`}
-                  style={{ padding: '5px 11px', minHeight: 30, fontSize: 12 }}
+                  className={`chip dev-chip ${device === 'a4' && fitMode === 'page' ? 'on' : ''}`}
+                  
                   onClick={() => { setDevice('a4'); setFitMode('page'); }}
                 >▤ Whole page</button>
               </div>
@@ -290,22 +255,22 @@ export default function Editor({ id }: { id: string }) {
                 <button
                   role="tab"
                   aria-selected={device === 'phone'}
-                  className={`chip ${device === 'phone' ? 'on' : ''}`}
-                  style={{ padding: '5px 11px', minHeight: 30, fontSize: 12 }}
+                  className={`chip dev-chip ${device === 'phone' ? 'on' : ''}`}
+                  
                   onClick={() => setDevice('phone')}
                 >📱 Mobile</button>
                 <button
                   role="tab"
                   aria-selected={device === 'desktop'}
-                  className={`chip ${device === 'desktop' ? 'on' : ''}`}
-                  style={{ padding: '5px 11px', minHeight: 30, fontSize: 12 }}
+                  className={`chip dev-chip ${device === 'desktop' ? 'on' : ''}`}
+                  
                   onClick={() => setDevice('desktop')}
                 >🖥 Desktop</button>
               </div>
             </div>
             <DeviceSheet r={r} mode={device} fit={fitMode} idPrefix="editor" onPages={setPages} />
             <div className="row" style={{ justifyContent: 'center', marginTop: 6 }}>
-              <button className="btn small primary" disabled={pct < 100} onClick={handleDownload} style={{ flex: '0 0 auto' }}>
+              <button className="btn small primary" onClick={handleDownload} style={{ flex: '0 0 auto' }}>
                 ⬇ Download PDF
               </button>
             </div>
