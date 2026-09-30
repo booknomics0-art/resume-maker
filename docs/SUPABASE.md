@@ -24,10 +24,9 @@ offline copy, but the database is the source of truth, and you (as admin) can se
 
 ## 2. Create the tables
 
-**SQL Editor → New query**, paste the whole file **`supabase/SETUP_ALL_IN_ONE.sql`** (migration + 80-template seed in one), **Run**. Safe to re-run.
+**SQL Editor → New query**, paste the whole file **`supabase/SETUP_ALL_IN_ONE.sql`** (schema + current template catalog, including cleanup of obsolete catalog rows), **Run**. Safe to re-run.
 
-> Alternatively with the CLI: `supabase link --project-ref <ref>` then `supabase db push`,
-> and `npm run seed:templates:push` with `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` set.
+> Existing projects can run migrations `0001_init.sql` and `0002_prune_obsolete_template_catalog.sql`, then run `supabase/seed/template_catalog.sql` in the SQL editor. Alternatively, use `supabase link --project-ref <ref>` → `supabase db push`, then `npm run seed:templates:push` with `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` set. The seed/push syncs the database to the 50 current designs and removes stale catalog rows.
 
 ## 3. Connect the app
 
