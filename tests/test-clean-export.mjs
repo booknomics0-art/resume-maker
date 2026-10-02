@@ -167,6 +167,8 @@ ok('layout: base resume ink is dark enough for print',
   /\.sheet\s*\{[^}]*color:\s*#182230/.test(templatesCss));
 ok('layout: contact details use a stronger readable weight',
   /\.s-contact\s*\{[^}]*font-weight:\s*600/.test(templatesCss));
+ok('layout: display-family header contacts are also strongly readable',
+  /\.tpl-masthead \.mast-strip,[\s\S]*?\.tpl-tintsheet \.tint-contact\s*\{[^}]*font-weight:\s*600[^}]*color:\s*#303b4a/.test(templatesCss));
 ok('layout: dates wrap instead of ellipsizing/clipping',
   /\.s-dates\s*\{[^}]*white-space:\s*normal[^}]*overflow:\s*visible[^}]*text-overflow:\s*clip/.test(templatesCss));
 ok('layout: infographic facts rail is on the left',

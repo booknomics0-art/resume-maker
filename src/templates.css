@@ -74,6 +74,13 @@
   background: #f5f7fa; color: #1c2434; overflow-wrap: anywhere; max-width: 100%;
 }
 .contact-line { overflow-wrap: anywhere; word-break: break-word; font-weight: 600; }
+/* Some display families render header contacts outside .s-contact. Keep every
+   contact surface equally scannable in screen and print output. */
+.tpl-masthead .mast-strip,
+.tpl-tintsheet .tint-contact {
+  font-weight: 600;
+  color: #303b4a;
+}
 .metric { font-weight: 750; color: inherit; }
 .sheet .side .s-item-sub, .sheet .side .s-dates,
 .sheet .rail .s-item-sub, .sheet .rail .s-dates,
