@@ -164,7 +164,9 @@ jobs:
 
             await oauth.goto(base + '/', { waitUntil: 'networkidle2' });
             await oauth.evaluate(() => localStorage.clear());
-            await oauth.goto(base + '/#/login', { waitUntil: 'networkidle2' });
+            // Force a new document load (not only a hash change), so App's
+            // initial currentUser() is evaluated after storage was cleared.
+            await oauth.goto(base + '/?qa=oauth-start#/login', { waitUntil: 'networkidle2' });
             await oauth.waitForFunction(() =>
               [...document.querySelectorAll('button')].some((b) => b.textContent?.includes('Continue with Google'))
             );
