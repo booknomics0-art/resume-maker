@@ -2,15 +2,19 @@ import { lazy, Suspense, useEffect, useState } from 'react';
 const Dashboard = lazy(() => import('./components/Dashboard'));
 const Editor = lazy(() => import('./components/Editor'));
 const Settings = lazy(() => import('./components/Settings'));
-import AuthPage from './components/AuthPage';
-import Landing from './components/Landing';
+const AuthPage = lazy(() => import('./components/AuthPage'));
+const Landing = lazy(() => import('./components/Landing'));
 import Footer from './components/Footer';
 const ResumeImporter = lazy(() => import('./components/ResumeImporter'));
 const CoverLetter = lazy(() => import('./components/CoverLetter'));
-import {
-  AboutPage, ContactPage, FaqPage, PrivacyPage, TermsPage,
-  DisclaimerPage, CookiePage, EulaPage,
-} from './components/LegalPages';
+const AboutPage = lazy(() => import('./components/LegalPages').then((m) => ({ default: m.AboutPage })));
+const ContactPage = lazy(() => import('./components/LegalPages').then((m) => ({ default: m.ContactPage })));
+const FaqPage = lazy(() => import('./components/LegalPages').then((m) => ({ default: m.FaqPage })));
+const PrivacyPage = lazy(() => import('./components/LegalPages').then((m) => ({ default: m.PrivacyPage })));
+const TermsPage = lazy(() => import('./components/LegalPages').then((m) => ({ default: m.TermsPage })));
+const DisclaimerPage = lazy(() => import('./components/LegalPages').then((m) => ({ default: m.DisclaimerPage })));
+const CookiePage = lazy(() => import('./components/LegalPages').then((m) => ({ default: m.CookiePage })));
+const EulaPage = lazy(() => import('./components/LegalPages').then((m) => ({ default: m.EulaPage })));
 import { currentUser, logout, setLocalSession, isOfflineSession, type User } from './lib/auth';
 import { initSecurity } from './lib/security';
 import { cloudEnabled } from './lib/supabase';
@@ -145,15 +149,21 @@ export default function App() {
     // product pitch (hero, templates, FAQ) comes BEFORE any login wall.
     if (tab === '/' || tab === '') {
       return (
-        <Landing
-          notice={authNotice}
-          onStart={(target) => navigate(target || '/editor/new')}
-        />
+        <Suspense fallback={<div className="card pad">Loading CraftCV…</div>}>
+          <Landing
+            notice={authNotice}
+            onStart={(target) => navigate(target || '/editor/new')}
+          />
+        </Suspense>
       );
     }
     // Any other deep link (e.g. a bookmarked #/editor/…) keeps the old
     // behaviour: show the login page first.
-    return <AuthPage onAuth={() => setUser(currentUser())} notice={authNotice} />;
+    return (
+      <Suspense fallback={<div className="card pad">Loading sign-in…</div>}>
+        <AuthPage onAuth={() => setUser(currentUser())} notice={authNotice} />
+      </Suspense>
+    );
   }
 
   let page: React.ReactNode;
