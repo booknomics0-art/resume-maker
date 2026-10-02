@@ -153,7 +153,8 @@ check('TESTIMONIALS ships empty (no invented reviews)', testimonialsEmpty);
 check('landing requires an account and offers no guest start',
   landingSrc.includes('Sign in or create a free account') && !landingSrc.includes('onStartGuest') && !landingSrc.includes('no signup'));
 check('logged-out home renders Landing instead of the login wall',
-  appSrc.includes('import Landing') && appSrc.includes('<Landing'));
+  (appSrc.includes('import Landing') || appSrc.includes("import('./components/Landing')")) &&
+  appSrc.includes('<Landing'));
 check('landing actions navigate through the authentication gate',
   appSrc.includes("onStart={(target) => navigate(target || '/editor/new')}") &&
   appSrc.includes('if (!user)') && appSrc.includes('<AuthPage') && !appSrc.includes('guest_start'));
