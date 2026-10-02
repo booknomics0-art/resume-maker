@@ -108,7 +108,11 @@ jobs:
             if (mobile.inputFontSize < 16) throw new Error('Mobile input font is below 16px: ' + mobile.inputFontSize);
 
             await page.click('.menu-btn');
-            await page.waitForFunction(() => document.querySelector('.sidebar')?.classList.contains('open'));
+            await page.waitForFunction(() => {
+              const el = document.querySelector('.sidebar');
+              if (!el?.classList.contains('open')) return false;
+              return el.getBoundingClientRect().left >= -2;
+            });
             const drawer = await page.evaluate(() => {
               const el = document.querySelector('.sidebar');
               const r = el?.getBoundingClientRect();
