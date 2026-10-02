@@ -87,7 +87,7 @@ function SectionBody({ r, id }: { r: Resume; id: SectionId }) {
               <div className="s-item-head">
                 <div>
                   <b>{e.role}</b>
-                  <div className="s-item-sub">{e.company}{e.location ? ` · ${e.location}` : ''}</div>
+                  <div className="s-item-sub s-company">{e.company}{e.location ? ` · ${e.location}` : ''}</div>
                 </div>
                 <span className="s-dates">
                   {e.start} – {e.current ? 'Present' : e.end}
@@ -157,7 +157,7 @@ function SectionBody({ r, id }: { r: Resume; id: SectionId }) {
                 <b>{c.name}</b>
                 <span className="s-dates">{c.year}</span>
               </div>
-              <div className="s-item-sub">{c.issuer}</div>
+              <div className="s-item-sub s-issuer">{c.issuer}</div>
             </div>
           ))}
         </>
@@ -246,7 +246,7 @@ function TimelineExperience({ r }: { r: Resume }) {
             <div className="tl-dot" />
             <div className="tl-body">
               <b>{e.role}</b>
-              <div className="s-item-sub">{e.company}{e.location ? ` · ${e.location}` : ''}</div>
+              <div className="s-item-sub s-company">{e.company}{e.location ? ` · ${e.location}` : ''}</div>
               <ul>{e.bullets.filter(Boolean).map((b, i) => <li key={i}>{b}</li>)}</ul>
             </div>
           </div>
