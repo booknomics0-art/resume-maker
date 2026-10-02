@@ -89,12 +89,34 @@ export function sanitizeURL(url: string): string {
 export function isSafeString(str: string): boolean {
   if (!str) return true;
   const lower = str.toLowerCase();
-  return !DANGEROUS_PATTERNS.some(p => p.test(lower));
+  return !DANGEROUS_PATTERNS.some((p) => {
+    // The patterns are global (/g). Reset lastIndex so repeated calls cannot
+    // alternate between safe/unsafe results because of RegExp state.
+    p.lastIndex = 0;
+    const unsafe = p.test(lower);
+    p.lastIndex = 0;
+    return unsafe;
+  });
+}
+
+const MAX_RESUME_IMAGE_DATA_URL_LENGTH = 2_000_000;
+
+function sanitizeResumeImageDataUrl(value: string): string {
+  if (value.length > MAX_RESUME_IMAGE_DATA_URL_LENGTH) return '';
+  // StepBasics always stores compressed raster images. Keep only formats that
+  // browsers can safely render as an <img>; explicitly reject SVG/HTML data.
+  return /^data:image\/(?:jpeg|jpg|png|webp);base64,[A-Za-z0-9+/=]+$/i.test(value)
+    ? value
+    : '';
 }
 
 // Deep sanitize resume data
 export function sanitizeResumeData(data: any): any {
   if (typeof data === 'string') {
+    // Profile photos are intentionally long base64 data URLs. The previous
+    // generic 5,000-character limit truncated them during autosave/cloud sync,
+    // corrupting the image after reload. Preserve validated image data URLs.
+    if (/^data:image\//i.test(data)) return sanitizeResumeImageDataUrl(data);
     return sanitizeInput(data, 5000);
   }
   if (Array.isArray(data)) {
