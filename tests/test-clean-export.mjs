@@ -196,6 +196,10 @@ ok('download: PDF renderer prints backgrounds and honours A4 CSS',
   /printBackground:\s*true/.test(pdfApi) && /preferCSSPageSize:\s*true/.test(pdfApi));
 ok('security: PDF renderer blocks outbound server-side requests',
   pdfApi.includes('setRequestInterception(true)') && pdfApi.includes('req.abort()'));
+ok('download: Vercel PDF function uses the supported default fetch handler',
+  pdfApi.includes('export default {') && pdfApi.includes('async fetch(request: Request)'));
+ok('download: PDF function only accepts POST',
+  pdfApi.includes("request.method !== 'POST'") && pdfApi.includes("Allow: 'POST'"));
 
 // ---- the flagship sample itself is watermark-free content -------------------
 const sampleJson = JSON.stringify(sampleR).toLowerCase();
