@@ -137,6 +137,7 @@ if (untaggedPlaceholder.length) console.log('   untagged:', untaggedPlaceholder.
 
 // ---- the print pipeline must be leak-proof ---------------------------------
 const styles = readFileSync(join(root, 'src', 'styles.css'), 'utf8');
+const templatesCss = readFileSync(join(root, 'src', 'templates.css'), 'utf8');
 const printBlock = styles.slice(styles.indexOf('@media print'));
 
 ok('print: A4 pages, zero margins (@page)',
@@ -160,6 +161,22 @@ ok('multi-page: entries keep together across a page break (break-inside avoid)',
   /\.print-root \.sheet \.s-item[\s\S]*?break-inside:\s*avoid/.test(printBlock));
 ok('multi-page: a section heading is never left alone at a page bottom (break-after avoid)',
   /\.print-root \.sheet \.s-sec-title[\s\S]*?break-after:\s*avoid/.test(printBlock));
+
+// ---- professional readability + left-rail rules -----------------------------
+ok('layout: base resume ink is dark enough for print',
+  /\.sheet\s*\{[^}]*color:\s*#182230/.test(templatesCss));
+ok('layout: contact details use a stronger readable weight',
+  /\.s-contact\s*\{[^}]*font-weight:\s*600/.test(templatesCss));
+ok('layout: dates wrap instead of ellipsizing/clipping',
+  /\.s-dates\s*\{[^}]*white-space:\s*normal[^}]*overflow:\s*visible[^}]*text-overflow:\s*clip/.test(templatesCss));
+ok('layout: infographic facts rail is on the left',
+  /\.tpl-infographic\s*\{\s*flex-direction:\s*row-reverse/.test(templatesCss));
+ok('layout: banner facts rail is on the left',
+  /\.tpl-banner \.rails\s*\{[^}]*flex-direction:\s*row-reverse/.test(templatesCss));
+ok('layout: masthead facts rail is on the left',
+  /\.tpl-masthead \.mast-cols\s*\{[^}]*flex-direction:\s*row-reverse/.test(templatesCss));
+ok('layout: tint-sheet facts rail is on the left',
+  /\.tpl-tintsheet \.tint-cols\s*\{[^}]*flex-direction:\s*row-reverse/.test(templatesCss));
 
 // ---- the editor's print root contains ONLY the sheet ------------------------
 const editor = readFileSync(join(root, 'src', 'components', 'Editor.tsx'), 'utf8');
