@@ -20,6 +20,30 @@ import {
 // optional, the Next buttons and the PDF download always work. The progress
 // meter and the Resume score stay as gentle advice, never as gates.
 
+function collectPrintableCss(): string {
+  const chunks: string[] = [];
+  for (const sheet of Array.from(document.styleSheets)) {
+    try {
+      chunks.push(Array.from(sheet.cssRules).map((rule) => rule.cssText).join('\n'));
+    } catch {
+      // Ignore cross-origin stylesheets. CraftCV's own Vite CSS is same-origin.
+    }
+  }
+  return chunks.join('\n');
+}
+
+function saveBlobAs(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.style.display = 'none';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
 export default function Editor({ id }: { id: string }) {
   const initial = useMemo<Resume>(() => {
     if (id === 'new') return emptyResume();
@@ -52,6 +76,7 @@ export default function Editor({ id }: { id: string }) {
   );
   // how many A4 pages the resume currently spans — 1, 2 or 3, the user's call
   const [pages, setPages] = useState(1);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
 
   // autosave (debounced) — never persists a brand-new resume the user hasn't touched
   useEffect(() => {
@@ -97,26 +122,54 @@ export default function Editor({ id }: { id: string }) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleDownload = () => {
-    // Save name first
+  const handleDownload = async () => {
+    if (downloadingPdf) return;
+
     setR((prev) => ({ ...prev, name: prev.name.startsWith('Untitled') && prev.personal.fullName ? `${prev.personal.fullName} — ${prev.personal.headline}` : prev.name }));
 
-    // The browser names the saved PDF after the page title — give it the
-    // resume's own name so the file lands as "Amit Shukla — Senior Software
-    // Engineer.pdf", never as the app's title.
     const base = (r.name && !r.name.startsWith('Untitled'))
       ? r.name
       : (r.personal.fullName ? `${r.personal.fullName} — ${r.personal.headline}` : 'resume');
     const clean = base.replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim() || 'resume';
-    const prevTitle = document.title;
-    const restore = () => { document.title = prevTitle; window.removeEventListener('afterprint', restore); };
-    document.title = clean;
-    window.addEventListener('afterprint', restore);
-    window.setTimeout(restore, 60_000); // safety net if afterprint never fires
 
-    recordDownload(r);
-    trackEvent('download');
-    setTimeout(() => window.print(), 150);
+    setDownloadingPdf(true);
+    try {
+      const sheet = document.querySelector('.print-root .sheet');
+      if (!(sheet instanceof HTMLElement)) throw new Error('Printable resume sheet not found');
+
+      const response = await fetch('/api/pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          html: sheet.outerHTML,
+          css: collectPrintableCss(),
+          title: clean,
+        }),
+      });
+      if (!response.ok) throw new Error(`PDF service returned ${response.status}`);
+
+      const blob = await response.blob();
+      if (blob.type !== 'application/pdf' || blob.size < 500) {
+        throw new Error('PDF service returned an invalid file');
+      }
+
+      saveBlobAs(blob, `${clean}.pdf`);
+      recordDownload(r);
+      trackEvent('download');
+    } catch (error) {
+      // Preserve the existing ATS-friendly print route as a resilient fallback.
+      console.warn('Direct PDF download unavailable; falling back to browser print.', error);
+      const prevTitle = document.title;
+      const restore = () => { document.title = prevTitle; window.removeEventListener('afterprint', restore); };
+      document.title = clean;
+      window.addEventListener('afterprint', restore);
+      window.setTimeout(restore, 60_000);
+      recordDownload(r);
+      trackEvent('download_fallback');
+      window.setTimeout(() => window.print(), 150);
+    } finally {
+      setDownloadingPdf(false);
+    }
   };
 
   const stepBody = [
@@ -167,8 +220,9 @@ export default function Editor({ id }: { id: string }) {
             className="btn primary"
             title="Download PDF — free, unlimited, no watermark"
             onClick={handleDownload}
+            disabled={downloadingPdf}
           >
-            ⬇ Download PDF
+            {downloadingPdf ? 'Preparing PDF…' : '⬇ Download PDF'}
           </button>
         </div>
       </div>
@@ -211,8 +265,8 @@ export default function Editor({ id }: { id: string }) {
             <button className="btn" disabled={step === 0} onClick={() => go(step - 1)}>← Back</button>
             <div className="row" style={{ flex: '1 1 auto', justifyContent: 'flex-end' }}>
               {step === STEPS.length - 1 ? (
-                <button className="btn primary" onClick={handleDownload}>
-                  ⬇ Finish & download PDF
+                <button className="btn primary" onClick={handleDownload} disabled={downloadingPdf}>
+                  {downloadingPdf ? 'Preparing PDF…' : '⬇ Finish & download PDF'}
                 </button>
               ) : (
                 <button className="btn primary" onClick={() => go(step + 1)}>
@@ -270,8 +324,8 @@ export default function Editor({ id }: { id: string }) {
             </div>
             <DeviceSheet r={r} mode={device} fit={fitMode} idPrefix="editor" onPages={setPages} />
             <div className="row" style={{ justifyContent: 'center', marginTop: 6 }}>
-              <button className="btn small primary" onClick={handleDownload} style={{ flex: '0 0 auto' }}>
-                ⬇ Download PDF
+              <button className="btn small primary" onClick={handleDownload} disabled={downloadingPdf} style={{ flex: '0 0 auto' }}>
+                {downloadingPdf ? 'Preparing PDF…' : '⬇ Download PDF'}
               </button>
             </div>
             <div className="hint" style={{ textAlign: 'center', fontSize: 11.5 }}>
