@@ -121,11 +121,24 @@ jobs:
             if (!drawer || drawer.left < -2 || drawer.right <= 0) {
               throw new Error('Mobile drawer did not open onscreen: ' + JSON.stringify(drawer));
             }
-            await page.click('.sidebar-overlay');
+            await page.evaluate(() => {
+              const overlay = document.querySelector('.sidebar-overlay');
+              if (!overlay) throw new Error('Sidebar overlay missing');
+              overlay.click();
+            });
             await page.waitForFunction(() => !document.querySelector('.sidebar')?.classList.contains('open'));
 
-            await page.waitForSelector('.editor-mobile-tabs button:nth-child(2)');
-            await page.click('.editor-mobile-tabs button:nth-child(2)');
+            await page.evaluate(() => {
+              const buttons = [...document.querySelectorAll('.editor-mobile-tabs button')];
+              if (buttons.length < 2) {
+                throw new Error('Mobile tabs disappeared after drawer close: ' + JSON.stringify({
+                  href: location.href,
+                  tabCount: buttons.length,
+                  body: document.body.innerText.slice(0, 800),
+                }));
+              }
+              buttons[1].click();
+            });
             await page.waitForFunction(() => {
               const preview = document.querySelector('.editor-preview');
               const form = document.querySelector('.editor-form');
