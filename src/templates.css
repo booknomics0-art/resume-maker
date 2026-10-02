@@ -53,7 +53,7 @@
 .s-item { margin-bottom: 11px; }
 .s-item-head { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
 .s-item-head b {
-  font-size: 13.2px; font-weight: 750; color: #111a27; overflow-wrap: anywhere;
+  font-size: 13.2px; font-weight: 750; color: inherit; overflow-wrap: anywhere;
 }
 .s-item-sub { font-size: 12px; color: #3d4858; margin-top: 1px; overflow-wrap: anywhere; }
 /* Recruiter-scan hierarchy: employer/institute/issuer and evidence bullets
@@ -100,6 +100,14 @@
 .sheet .aside .s-item-sub, .sheet .aside .s-dates,
 .sheet .panel .s-item-sub, .sheet .panel .s-dates {
   color: inherit; opacity: .92;
+}
+/* Education can live in a coloured side panel in several families. In those
+   layouts preserve the panel's light-on-dark palette instead of forcing ink. */
+.sheet .side .edu-school, .sheet .side .edu-year,
+.sheet .rail .edu-school, .sheet .rail .edu-year,
+.sheet .aside .edu-school, .sheet .aside .edu-year,
+.sheet .panel .edu-school, .sheet .panel .edu-year {
+  color: inherit;
 }
 
 /* education table — clean aligned columns in every template */
