@@ -22,21 +22,39 @@ jobs:
           node-version: 22
           cache: npm
 
-      - name: Refresh lockfile from package.json
-        run: npm install --package-lock-only --ignore-scripts
-
-      - name: Upload refreshed lockfile
-        uses: actions/upload-artifact@v4
-        with:
-          name: refreshed-package-lock
-          path: package-lock.json
-          retention-days: 1
-
       - name: Clean install
         run: npm ci
+
+      - name: Production dependency security gate
+        run: npm audit --omit=dev --audit-level=high
 
       - name: Run tests
         run: npm test
 
       - name: Production build
         run: npm run build
+
+      - name: Live production PDF smoke test
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          PROD_URL: https://resume-maker-ivory-ten.vercel.app
+        run: |
+          node --input-type=module <<'NODE'
+          const payload = {
+            title: 'QA Resume',
+            html: '<div class="sheet"><h1>QA Resume</h1><p>Production PDF smoke test</p></div>',
+            css: '.sheet{width:794px;min-height:1123px;background:#fff;color:#182230;font:16px Arial;padding:40px}'
+          };
+          const res = await fetch(process.env.PROD_URL + '/api/pdf', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+          const body = new Uint8Array(await res.arrayBuffer());
+          const signature = new TextDecoder().decode(body.slice(0, 4));
+          console.log('PDF status:', res.status, 'type:', res.headers.get('content-type'), 'bytes:', body.length);
+          if (!res.ok) throw new Error('PDF endpoint returned HTTP ' + res.status + ': ' + new TextDecoder().decode(body.slice(0, 500)));
+          if (!(res.headers.get('content-type') || '').includes('application/pdf')) throw new Error('Wrong PDF content type');
+          if (signature !== '%PDF') throw new Error('Response is not a PDF');
+          if (body.length < 500) throw new Error('Generated PDF is unexpectedly small');
+          NODE
