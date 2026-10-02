@@ -84,13 +84,15 @@ export function setPdfWorkerUrl(url: string) {
 
 async function getPdfjs(): Promise<any> {
   if (!pdfjsMod) {
-    const [lib, workerModule]: [any, any] = await Promise.all([
-      import('pdfjs-dist'),
-      customWorkerUrl
-        ? Promise.resolve({ default: customWorkerUrl })
-        : import('pdfjs-dist/build/pdf.worker.min.mjs?url'),
-    ]);
-    lib.GlobalWorkerOptions.workerSrc = customWorkerUrl || workerModule.default;
+    const lib: any = await import('pdfjs-dist');
+    if (customWorkerUrl) {
+      lib.GlobalWorkerOptions.workerSrc = customWorkerUrl;
+    } else if (typeof document !== 'undefined') {
+      // Only browsers need an emitted worker URL. Node-based parser tests use
+      // pdf.js' own non-browser path and must not receive a Vite ?url module.
+      const workerModule: any = await import('pdfjs-dist/build/pdf.worker.min.mjs?url');
+      lib.GlobalWorkerOptions.workerSrc = workerModule.default;
+    }
     pdfjsMod = lib;
   }
   return pdfjsMod;
