@@ -52,8 +52,21 @@
 }
 .s-item { margin-bottom: 11px; }
 .s-item-head { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
-.s-item-head b { font-size: 13.2px; overflow-wrap: anywhere; }
+.s-item-head b {
+  font-size: 13.2px; font-weight: 750; color: inherit; overflow-wrap: anywhere;
+}
 .s-item-sub { font-size: 12px; color: #3d4858; margin-top: 1px; overflow-wrap: anywhere; }
+/* Recruiter-scan hierarchy: employer/institute/issuer and evidence bullets
+   stay visibly darker than supporting metadata, especially on printed copies. */
+.s-company, .s-issuer {
+  color: #273345; font-weight: 650;
+}
+.sec-experience .s-item > ul li,
+.sec-experience .tl-body > ul li,
+.sec-projects .s-item > ul li,
+.sec-achievements > ul li {
+  color: #253142; font-weight: 500;
+}
 .s-dates {
   font-size: 11.6px; color: #3d4858; white-space: normal;
   overflow: visible; text-overflow: clip; max-width: 48%;
@@ -88,6 +101,14 @@
 .sheet .panel .s-item-sub, .sheet .panel .s-dates {
   color: inherit; opacity: .92;
 }
+/* Education can live in a coloured side panel in several families. In those
+   layouts preserve the panel's light-on-dark palette instead of forcing ink. */
+.sheet .side .edu-school, .sheet .side .edu-year,
+.sheet .rail .edu-school, .sheet .rail .edu-year,
+.sheet .aside .edu-school, .sheet .aside .edu-year,
+.sheet .panel .edu-school, .sheet .panel .edu-year {
+  color: inherit;
+}
 
 /* education table — clean aligned columns in every template */
 .s-table { width: 100%; border-collapse: collapse; }
@@ -97,8 +118,8 @@
 }
 .s-table tr:last-child td { border-bottom: none; }
 .s-table .edu-deg { width: 44%; }
-.s-table .edu-school { width: 38%; color: #3d475c; font-size: 12.6px; }
-.s-table .edu-year { width: 18%; text-align: right; white-space: nowrap; color: #55617a; font-size: 12.2px; }
+.s-table .edu-school { width: 38%; color: #273345; font-size: 12.6px; font-weight: 600; }
+.s-table .edu-year { width: 18%; text-align: right; white-space: nowrap; color: #465264; font-size: 12.2px; font-weight: 550; }
 
 /* timeline experience — used by Sidebar & Minimal */
 .tpl-split .sec-experience.tl .s-item,
@@ -1037,4 +1058,26 @@
   }
   .print-root .sheet { width: 210mm !important; min-height: 297mm; box-shadow: none !important; }
   .no-print { display: none !important; }
+}
+@media print {
+  /* Office printers often wash out mid-gray text. Keep important recruiter
+     scan targets at full opacity while retaining white text on dark rails. */
+  .sheet .s-item-head b,
+  .sheet .s-company,
+  .sheet .s-issuer,
+  .sheet .edu-school,
+  .sheet .sec-experience .s-item > ul li,
+  .sheet .sec-experience .tl-body > ul li,
+  .sheet .sec-projects .s-item > ul li,
+  .sheet .sec-achievements > ul li {
+    opacity: 1;
+  }
+  .sheet .main .s-company,
+  .sheet .body .s-company,
+  .sheet .content .s-company,
+  .sheet .main .s-issuer,
+  .sheet .body .s-issuer,
+  .sheet .content .s-issuer {
+    color: #1f2a38;
+  }
 }
