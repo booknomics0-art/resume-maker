@@ -57,6 +57,7 @@ jobs:
           });
 
           const page = await browser.newPage();
+          await page.setViewport({ width: 1440, height: 1200 });
           page.setDefaultTimeout(20000);
           const pageErrors = [];
           const consoleErrors = [];
@@ -66,6 +67,24 @@ jobs:
           });
 
           try {
+            // Establish an isolated local/offline session so the editor can be
+            // exercised without touching Supabase auth or production accounts.
+            await page.goto(base + '/', { waitUntil: 'networkidle2' });
+            await page.evaluate(() => {
+              const email = 'qa-live@example.invalid';
+              localStorage.clear();
+              localStorage.setItem('craftcv.users.v2', JSON.stringify({
+                [email]: {
+                  name: 'QA Live',
+                  email,
+                  provider: 'email',
+                  createdAt: Date.now(),
+                  failedAttempts: 0,
+                },
+              }));
+              localStorage.setItem('craftcv.session.v2', email);
+              localStorage.setItem('craftcv.session.offline', '1');
+            });
             await page.goto(base + '/#/editor/new', { waitUntil: 'networkidle2' });
             await page.waitForSelector('input[placeholder="e.g. Amit Shukla"]');
 
