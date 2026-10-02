@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   qa:
@@ -15,6 +15,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
 
       - name: Use Node 22
         uses: actions/setup-node@v4
@@ -32,8 +34,24 @@ jobs:
           path: package-lock.json
           retention-days: 1
 
+      - name: Commit refreshed lockfile to PR branch
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        run: |
+          rm -f .github/qa-trigger.txt
+          if ! git diff --quiet -- package-lock.json || [ -n "$(git status --porcelain .github/qa-trigger.txt)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add package-lock.json
+            git add -u .github/qa-trigger.txt
+            git commit -m "Refresh package lock from package.json"
+            git push origin HEAD:${{ github.event.pull_request.head.ref }}
+          fi
+
       - name: Clean install
         run: npm ci
+
+      - name: Production dependency security gate
+        run: npm audit --omit=dev --audit-level=high
 
       - name: Run tests
         run: npm test
