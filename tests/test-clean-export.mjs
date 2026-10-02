@@ -138,6 +138,7 @@ if (untaggedPlaceholder.length) console.log('   untagged:', untaggedPlaceholder.
 // ---- the print pipeline must be leak-proof ---------------------------------
 const styles = readFileSync(join(root, 'src', 'styles.css'), 'utf8');
 const templatesCss = readFileSync(join(root, 'src', 'templates.css'), 'utf8');
+const previewSrc = readFileSync(join(root, 'src', 'components', 'Preview.tsx'), 'utf8');
 const printBlock = styles.slice(styles.indexOf('@media print'));
 
 ok('print: A4 pages, zero margins (@page)',
@@ -167,6 +168,16 @@ ok('layout: base resume ink is dark enough for print',
   /\.sheet\s*\{[^}]*color:\s*#182230/.test(templatesCss));
 ok('layout: contact details use a stronger readable weight',
   /\.s-contact\s*\{[^}]*font-weight:\s*600/.test(templatesCss));
+ok('layout: employer and issuer metadata are dark and semibold',
+  /\.s-company, \.s-issuer\s*\{[^}]*color:\s*#273345[^}]*font-weight:\s*650/.test(templatesCss));
+ok('layout: important work bullets use stronger print-safe ink',
+  /\.sec-experience \.s-item > ul li,[\s\S]*?\.sec-achievements > ul li\s*\{[^}]*color:\s*#253142[^}]*font-weight:\s*500/.test(templatesCss));
+ok('layout: education institution and year are print-readable',
+  /\.s-table \.edu-school\s*\{[^}]*color:\s*#273345[^}]*font-weight:\s*600/.test(templatesCss) &&
+  /\.s-table \.edu-year\s*\{[^}]*color:\s*#465264[^}]*font-weight:\s*550/.test(templatesCss));
+ok('layout: experience company and cert issuer get semantic emphasis classes',
+  (previewSrc.match(/s-item-sub s-company/g) || []).length === 2 &&
+  previewSrc.includes('s-item-sub s-issuer'));
 ok('layout: display-family header contacts are also strongly readable',
   /\.tpl-masthead \.mast-strip,[\s\S]*?\.tpl-tintsheet \.tint-contact\s*\{[^}]*font-weight:\s*600[^}]*color:\s*#303b4a/.test(templatesCss));
 ok('layout: dates wrap instead of ellipsizing/clipping',
