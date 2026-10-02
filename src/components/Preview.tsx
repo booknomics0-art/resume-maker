@@ -62,12 +62,23 @@ function ContactBits({ r }: { r: Resume }) {
   );
 }
 
+function EmphasizedText({ text }: { text: string }) {
+  const token = /([₹$€£]\s?\d[\d,.]*(?:\s?(?:k|m|b|cr|crore|lakh|million|billion))?|\b\d+(?:[.,]\d+)?\s?(?:%|x|×|k|m|b|cr|crore|lakh|million|billion)(?=\W|$))/gi;
+  const metric = /^(?:[₹$€£]\s?\d[\d,.]*(?:\s?(?:k|m|b|cr|crore|lakh|million|billion))?|\d+(?:[.,]\d+)?\s?(?:%|x|×|k|m|b|cr|crore|lakh|million|billion))$/i;
+  return (
+    <>
+      {text.split(token).map((part, i) =>
+        metric.test(part) ? <strong className="metric" key={i}>{part}</strong> : part
+      )}
+    </>
+  );
+}
 function SectionBody({ r, id }: { r: Resume; id: SectionId }) {
   switch (id) {
     case 'summary':
       return <p>{r.summary}</p>;
     case 'highlight':
-      return <p>{r.bestExperience}</p>;
+      return <p><EmphasizedText text={r.bestExperience} /></p>;
     case 'experience':
       return (
         <>
@@ -84,7 +95,7 @@ function SectionBody({ r, id }: { r: Resume; id: SectionId }) {
               </div>
               <ul>
                 {e.bullets.filter(Boolean).map((b, i) => (
-                  <li key={i}>{b}</li>
+                  <li key={i}><EmphasizedText text={b} /></li>
                 ))}
               </ul>
             </div>
@@ -130,7 +141,7 @@ function SectionBody({ r, id }: { r: Resume; id: SectionId }) {
               </div>
               <ul>
                 {p.points.split('\n').filter(Boolean).map((x, i) => (
-                  <li key={i}>{x}</li>
+                  <li key={i}><EmphasizedText text={x} /></li>
                 ))}
               </ul>
             </div>
@@ -165,7 +176,7 @@ function SectionBody({ r, id }: { r: Resume; id: SectionId }) {
       return (
         <ul>
           {r.achievements.filter(Boolean).map((a, i) => (
-            <li key={i}>{a}</li>
+            <li key={i}><EmphasizedText text={a} /></li>
           ))}
         </ul>
       );

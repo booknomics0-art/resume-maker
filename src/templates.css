@@ -21,12 +21,14 @@
 
 .sheet {
   --p: #0f2148; --p2: #16305f; --p3: #1e4076; --pm: #33507e; --a: #c9d2de;
-  width: 794px; min-height: 1123px; background: #fff; color: #232a38;
+  width: 794px; min-height: 1123px; background: #fff; color: #182230;
   font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
   font-size: 13px; line-height: 1.52; box-shadow: 0 8px 28px rgba(10, 22, 48, 0.25);
   display: flex; flex-direction: column; text-align: left; position: relative;
 }
 .sheet * { box-sizing: border-box; }
+.sheet .main, .sheet .body, .sheet .content, .sheet .side, .sheet .rail, .sheet .aside { min-width: 0; }
 .sheet h1, .sheet h2, .sheet h3, .sheet p, .sheet ul { margin: 0; }
 .sheet ul { padding-left: 16px; }
 .sheet li { margin-bottom: 4px; }
@@ -35,7 +37,7 @@
 /* shared bits — long values (emails, URLs, phone) always wrap inside the sheet */
 .s-name { font-size: 26px; font-weight: 800; letter-spacing: .3px; overflow-wrap: anywhere; }
 .s-headline { font-size: 13.5px; font-weight: 600; margin-top: 2px; overflow-wrap: anywhere; }
-.s-contact { font-size: 11.8px; display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.s-contact { font-size: 11.8px; font-weight: 600; display: flex; flex-wrap: wrap; gap: 4px 14px; }
 .s-contact span {
   display: inline-flex; align-items: center;
   overflow-wrap: anywhere; word-break: break-word; max-width: 100%;
@@ -51,12 +53,13 @@
 .s-item { margin-bottom: 11px; }
 .s-item-head { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
 .s-item-head b { font-size: 13.2px; overflow-wrap: anywhere; }
-.s-item-sub { font-size: 12px; color: #55617a; margin-top: 1px; overflow-wrap: anywhere; }
+.s-item-sub { font-size: 12px; color: #3d4858; margin-top: 1px; overflow-wrap: anywhere; }
 .s-dates {
-  font-size: 11.6px; color: #55617a; white-space: nowrap;
-  overflow: hidden; text-overflow: ellipsis; max-width: 46%;
+  font-size: 11.6px; color: #3d4858; white-space: normal;
+  overflow: visible; text-overflow: clip; max-width: 48%;
+  overflow-wrap: anywhere; word-break: break-word;
 }
-.s-item-head .s-dates { flex: 0 1 auto; }
+.s-item-head .s-dates { flex: 0 1 auto; min-width: 0; }
 /* narrow side rails — a date must wrap to a second line, never clip to "2." */
 .tpl-split .side .s-dates, .tpl-portrait .side .s-dates,
 .tpl-studio .side .s-dates, .tpl-infographic .side .s-dates,
@@ -70,7 +73,14 @@
   border: 1px solid #c9d2de; border-radius: 4px; padding: 2px 9px; font-size: 11.5px;
   background: #f5f7fa; color: #1c2434; overflow-wrap: anywhere; max-width: 100%;
 }
-.contact-line { overflow-wrap: anywhere; word-break: break-word; }
+.contact-line { overflow-wrap: anywhere; word-break: break-word; font-weight: 600; }
+.metric { font-weight: 750; color: inherit; }
+.sheet .side .s-item-sub, .sheet .side .s-dates,
+.sheet .rail .s-item-sub, .sheet .rail .s-dates,
+.sheet .aside .s-item-sub, .sheet .aside .s-dates,
+.sheet .panel .s-item-sub, .sheet .panel .s-dates {
+  color: inherit; opacity: .92;
+}
 
 /* education table — clean aligned columns in every template */
 .s-table { width: 100%; border-collapse: collapse; }
@@ -467,7 +477,7 @@
 .tpl-timeline .tl-body ul { margin-top: 4px; }
 
 /* ============ 10. Infographic — angled dark rail with proficiency bars === */
-.tpl-infographic { flex-direction: row; }
+.tpl-infographic { flex-direction: row-reverse; }
 .tpl-infographic .main { flex: 1; min-width: 0; padding: 36px 32px 30px 40px; }
 .tpl-infographic .head { margin-bottom: 18px; padding-bottom: 15px; border-bottom: 3px solid var(--p); position: relative; }
 .tpl-infographic .head::after {
@@ -488,8 +498,8 @@
   width: 248px; flex: 0 0 248px;
   background: linear-gradient(175deg, var(--p) 0%, var(--p2) 100%);
   color: #e4e9f0; padding: 34px 24px 30px;
-  clip-path: polygon(14% 0, 100% 0, 100% 100%, 0 100%);
-  padding-left: 40px;
+  clip-path: none;
+  padding-left: 24px; border-right: 4px solid var(--a);
 }
 .tpl-infographic .avatar {
   width: 124px; height: 124px; border-radius: 50%; object-fit: cover; display: block; margin: 0 auto 22px;
@@ -652,7 +662,7 @@
 .tpl-banner .s-name { font-size: 30px; font-weight: 800; letter-spacing: .4px; line-height: 1.06; }
 .tpl-banner .s-headline { color: var(--a); font-size: 12.5px; letter-spacing: 2.4px; text-transform: uppercase; font-weight: 600; margin-top: 7px; }
 .tpl-banner .s-photo { border-radius: 12px; border: 3px solid rgba(255, 255, 255, .7); box-shadow: 9px 9px 0 0 var(--a); }
-.tpl-banner .rails { display: flex; gap: 26px; padding: 24px 38px 28px; align-items: flex-start; }
+.tpl-banner .rails { display: flex; flex-direction: row-reverse; gap: 26px; padding: 24px 38px 28px; align-items: flex-start; }
 .tpl-banner .main { flex: 1; min-width: 0; }
 .tpl-banner .rail {
   width: 220px; flex: 0 0 220px; background: color-mix(in srgb, var(--a) 26%, #fff);
@@ -738,9 +748,9 @@
   font-family: ui-monospace, "Cascadia Mono", Menlo, monospace;
   font-size: 10.4px; letter-spacing: .4px; color: #3d475c; word-break: break-word; overflow-wrap: anywhere;
 }
-.tpl-masthead .mast-cols { display: flex; gap: 28px; margin-top: 20px; align-items: flex-start; }
+.tpl-masthead .mast-cols { display: flex; flex-direction: row-reverse; gap: 28px; margin-top: 20px; align-items: flex-start; }
 .tpl-masthead .main { flex: 1; min-width: 0; }
-.tpl-masthead .rail { width: 198px; flex: 0 0 198px; border-left: 1px solid var(--a); padding-left: 20px; }
+.tpl-masthead .rail { width: 198px; flex: 0 0 198px; border-right: 1px solid var(--a); padding-right: 20px; }
 .tpl-masthead .s-sec-title {
   color: var(--p); font-size: 11.5px; letter-spacing: 2.8px; margin-bottom: 8px;
   padding-bottom: 5px; border-bottom: 1px solid var(--a); position: relative;
@@ -815,7 +825,7 @@
   width: 136px; height: 164px; object-fit: cover; margin: 0 auto 14px; display: block;
   border: 7px solid #fff; box-shadow: 0 3px 14px rgba(0, 0, 0, .14), 10px 10px 0 0 var(--a); filter: grayscale(1) contrast(1.05);
 }
-.tpl-tintsheet .tint-cols { display: flex; gap: 28px; align-items: flex-start; }
+.tpl-tintsheet .tint-cols { display: flex; flex-direction: row-reverse; gap: 28px; align-items: flex-start; }
 .tpl-tintsheet .main { flex: 1; min-width: 0; }
 .tpl-tintsheet .aside { width: 210px; flex: 0 0 210px; }
 .tpl-tintsheet .s-sec-title {
