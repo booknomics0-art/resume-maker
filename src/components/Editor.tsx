@@ -5,7 +5,7 @@ import {
   clearImportDraft, draftResumeFor, forgetImportInfo, importInfoFor, isDraftResume, subscribeImportDraft,
 } from '../lib/importDraft';
 import { fieldById } from '../lib/fields';
-import { navigate } from '../App';
+import { navigate } from '../lib/navigation';
 import { recordDownload } from '../lib/cloud';
 import { trackEvent } from '../lib/track';
 import Preview, { A4 } from './Preview';

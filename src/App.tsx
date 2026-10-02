@@ -1,12 +1,12 @@
-import { useEffect, useState } from 'react';
-import Dashboard from './components/Dashboard';
-import Editor from './components/Editor';
-import Settings from './components/Settings';
+import { lazy, Suspense, useEffect, useState } from 'react';
+const Dashboard = lazy(() => import('./components/Dashboard'));
+const Editor = lazy(() => import('./components/Editor'));
+const Settings = lazy(() => import('./components/Settings'));
 import AuthPage from './components/AuthPage';
 import Landing from './components/Landing';
 import Footer from './components/Footer';
-import ResumeImporter from './components/ResumeImporter';
-import CoverLetter from './components/CoverLetter';
+const ResumeImporter = lazy(() => import('./components/ResumeImporter'));
+const CoverLetter = lazy(() => import('./components/CoverLetter'));
 import {
   AboutPage, ContactPage, FaqPage, PrivacyPage, TermsPage,
   DisclaimerPage, CookiePage, EulaPage,
@@ -18,6 +18,7 @@ import { cloudBootAuth, cloudCurrentUser, cloudResumeGoogleStart, touchProfile }
 import { hasAuthCallback } from './lib/authRedirect';
 import type { GoogleAuthIssue } from './lib/googleAuth';
 import { syncWithCloud } from './lib/store';
+import { navigate } from './lib/navigation';
 
 function useHashRoute() {
   const [hash, setHash] = useState(window.location.hash || '#/');
@@ -28,10 +29,6 @@ function useHashRoute() {
   }, []);
   return hash.replace(/^#/, '') || '/';
 }
-
-export const navigate = (to: string) => {
-  window.location.hash = to;
-};
 
 export default function App() {
   const [user, setUser] = useState<User | null>(() => currentUser());
@@ -291,7 +288,9 @@ export default function App() {
       <div className={`sidebar-overlay ${menuOpen ? 'open' : ''}`} onClick={() => setMenuOpen(false)} aria-hidden />
 
       <main className={`main ${active === '/editor' ? 'wide' : ''}`}>
-        {page}
+        <Suspense fallback={<div className="card pad">Loading workspace…</div>}>
+          {page}
+        </Suspense>
         <Footer />
       </main>
 

@@ -77,7 +77,7 @@ const RENDER_LONG_EDGE = 2200;
 let pdfjsMod: any = null;
 let customWorkerUrl: string | null = null;
 
-/** The app entry sets this from `pdfjs-dist/build/pdf.worker.min.mjs?url`. */
+/** Tests or embedders may override the pdf.js worker URL explicitly. */
 export function setPdfWorkerUrl(url: string) {
   customWorkerUrl = url;
 }
@@ -85,7 +85,14 @@ export function setPdfWorkerUrl(url: string) {
 async function getPdfjs(): Promise<any> {
   if (!pdfjsMod) {
     const lib: any = await import('pdfjs-dist');
-    if (customWorkerUrl) lib.GlobalWorkerOptions.workerSrc = customWorkerUrl;
+    if (customWorkerUrl) {
+      lib.GlobalWorkerOptions.workerSrc = customWorkerUrl;
+    } else if (typeof document !== 'undefined') {
+      // Only browsers need an emitted worker URL. Node-based parser tests use
+      // pdf.js' own non-browser path and must not receive a Vite ?url module.
+      const workerModule: any = await import('pdfjs-dist/build/pdf.worker.min.mjs?url');
+      lib.GlobalWorkerOptions.workerSrc = workerModule.default;
+    }
     pdfjsMod = lib;
   }
   return pdfjsMod;
