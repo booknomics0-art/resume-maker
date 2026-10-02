@@ -4,7 +4,7 @@ import {
   deleteResume, duplicateResume, loadResumes, sampleResume, upsertResume,
 } from '../lib/store';
 import { fieldById } from '../lib/fields';
-import { navigate } from '../App';
+import { navigate } from '../lib/navigation';
 import { Thumb } from './Preview';
 import { RESUMES_CHANGED_EVENT } from '../lib/cloud';
 import CloudBadge from './CloudBadge';
