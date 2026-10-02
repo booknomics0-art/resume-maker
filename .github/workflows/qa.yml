@@ -34,6 +34,183 @@ jobs:
       - name: Production build
         run: npm run build
 
+      - name: Live browser E2E
+        env:
+          PROD_URL: https://resume-maker-ivory-ten.vercel.app
+        run: |
+          CHROME_BIN="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser)"
+          if [ -z "$CHROME_BIN" ]; then
+            echo "Chrome/Chromium not found on runner"
+            exit 1
+          fi
+          export CHROME_BIN
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import puppeteer from 'puppeteer-core';
+
+          const base = process.env.PROD_URL;
+          const chrome = process.env.CHROME_BIN;
+          const browser = await puppeteer.launch({
+            executablePath: chrome,
+            headless: true,
+            args: ['--no-sandbox', '--disable-setuid-sandbox'],
+          });
+
+          const page = await browser.newPage();
+          page.setDefaultTimeout(20000);
+          const pageErrors = [];
+          const consoleErrors = [];
+          page.on('pageerror', (err) => pageErrors.push(String(err)));
+          page.on('console', (msg) => {
+            if (msg.type() === 'error') consoleErrors.push(msg.text());
+          });
+
+          try {
+            await page.goto(base + '/#/editor/new', { waitUntil: 'networkidle2' });
+            await page.waitForSelector('input[placeholder="e.g. Amit Shukla"]');
+
+            const title = await page.title();
+            if (!title) throw new Error('Production page has no title');
+
+            const nameInput = await page.$('input[placeholder="e.g. Amit Shukla"]');
+            if (!nameInput) throw new Error('Full-name field missing');
+            await nameInput.click({ clickCount: 3 });
+            await nameInput.type('QA Live User');
+
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="900" height="900">
+              <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#123456"/><stop offset=".5" stop-color="#e7a32b"/><stop offset="1" stop-color="#2a8f6a"/>
+              </linearGradient></defs>
+              <rect width="900" height="900" fill="url(#g)"/>
+              <g fill="none" stroke="#fff" stroke-width="7" opacity=".7">
+                ${Array.from({length:35}, (_,i)=>`<circle cx="${(i*73)%900}" cy="${(i*137)%900}" r="${30+(i%9)*14}"/>`).join('')}
+              </g>
+              <text x="450" y="470" font-size="120" text-anchor="middle" fill="#fff" font-family="Arial">QA</text>
+            </svg>`;
+            const photoPath = '/tmp/craftcv-qa-photo.svg';
+            fs.writeFileSync(photoPath, svg);
+
+            const [chooser] = await Promise.all([
+              page.waitForFileChooser(),
+              page.evaluate(() => {
+                const btn = [...document.querySelectorAll('button')].find((b) => b.textContent?.includes('Upload photo'));
+                if (!btn) throw new Error('Upload photo button missing');
+                btn.click();
+              }),
+            ]);
+            await chooser.accept([photoPath]);
+            await page.waitForSelector('img[alt="Profile"]');
+            await new Promise((r) => setTimeout(r, 1200));
+
+            const stored = await page.evaluate(() => {
+              const raw = localStorage.getItem('craftcv.resumes.v2') || localStorage.getItem('craftcv.resumes.v1');
+              if (!raw) return null;
+              const list = JSON.parse(raw);
+              const r = list.find((x) => x?.personal?.fullName === 'QA Live User');
+              return r ? { id: r.id, photo: r.personal.photo, templateId: r.templateId } : null;
+            });
+            if (!stored?.id) throw new Error('Edited resume was not autosaved');
+            if (!stored.photo?.startsWith('data:image/jpeg;base64,')) throw new Error('Autosaved photo is not a JPEG data URL');
+            if (stored.photo.length <= 5000) throw new Error('QA photo is too small to exercise the former 5k truncation bug');
+
+            await page.goto(base + '/#/editor/' + stored.id, { waitUntil: 'networkidle2' });
+            await page.waitForSelector('img[alt="Profile"]');
+            const reloaded = await page.evaluate(() => {
+              const input = document.querySelector('input[placeholder="e.g. Amit Shukla"]');
+              const img = document.querySelector('img[alt="Profile"]');
+              return {
+                name: input?.value || '',
+                photoLength: img?.getAttribute('src')?.length || 0,
+              };
+            });
+            if (reloaded.name !== 'QA Live User') throw new Error('Saved resume name did not survive reload');
+            if (reloaded.photoLength <= 5000) throw new Error('Profile photo was truncated/disappeared after reload');
+
+            const families = [
+              ['data-bars', '.tpl-infographic .side', '.tpl-infographic .main'],
+              ['data-banner', '.tpl-banner .rail', '.tpl-banner .main'],
+              ['it-masthead', '.tpl-masthead .rail', '.tpl-masthead .main'],
+              ['corp-tint', '.tpl-tintsheet .aside', '.tpl-tintsheet .main'],
+            ];
+            for (const [templateId, railSel, mainSel] of families) {
+              await page.evaluate((id) => {
+                for (const key of ['craftcv.resumes.v2', 'craftcv.resumes.v1']) {
+                  const raw = localStorage.getItem(key);
+                  if (!raw) continue;
+                  const list = JSON.parse(raw);
+                  const r = list.find((x) => x?.personal?.fullName === 'QA Live User');
+                  if (r) r.templateId = id;
+                  localStorage.setItem(key, JSON.stringify(list));
+                }
+              }, templateId);
+              await page.reload({ waitUntil: 'networkidle2' });
+              await page.waitForSelector(railSel);
+              const pos = await page.evaluate(({ railSel, mainSel }) => {
+                const rail = document.querySelector(railSel);
+                const main = document.querySelector(mainSel);
+                if (!rail || !main) return null;
+                const rr = rail.getBoundingClientRect();
+                const mr = main.getBoundingClientRect();
+                return { railLeft: rr.left, railRight: rr.right, mainLeft: mr.left, mainRight: mr.right };
+              }, { railSel, mainSel });
+              if (!pos || !(pos.railLeft < pos.mainLeft)) {
+                throw new Error(templateId + ' facts rail is not on the left: ' + JSON.stringify(pos));
+              }
+            }
+
+            const readability = await page.evaluate(() => {
+              const sheet = document.querySelector('.editor-preview .sheet');
+              const contact = sheet?.querySelector('.s-contact');
+              const sheetStyle = sheet ? getComputedStyle(sheet) : null;
+              const contactStyle = contact ? getComputedStyle(contact) : null;
+              return {
+                sheetColor: sheetStyle?.color || '',
+                contactWeight: contactStyle?.fontWeight || '',
+                overflow: sheet ? sheet.scrollWidth - sheet.clientWidth : 999,
+              };
+            });
+            if (readability.overflow > 2) throw new Error('Resume sheet has horizontal overflow: ' + readability.overflow);
+            if (Number.parseInt(readability.contactWeight || '0', 10) < 600) throw new Error('Contact details are not sufficiently emphasized');
+
+            await page.evaluate(() => {
+              window.__qaPrintFallbackCalled = false;
+              window.print = () => { window.__qaPrintFallbackCalled = true; };
+            });
+
+            const responsePromise = page.waitForResponse((res) =>
+              res.url().endsWith('/api/pdf') && res.request().method() === 'POST'
+            );
+            await page.evaluate(() => {
+              const btn = [...document.querySelectorAll('button')].find((b) => b.textContent?.includes('Download PDF'));
+              if (!btn) throw new Error('Download PDF button missing');
+              btn.click();
+            });
+            const pdfResponse = await responsePromise;
+            if (pdfResponse.status() !== 200) throw new Error('Download button PDF request returned ' + pdfResponse.status());
+            const pdfType = pdfResponse.headers()['content-type'] || '';
+            if (!pdfType.includes('application/pdf')) throw new Error('Download button received wrong content type: ' + pdfType);
+            await new Promise((r) => setTimeout(r, 500));
+            const fallback = await page.evaluate(() => window.__qaPrintFallbackCalled === true);
+            if (fallback) throw new Error('Download button fell back to window.print despite successful PDF API');
+
+            if (pageErrors.length) throw new Error('Page errors: ' + pageErrors.join(' | '));
+            console.log(JSON.stringify({
+              title,
+              savedResumeId: stored.id,
+              storedPhotoLength: stored.photo.length,
+              reloadedPhotoLength: reloaded.photoLength,
+              leftRailTemplatesChecked: families.map((x) => x[0]),
+              readability,
+              pdfStatus: pdfResponse.status(),
+              pdfType,
+              consoleErrorCount: consoleErrors.length,
+              consoleErrors: consoleErrors.slice(0, 5),
+            }, null, 2));
+          } finally {
+            await browser.close();
+          }
+          NODE
+
       - name: Live production PDF smoke test
         if: github.event_name == 'workflow_dispatch'
         env:
