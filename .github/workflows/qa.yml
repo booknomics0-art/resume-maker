@@ -183,16 +183,26 @@ jobs:
             }
 
             const oauthStart = new Promise((resolve, reject) => {
-              const timer = setTimeout(() => reject(new Error('No Google/Supabase OAuth authorize request observed')), 15000);
+              let sawSupabaseAuthorize = false;
+              const timer = setTimeout(() => reject(new Error(
+                'OAuth did not reach Google sign-in. Supabase authorize seen=' + sawSupabaseAuthorize
+                + ' requests=' + JSON.stringify(outbound)
+              )), 15000);
               const onRequest = (req) => {
                 try {
                   const u = new URL(req.url());
-                  const isSupabaseAuthorize = u.hostname.endsWith('.supabase.co') && u.pathname.includes('/auth/v1/authorize');
-                  const isGoogle = u.hostname === 'accounts.google.com';
-                  if (isSupabaseAuthorize || isGoogle) {
+                  if (u.hostname.endsWith('.supabase.co') && u.pathname.includes('/auth/v1/authorize')) {
+                    sawSupabaseAuthorize = true;
+                  }
+                  if (u.hostname === 'accounts.google.com') {
                     clearTimeout(timer);
                     oauth.off('request', onRequest);
-                    resolve({ host: u.hostname, path: u.pathname, kind: isGoogle ? 'google' : 'supabase-authorize' });
+                    resolve({
+                      host: u.hostname,
+                      path: u.pathname,
+                      kind: 'google',
+                      sawSupabaseAuthorize,
+                    });
                   }
                 } catch {}
               };
@@ -206,8 +216,8 @@ jobs:
             });
             const oauthObserved = await oauthStart;
 
-            if (!String(oauthObserved.host).includes('supabase.co') && oauthObserved.host !== 'accounts.google.com') {
-              throw new Error('Unexpected OAuth destination: ' + JSON.stringify(oauthObserved));
+            if (oauthObserved.host !== 'accounts.google.com' || !oauthObserved.sawSupabaseAuthorize) {
+              throw new Error('OAuth did not complete the Supabase → Google redirect: ' + JSON.stringify(oauthObserved));
             }
 
             if (pageErrors.length) throw new Error('Mobile page errors: ' + pageErrors.join(' | '));
