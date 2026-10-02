@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   qa:
@@ -15,37 +15,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.ref }}
 
       - name: Use Node 22
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-
-      - name: Refresh lockfile from package.json
-        run: npm install --package-lock-only --ignore-scripts
-
-      - name: Upload refreshed lockfile
-        uses: actions/upload-artifact@v4
-        with:
-          name: refreshed-package-lock
-          path: package-lock.json
-          retention-days: 1
-
-      - name: Commit refreshed lockfile to PR branch
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-        run: |
-          rm -f .github/qa-trigger.txt
-          if ! git diff --quiet -- package-lock.json || [ -n "$(git status --porcelain .github/qa-trigger.txt)" ]; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add package-lock.json
-            git add -u .github/qa-trigger.txt
-            git commit -m "Refresh package lock from package.json"
-            git push origin HEAD:${{ github.event.pull_request.head.ref }}
-          fi
 
       - name: Clean install
         run: npm ci
@@ -60,6 +35,7 @@ jobs:
         run: npm run build
 
       - name: Live production PDF smoke test
+        if: github.event_name == 'workflow_dispatch'
         env:
           PROD_URL: https://resume-maker-ivory-ten.vercel.app
         run: |
