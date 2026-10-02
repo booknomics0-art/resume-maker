@@ -25,7 +25,8 @@
     "test:score": "node tests/test-score-landing.mjs",
     "test:letter": "node tests/test-cover-letter.mjs",
     "preview:templates": "node scripts/render-templates.mjs",
-    "test:photo": "node tests/test-photo-persistence.mjs"
+    "test:photo": "node tests/test-photo-persistence.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.1",
