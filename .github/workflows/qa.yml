@@ -189,7 +189,7 @@ jobs:
 
             const readability = await page.evaluate(() => {
               const sheet = document.querySelector('.editor-preview .sheet');
-              const contact = sheet?.querySelector('.s-contact');
+              const contact = sheet?.querySelector('.s-contact, .tint-contact, .mast-strip, .contact-line');
               const sheetStyle = sheet ? getComputedStyle(sheet) : null;
               const contactStyle = contact ? getComputedStyle(contact) : null;
               return {
