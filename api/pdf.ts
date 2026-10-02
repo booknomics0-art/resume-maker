@@ -14,7 +14,14 @@ function cleanTitle(value: unknown): string {
     .slice(0, 120) || 'resume';
 }
 
-export async function POST(request: Request) {
+export default {
+  async fetch(request: Request) {
+    if (request.method !== 'POST') {
+      return new Response('Method not allowed.', {
+        status: 405,
+        headers: { Allow: 'POST' },
+      });
+    }
   let browser: Awaited<ReturnType<typeof puppeteer.launch>> | undefined;
   try {
     const body = await request.json().catch(() => null) as { html?: unknown; css?: unknown; title?: unknown } | null;
@@ -96,4 +103,5 @@ export async function POST(request: Request) {
   } finally {
     if (browser) await browser.close().catch(() => {});
   }
-}
+  },
+};
