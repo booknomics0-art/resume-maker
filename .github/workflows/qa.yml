@@ -67,12 +67,10 @@ jobs:
           });
 
           try {
-            // Establish an isolated local/offline session so the editor can be
-            // exercised without touching Supabase auth or production accounts.
-            await page.goto(base + '/', { waitUntil: 'networkidle2' });
-            await page.evaluate(() => {
+            // Establish an isolated local/offline session before the app's
+            // first React render so currentUser() sees it immediately.
+            await page.evaluateOnNewDocument(() => {
               const email = 'qa-live@example.invalid';
-              localStorage.clear();
               localStorage.setItem('craftcv.users.v2', JSON.stringify({
                 [email]: {
                   name: 'QA Live',
@@ -86,7 +84,19 @@ jobs:
               localStorage.setItem('craftcv.session.offline', '1');
             });
             await page.goto(base + '/#/editor/new', { waitUntil: 'networkidle2' });
-            await page.waitForSelector('input[placeholder="e.g. Amit Shukla"]');
+            try {
+              await page.waitForSelector('input[placeholder="e.g. Amit Shukla"]');
+            } catch (err) {
+              const diag = await page.evaluate(() => ({
+                href: location.href,
+                hash: location.hash,
+                body: document.body.innerText.slice(0, 1200),
+                session: localStorage.getItem('craftcv.session.v2'),
+                offline: localStorage.getItem('craftcv.session.offline'),
+                users: localStorage.getItem('craftcv.users.v2'),
+              }));
+              throw new Error('Editor did not render: ' + JSON.stringify(diag) + ' :: ' + err);
+            }
 
             const title = await page.title();
             if (!title) throw new Error('Production page has no title');
