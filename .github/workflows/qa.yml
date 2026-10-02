@@ -124,12 +124,8 @@ jobs:
             await page.click('.sidebar-overlay');
             await page.waitForFunction(() => !document.querySelector('.sidebar')?.classList.contains('open'));
 
-            await page.evaluate(() => {
-              const btn = [...document.querySelectorAll('.editor-mobile-tabs button')]
-                .find((b) => b.textContent?.includes('Preview'));
-              if (!btn) throw new Error('Preview mobile tab missing');
-              btn.click();
-            });
+            await page.waitForSelector('.editor-mobile-tabs button:nth-child(2)');
+            await page.click('.editor-mobile-tabs button:nth-child(2)');
             await page.waitForFunction(() => {
               const preview = document.querySelector('.editor-preview');
               const form = document.querySelector('.editor-form');
