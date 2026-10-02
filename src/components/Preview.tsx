@@ -63,7 +63,7 @@ function ContactBits({ r }: { r: Resume }) {
 }
 
 function EmphasizedText({ text }: { text: string }) {
-  const token = /([₹$€£]\s?\d[\d,.]*(?:\s?(?:k|m|b|cr|crore|lakh|million|billion))?|\b\d+(?:[.,]\d+)?\s?(?:%|x|×|k|m|b|cr|crore|lakh|million|billion)\b)/gi;
+  const token = /([₹$€£]\s?\d[\d,.]*(?:\s?(?:k|m|b|cr|crore|lakh|million|billion))?|\b\d+(?:[.,]\d+)?\s?(?:%|x|×|k|m|b|cr|crore|lakh|million|billion)(?=\W|$))/gi;
   const metric = /^(?:[₹$€£]\s?\d[\d,.]*(?:\s?(?:k|m|b|cr|crore|lakh|million|billion))?|\d+(?:[.,]\d+)?\s?(?:%|x|×|k|m|b|cr|crore|lakh|million|billion))$/i;
   return (
     <>
