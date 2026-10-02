@@ -10,7 +10,7 @@ import type { Resume } from '../lib/types';
 import { loadResumes, sampleResume } from '../lib/store';
 import { draftCoverLetter } from '../lib/coverLetter';
 import { trackEvent } from '../lib/track';
-import { navigate } from '../App';
+import { navigate } from '../lib/navigation';
 
 type Layout = 'classic' | 'modern' | 'compact';
 
