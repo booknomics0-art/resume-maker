@@ -38,6 +38,17 @@ export async function POST(request: Request) {
 
     const page = await browser.newPage();
     await page.setJavaScriptEnabled(false);
+
+    // Never let user-controlled resume markup or CSS trigger server-side
+    // network requests. Profile photos are embedded as data: URLs and remain
+    // available, while http(s), file and other resource fetches are blocked.
+    await page.setRequestInterception(true);
+    page.on('request', (req) => {
+      const url = req.url();
+      if (url === 'about:blank' || url.startsWith('data:')) req.continue();
+      else req.abort();
+    });
+
     await page.setContent(
       `<!doctype html>
 <html>
