@@ -28,7 +28,7 @@ import { upsertResume } from '../lib/store';
 import { FIELDS, fieldById } from '../lib/fields';
 import { LAYOUT_META, TEMPLATES, TEMPLATE_COUNT } from '../lib/templates';
 import { ocrAssetMode, type OcrAssetMode } from '../lib/ocr';
-import { navigate } from '../App';
+import { navigate } from '../lib/navigation';
 import DeviceSheet, { DeviceTabs, type DeviceMode } from './DeviceSheet';
 import {
   StepBasics, StepDesign, StepEducation, StepExperience, StepExtras, StepSkills, StepSummary,
