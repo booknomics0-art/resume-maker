@@ -1,0 +1,89 @@
+name: One-time stale branch cleanup
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    if: contains(github.event.head_commit.message, '[branch-cleanup]')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+
+      - name: Delete archived stale branches
+        shell: bash
+        run: |
+          set -euo pipefail
+          branches=(
+            "arena/01a0bfec-resume-maker"
+            "arena/01a0c526-resume-maker"
+            "arena/01a0cd97-resume-maker"
+            "arena/01a0ced7-resume-maker"
+            "arena/01a0cef0-resume-maker"
+            "arena/01a0cf3b-resume-maker"
+            "arena/01a0cf32-resume-maker"
+            "arena/01a0cf64-resume-maker"
+            "arena/01a0d1be-resume-maker"
+            "arena/01a0d1eb-resume-maker"
+            "arena/01a0d4c8-resume-maker"
+            "arena/01a0d14b-resume-maker"
+            "arena/01a0d21e-resume-maker"
+            "arena/01a0d46f-resume-maker"
+            "arena/01a0d164-resume-maker"
+            "arena/01a0d258-resume-maker"
+            "arena/01a0d273-resume-maker"
+            "arena/01a0d499-resume-maker"
+            "arena/01a0d716-resume-maker"
+            "arena/01a0d744-resume-maker"
+            "arena/01a0da0c-resume-maker"
+            "arena/01a0deaa-resume-maker"
+            "arena/01a0e1b8-resume-maker"
+            "arena/01a0e1df-resume-maker"
+            "arena/01a0e2d1-resume-maker"
+            "arena/01a0e115-resume-maker"
+            "arena/01a0e141-resume-maker"
+            "arena/01a0e168-resume-maker"
+            "arena/01a0e303-resume-maker"
+            "arena/01a0ed22-resume-maker"
+            "arena/01a0ee87-resume-maker"
+            "chore/ci-hardening"
+            "fix/contact-readability-special-layouts"
+            "fix/pdf-vercel-handler"
+            "fix/resume-quality-photo-layout"
+            "perf/final-polish"
+            "perf/split-public-pages"
+            "professional-resume-studio"
+            "qa/final-production-smoke"
+            "qa/live-browser-e2e"
+            "qa/mobile-oauth-final"
+            "chore/one-time-branch-cleanup"
+          )
+          deleted=0
+          for branch in "${branches[@]}"; do
+            if git ls-remote --exit-code --heads origin "refs/heads/$branch" >/dev/null 2>&1; then
+              echo "Deleting $branch"
+              git push origin --delete "$branch"
+              deleted=$((deleted + 1))
+            else
+              echo "Already absent: $branch"
+            fi
+          done
+          echo "Deleted $deleted stale branches."
+
+      - name: Remove this one-time workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/one-time-branch-cleanup.yml
+          git commit -m "Remove one-time branch cleanup workflow"
+          git push origin HEAD:main
