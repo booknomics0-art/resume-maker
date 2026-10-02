@@ -34,6 +34,186 @@ jobs:
       - name: Production build
         run: npm run build
 
+      - name: Live mobile and Google OAuth start QA
+        env:
+          PROD_URL: https://resume-maker-ivory-ten.vercel.app
+        run: |
+          CHROME_BIN="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser)"
+          if [ -z "$CHROME_BIN" ]; then
+            echo "Chrome/Chromium not found on runner"
+            exit 1
+          fi
+          export CHROME_BIN
+          node --input-type=module <<'NODE'
+          import puppeteer from 'puppeteer-core';
+
+          const base = process.env.PROD_URL;
+          const browser = await puppeteer.launch({
+            executablePath: process.env.CHROME_BIN,
+            headless: true,
+            args: ['--no-sandbox', '--disable-setuid-sandbox'],
+          });
+
+          const pageErrors = [];
+          const consoleErrors = [];
+
+          try {
+            // ----- Mobile editor sanity (390px wide) -----
+            const page = await browser.newPage();
+            await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 1 });
+            page.setDefaultTimeout(20000);
+            page.on('pageerror', (err) => pageErrors.push(String(err)));
+            page.on('console', (msg) => { if (msg.type() === 'error') consoleErrors.push(msg.text()); });
+
+            await page.evaluateOnNewDocument(() => {
+              const email = 'qa-mobile@example.invalid';
+              localStorage.setItem('craftcv.users.v2', JSON.stringify({
+                [email]: {
+                  name: 'QA Mobile',
+                  email,
+                  provider: 'email',
+                  createdAt: Date.now(),
+                  failedAttempts: 0,
+                },
+              }));
+              localStorage.setItem('craftcv.session.v2', email);
+              localStorage.setItem('craftcv.session.offline', '1');
+            });
+
+            await page.goto(base + '/#/editor/new', { waitUntil: 'networkidle2' });
+            await page.waitForSelector('input[placeholder="e.g. Amit Shukla"]');
+            await page.waitForSelector('.editor-mobile-tabs');
+
+            const mobile = await page.evaluate(() => {
+              const top = document.querySelector('.mobile-topbar');
+              const bottom = document.querySelector('.bottom-nav');
+              const tabs = document.querySelector('.editor-mobile-tabs');
+              const input = document.querySelector('input[placeholder="e.g. Amit Shukla"]');
+              const style = (el) => el ? getComputedStyle(el) : null;
+              return {
+                width: innerWidth,
+                documentOverflow: document.documentElement.scrollWidth - innerWidth,
+                topDisplay: style(top)?.display || '',
+                bottomDisplay: style(bottom)?.display || '',
+                tabsDisplay: style(tabs)?.display || '',
+                inputFontSize: Number.parseFloat(style(input)?.fontSize || '0'),
+              };
+            });
+
+            if (mobile.width !== 390) throw new Error('Unexpected mobile viewport: ' + mobile.width);
+            if (mobile.documentOverflow > 2) throw new Error('Mobile page has horizontal overflow: ' + mobile.documentOverflow);
+            if (mobile.topDisplay !== 'flex') throw new Error('Mobile top bar is not visible: ' + mobile.topDisplay);
+            if (mobile.bottomDisplay !== 'flex') throw new Error('Mobile bottom nav is not visible: ' + mobile.bottomDisplay);
+            if (mobile.tabsDisplay !== 'flex') throw new Error('Editor mobile Edit/Preview tabs are not visible');
+            if (mobile.inputFontSize < 16) throw new Error('Mobile input font is below 16px: ' + mobile.inputFontSize);
+
+            await page.click('.menu-btn');
+            await page.waitForFunction(() => document.querySelector('.sidebar')?.classList.contains('open'));
+            const drawer = await page.evaluate(() => {
+              const el = document.querySelector('.sidebar');
+              const r = el?.getBoundingClientRect();
+              return r ? { left: r.left, right: r.right, width: r.width } : null;
+            });
+            if (!drawer || drawer.left < -2 || drawer.right <= 0) {
+              throw new Error('Mobile drawer did not open onscreen: ' + JSON.stringify(drawer));
+            }
+            await page.click('.sidebar-overlay');
+            await page.waitForFunction(() => !document.querySelector('.sidebar')?.classList.contains('open'));
+
+            await page.evaluate(() => {
+              const btn = [...document.querySelectorAll('.editor-mobile-tabs button')]
+                .find((b) => b.textContent?.includes('Preview'));
+              if (!btn) throw new Error('Preview mobile tab missing');
+              btn.click();
+            });
+            await page.waitForFunction(() => {
+              const preview = document.querySelector('.editor-preview');
+              const form = document.querySelector('.editor-form');
+              return preview && !preview.classList.contains('editor-pane-hidden')
+                && form?.classList.contains('editor-pane-hidden');
+            });
+            const previewOverflow = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
+            if (previewOverflow > 2) throw new Error('Mobile preview causes horizontal page overflow: ' + previewOverflow);
+
+            // ----- Google OAuth start flow (no credentials entered) -----
+            const oauth = await browser.newPage();
+            await oauth.setViewport({ width: 1280, height: 900 });
+            oauth.setDefaultTimeout(20000);
+            const outbound = [];
+            oauth.on('request', (req) => {
+              try {
+                const u = new URL(req.url());
+                if (u.hostname.endsWith('.supabase.co') || u.hostname === 'accounts.google.com') {
+                  outbound.push({ host: u.hostname, path: u.pathname });
+                }
+              } catch {}
+            });
+
+            await oauth.goto(base + '/', { waitUntil: 'networkidle2' });
+            await oauth.evaluate(() => localStorage.clear());
+            await oauth.goto(base + '/#/login', { waitUntil: 'networkidle2' });
+            await oauth.waitForFunction(() =>
+              [...document.querySelectorAll('button')].some((b) => b.textContent?.includes('Continue with Google'))
+            );
+
+            // Let the provider-state probe settle so a disabled provider is detected before clicking.
+            await new Promise((r) => setTimeout(r, 1200));
+            const googleUi = await oauth.evaluate(() => ({
+              body: document.body.innerText.slice(0, 2500),
+              buttonDisabled: [...document.querySelectorAll('button')]
+                .find((b) => b.textContent?.includes('Continue with Google'))?.disabled ?? null,
+            }));
+            if (/Google provider:\s*not enabled|Google login is switched off/i.test(googleUi.body)) {
+              throw new Error('Google provider is disabled in live production');
+            }
+
+            const oauthStart = new Promise((resolve, reject) => {
+              const timer = setTimeout(() => reject(new Error('No Google/Supabase OAuth authorize request observed')), 15000);
+              const onRequest = (req) => {
+                try {
+                  const u = new URL(req.url());
+                  const isSupabaseAuthorize = u.hostname.endsWith('.supabase.co') && u.pathname.includes('/auth/v1/authorize');
+                  const isGoogle = u.hostname === 'accounts.google.com';
+                  if (isSupabaseAuthorize || isGoogle) {
+                    clearTimeout(timer);
+                    oauth.off('request', onRequest);
+                    resolve({ host: u.hostname, path: u.pathname, kind: isGoogle ? 'google' : 'supabase-authorize' });
+                  }
+                } catch {}
+              };
+              oauth.on('request', onRequest);
+            });
+
+            await oauth.evaluate(() => {
+              const btn = [...document.querySelectorAll('button')].find((b) => b.textContent?.includes('Continue with Google'));
+              if (!btn) throw new Error('Continue with Google button missing');
+              btn.click();
+            });
+            const oauthObserved = await oauthStart;
+
+            if (!String(oauthObserved.host).includes('supabase.co') && oauthObserved.host !== 'accounts.google.com') {
+              throw new Error('Unexpected OAuth destination: ' + JSON.stringify(oauthObserved));
+            }
+
+            if (pageErrors.length) throw new Error('Mobile page errors: ' + pageErrors.join(' | '));
+
+            console.log(JSON.stringify({
+              mobile,
+              drawer,
+              previewOverflow,
+              mobileConsoleErrorCount: consoleErrors.length,
+              oauthButtonDisabled: googleUi.buttonDisabled,
+              oauthObserved,
+              oauthHostsSeen: [...new Set(outbound.map((x) => x.host))],
+            }, null, 2));
+
+            await page.close();
+            await oauth.close().catch(() => {});
+          } finally {
+            await browser.close();
+          }
+          NODE
+
       - name: Live production PDF smoke test
         if: github.event_name == 'workflow_dispatch'
         env:
