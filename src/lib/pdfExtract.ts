@@ -77,15 +77,20 @@ const RENDER_LONG_EDGE = 2200;
 let pdfjsMod: any = null;
 let customWorkerUrl: string | null = null;
 
-/** The app entry sets this from `pdfjs-dist/build/pdf.worker.min.mjs?url`. */
+/** Tests or embedders may override the pdf.js worker URL explicitly. */
 export function setPdfWorkerUrl(url: string) {
   customWorkerUrl = url;
 }
 
 async function getPdfjs(): Promise<any> {
   if (!pdfjsMod) {
-    const lib: any = await import('pdfjs-dist');
-    if (customWorkerUrl) lib.GlobalWorkerOptions.workerSrc = customWorkerUrl;
+    const [lib, workerModule]: [any, any] = await Promise.all([
+      import('pdfjs-dist'),
+      customWorkerUrl
+        ? Promise.resolve({ default: customWorkerUrl })
+        : import('pdfjs-dist/build/pdf.worker.min.mjs?url'),
+    ]);
+    lib.GlobalWorkerOptions.workerSrc = customWorkerUrl || workerModule.default;
     pdfjsMod = lib;
   }
   return pdfjsMod;
