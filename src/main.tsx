@@ -5,8 +5,15 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';
+import { installOriginalUploadCapture } from './lib/originalDocument';
+import { installRouteMotion } from './lib/routeMotion';
 import './styles.css';
 import './templates.css';
+
+// Preserve the exact uploaded source file before the existing parser/OCR reads
+// it, and add a light route transition without touching the router itself.
+installOriginalUploadCapture();
+installRouteMotion();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
