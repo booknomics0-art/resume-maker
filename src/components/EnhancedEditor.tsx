@@ -2,16 +2,17 @@ import { useState } from 'react';
 import Editor from './Editor';
 import ExactResumeEditor from './ExactResumeEditor';
 import MobileExactResumeEditor from './MobileExactResumeEditor';
-import PremiumPdfEditor from './PremiumPdfEditor';
+import PremiumPdfEditor from './PremiumPdfEditorExact';
 import { importInfoFor } from '../lib/importDraft';
 
 type ImportEditorMode = 'exact' | 'word' | 'guided';
 
 /**
  * Imported resumes always keep the original file as the visual source of truth.
- * Exact mode is a clean untouched view, Premium edit works directly on top of
- * that source PDF/image, and Structured mode remains available for field-level
- * OCR/template editing. Fresh resumes still open in the guided editor.
+ * Exact mode is a clean untouched view, Premium Exact edits directly on top of
+ * that source PDF/image with page geometry locked, and Structured mode remains
+ * available for field-level OCR/template editing. Fresh resumes still open in
+ * the guided editor.
  */
 export default function EnhancedEditor({ id }: { id: string }) {
   const imported = id !== 'new' && !!importInfoFor(id);
@@ -38,7 +39,7 @@ export default function EnhancedEditor({ id }: { id: string }) {
           <b>Edit uploaded resume</b>
           <span>
             {mode === 'exact' && 'Original view keeps the uploaded PDF/photo completely untouched.'}
-            {mode === 'word' && 'Premium edit changes text on the real PDF instead of rebuilding your resume into a template.'}
+            {mode === 'word' && 'Premium Exact keeps the PDF page order and coordinates locked while you edit text in place.'}
             {mode === 'guided' && 'Structured edit is best for changing parsed resume fields and templates.'}
           </span>
         </div>
@@ -47,7 +48,7 @@ export default function EnhancedEditor({ id }: { id: string }) {
             Original
           </button>
           <button type="button" role="tab" aria-selected={mode === 'word'} className={mode === 'word' ? 'active' : ''} onClick={() => setMode('word')}>
-            Premium edit
+            Premium Exact
           </button>
           <button type="button" role="tab" aria-selected={mode === 'guided'} className={mode === 'guided' ? 'active' : ''} onClick={() => setMode('guided')}>
             Structured
