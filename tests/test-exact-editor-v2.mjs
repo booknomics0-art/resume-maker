@@ -2,7 +2,7 @@ import fs from 'node:fs';
 
 const exact = fs.readFileSync('src/components/ExactResumeEditor.tsx', 'utf8');
 const mobileExact = fs.readFileSync('src/components/MobileExactResumeEditor.tsx', 'utf8');
-const premium = fs.readFileSync('src/components/PremiumPdfEditor.tsx', 'utf8');
+const premium = fs.readFileSync('src/components/PremiumPdfEditorExact.tsx', 'utf8');
 const enhanced = fs.readFileSync('src/components/EnhancedEditor.tsx', 'utf8');
 const exactCss = fs.readFileSync('src/exact-editor-v2.css', 'utf8');
 const original = fs.readFileSync('src/lib/originalDocument.ts', 'utf8');
@@ -28,19 +28,22 @@ check(exact.includes('exact2-replacement'), 'Only changed text should render as 
 check(exactCss.includes('.exact2-workspace.viewing .exact2-replacement'), 'Original mode must hide all edited overlays.');
 check(main.includes("import './exact-editor-v2.css'"), 'Original-view safeguard CSS must be loaded.');
 
-// Premium editing must work on the preserved source PDF/image instead of
-// reconstructing an OCR parse into the generic QuickResumeEditor template.
-check(enhanced.includes("import PremiumPdfEditor from './PremiumPdfEditor'"), 'Imported resumes must expose the premium source-preserving editor.');
+// Premium editing must keep the preserved source PDF/image as the layout truth.
+check(enhanced.includes("import PremiumPdfEditor from './PremiumPdfEditorExact'"), 'Imported resumes must route to the layout-locked Premium Exact editor.');
 check(!enhanced.includes("import QuickResumeEditor from './QuickResumeEditor'"), 'Imported Premium edit must not rebuild the document in QuickResumeEditor.');
-check(enhanced.includes("mode === 'word'") && enhanced.includes('<PremiumPdfEditor'), 'Premium edit mode must route to PremiumPdfEditor.');
+check(enhanced.includes("mode === 'word'") && enhanced.includes('<PremiumPdfEditor'), 'Premium edit mode must route to the source-preserving editor.');
 check(premium.includes('loadOriginalDocument') && premium.includes('claimPendingOriginal'), 'Premium editor must load the original uploaded file.');
 check(premium.includes("import('pdfjs-dist')"), 'Premium editor must render the real PDF with pdf.js.');
-check(premium.includes('original PDF is the canvas'), 'Premium editor must make source preservation explicit.');
-check(premium.includes('premium-ribbon'), 'Premium editor must provide a desktop-quality formatting ribbon.');
-check(premium.includes('type="color"') && premium.includes('fontFamily') && premium.includes('lineHeight'), 'Premium editor must support font, colour and line spacing controls.');
-check(premium.includes('applyList(false)') && premium.includes('applyList(true)'), 'Premium editor must support bullet and numbered list formatting.');
-check(premium.includes('undoRef') && premium.includes('redoRef'), 'Premium editor must provide undo/redo history.');
-check(premium.includes('1080') && premium.includes("matchMedia('(max-width: 760px)')"), 'Premium mobile PDF rendering must cap canvas memory.');
+check(premium.includes('craftcv.premium-exact.v3.'), 'Premium Exact must use a new versioned edit store so stale legacy overlays cannot distort a fresh opening.');
+check(premium.includes('widthPt') && premium.includes('heightPt'), 'Premium Exact must retain the physical page dimensions.');
+check(premium.includes('@page resume') && premium.includes('pageRules'), 'Edited PDF export must preserve each source page size instead of forcing A4.');
+check(premium.includes('boxes.sort(spatialOrder)'), 'PDF text hit targets must follow stable visual reading order.');
+check(premium.includes('Existing text keeps its original X/Y position and box size'), 'The UI must explain the layout lock.');
+check(premium.includes('overflow:hidden'), 'Changed text must stay inside its locked source box rather than reflowing later sections.');
+check(premium.includes('premium3-ribbon'), 'Premium Exact must provide a desktop-quality formatting ribbon.');
+check(premium.includes('type="color"') && premium.includes('fontFamily') && premium.includes('lineHeight'), 'Premium Exact must support font, colour and line spacing controls.');
+check(premium.includes('undoRef') && premium.includes('redoRef'), 'Premium Exact must provide undo/redo history.');
+check(premium.includes('1120') && premium.includes("matchMedia('(max-width: 760px)')"), 'Premium mobile PDF rendering must cap canvas memory.');
 check(premium.includes('position:fixed') && premium.includes('46dvh'), 'Premium mobile editing must use a touch-friendly bottom sheet.');
 check(premium.includes('min-width:20px!important') && premium.includes('min-height:20px!important'), 'Premium mobile text targets must remain touchable.');
 check(!premium.includes('autoFocus'), 'Premium mobile editor must not force-open the keyboard.');
@@ -71,4 +74,4 @@ check(main.includes('installMobileImportSaveGuard'), 'Mobile import save guard m
 check(mobileSaveGuard.includes('surfaceImportError'), 'Mobile save guard must surface validation errors.');
 check(mobileSaveGuard.includes('Edit fields'.toLowerCase()) || mobileSaveGuard.toLowerCase().includes('edit fields'), 'Mobile save guard must return to Edit fields.');
 
-console.log('✓ Exact Editor V2 + premium PDF editor + mobile save-flow guard passed');
+console.log('✓ Exact Editor V2 + layout-locked Premium Exact editor + mobile save-flow guard passed');
