@@ -1,9 +1,11 @@
 import fs from 'node:fs';
 
 const exact = fs.readFileSync('src/components/ExactResumeEditor.tsx', 'utf8');
+const exactCss = fs.readFileSync('src/exact-editor-v2.css', 'utf8');
 const original = fs.readFileSync('src/lib/originalDocument.ts', 'utf8');
 const navigation = fs.readFileSync('src/lib/navigation.ts', 'utf8');
 const motion = fs.readFileSync('src/lib/routeMotion.ts', 'utf8');
+const main = fs.readFileSync('src/main.tsx', 'utf8');
 
 function check(condition, message) {
   if (!condition) throw new Error(message);
@@ -19,6 +21,8 @@ check(exact.includes('loadSavedEdits') && exact.includes('serializeEdits'), 'Exa
 check(exact.includes('exact2-inspector'), 'Editing controls must live in a separate inspector instead of over the document.');
 check(exact.includes('exact2-hit'), 'PDF text hit areas are required in Quick edit mode.');
 check(exact.includes('exact2-replacement'), 'Only changed text should render as a replacement overlay.');
+check(exactCss.includes('.exact2-workspace.viewing .exact2-replacement'), 'Original mode must hide all edited overlays.');
+check(main.includes("import './exact-editor-v2.css'"), 'Original-view safeguard CSS must be loaded.');
 
 // Source preservation must cover both file picker and drag/drop uploads.
 check(original.includes("addEventListener('change'"), 'File-picker source capture is required.');
