@@ -5,7 +5,8 @@
    value with a small, quiet icon. Long emails/URLs may wrap inside their line. */
 .sheet .s-contact,
 .sheet .mast-strip,
-.sheet .tint-contact {
+.sheet .tint-contact,
+.sheet.quick-sheet .quick-contact-grid {
   display: flex !important;
   flex-direction: column !important;
   align-items: flex-start !important;
