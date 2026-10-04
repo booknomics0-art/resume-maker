@@ -3,6 +3,9 @@ import { importInfoFor } from '../lib/importDraft';
 import { claimPendingOriginal, loadOriginalDocument, type OriginalDocumentRecord } from '../lib/originalDocument';
 import { navigate } from '../lib/navigation';
 
+type Align = 'left' | 'center' | 'right';
+type ViewMode = 'original' | 'edit';
+
 interface TextBox {
   id: string;
   original: string;
@@ -18,7 +21,12 @@ interface TextBox {
   bold: boolean;
   italic: boolean;
   underline: boolean;
-  align: 'left' | 'center' | 'right';
+  align: Align;
+  originalFontSize: number;
+  originalBold: boolean;
+  originalItalic: boolean;
+  originalUnderline: boolean;
+  originalAlign: Align;
   changed: boolean;
   custom?: boolean;
 }
@@ -31,7 +39,27 @@ interface PageModel {
   boxes: TextBox[];
 }
 
+interface SavedEdit {
+  page: number;
+  id: string;
+  text: string;
+  fontSize: number;
+  bold: boolean;
+  italic: boolean;
+  underline: boolean;
+  align: Align;
+  custom?: boolean;
+  x?: number;
+  y?: number;
+  w?: number;
+  h?: number;
+  fontFamily?: string;
+  background?: string;
+  color?: string;
+}
+
 const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
+const editKey = (id: string) => `craftcv.exact-editor.v2.${id}`;
 
 function escapeHtml(value: string) {
   return value
@@ -61,44 +89,71 @@ function saveBlob(blob: Blob, filename: string) {
   document.body.appendChild(a);
   a.click();
   a.remove();
-  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  window.setTimeout(() => URL.revokeObjectURL(url), 1200);
+}
+
+function parseRgb(value: string): [number, number, number] | null {
+  const match = value.match(/rgb\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)\)/i);
+  return match ? [Number(match[1]), Number(match[2]), Number(match[3])] : null;
 }
 
 function contrastColor(background: string) {
-  const match = background.match(/rgb\((\d+),(\d+),(\d+)\)/);
-  if (!match) return '#111827';
-  const [, r, g, b] = match.map(Number);
-  const luminance = (0.299 * r + 0.587 * g + 0.114 * b);
+  const rgb = parseRgb(background);
+  if (!rgb) return '#111827';
+  const [r, g, b] = rgb;
+  const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
   return luminance < 130 ? '#ffffff' : '#111827';
 }
 
+/**
+ * Estimate the page colour around a text run rather than sampling through the
+ * glyph itself. Most resumes use flat white or coloured section bands; this
+ * makes replacement text substantially less "sticker-like" than the old
+ * corner-only sampler.
+ */
 function sampleBackground(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  const points = [
-    [x + 2, y + 2],
-    [x + Math.max(2, w - 2), y + 2],
-    [x + 2, y + Math.max(2, h - 2)],
-    [x + Math.max(2, w - 2), y + Math.max(2, h - 2)],
+  const pad = Math.max(2, Math.min(7, h * .35));
+  const points: Array<[number, number]> = [
+    [x + 2, y - pad], [x + w * .5, y - pad], [x + Math.max(2, w - 2), y - pad],
+    [x + 2, y + h + pad], [x + w * .5, y + h + pad], [x + Math.max(2, w - 2), y + h + pad],
+    [x - pad, y + h * .5], [x + w + pad, y + h * .5],
   ];
   let r = 0; let g = 0; let b = 0; let count = 0;
-  for (const [px0, py0] of points) {
-    const px = clamp(Math.round(px0), 0, Math.max(0, ctx.canvas.width - 1));
-    const py = clamp(Math.round(py0), 0, Math.max(0, ctx.canvas.height - 1));
+  for (const [rawX, rawY] of points) {
+    const px = clamp(Math.round(rawX), 0, Math.max(0, ctx.canvas.width - 1));
+    const py = clamp(Math.round(rawY), 0, Math.max(0, ctx.canvas.height - 1));
     try {
       const data = ctx.getImageData(px, py, 1, 1).data;
       if (data[3] < 20) continue;
       r += data[0]; g += data[1]; b += data[2]; count++;
     } catch {
-      // Canvas pixels are local PDF pixels, so this should not fail.
+      // Local PDF canvas pixels are always same-origin. Keep a safe fallback.
     }
   }
   if (!count) return 'rgb(255,255,255)';
   return `rgb(${Math.round(r / count)},${Math.round(g / count)},${Math.round(b / count)})`;
 }
 
+function hasChanges(box: TextBox) {
+  return !!box.custom
+    || box.text !== box.original
+    || Math.abs(box.fontSize - box.originalFontSize) > .001
+    || box.bold !== box.originalBold
+    || box.italic !== box.originalItalic
+    || box.underline !== box.originalUnderline
+    || box.align !== box.originalAlign;
+}
+
+function patchWithChangeState(box: TextBox, patch: Partial<TextBox>): TextBox {
+  const next = { ...box, ...patch };
+  return { ...next, changed: hasChanges(next) };
+}
+
 async function renderPdf(blob: Blob): Promise<PageModel[]> {
   const pdfjs: any = await import('pdfjs-dist');
   const workerModule: any = await import('pdfjs-dist/build/pdf.worker.min.mjs?url');
   pdfjs.GlobalWorkerOptions.workerSrc = workerModule.default;
+
   const bytes = new Uint8Array(await blob.arrayBuffer());
   const doc = await pdfjs.getDocument({ data: bytes, isEvalSupported: false, useSystemFonts: true }).promise;
   const pages: PageModel[] = [];
@@ -106,8 +161,9 @@ async function renderPdf(blob: Blob): Promise<PageModel[]> {
   for (let pageNo = 1; pageNo <= doc.numPages; pageNo++) {
     const page = await doc.getPage(pageNo);
     const base = page.getViewport({ scale: 1 });
-    // Sharp enough to preserve photos/graphics while staying under the PDF API body cap.
-    const scale = Math.min(1.55, 1150 / Math.max(base.width, base.height));
+    // About 145-170 PPI for a normal A4 page: crisp on desktop/mobile while
+    // keeping multi-page edited exports comfortably below the PDF API cap.
+    const scale = Math.min(2.15, 1700 / Math.max(base.width, base.height));
     const viewport = page.getViewport({ scale });
     const canvas = document.createElement('canvas');
     canvas.width = Math.max(1, Math.round(viewport.width));
@@ -121,45 +177,63 @@ async function renderPdf(blob: Blob): Promise<PageModel[]> {
     const tc = await page.getTextContent();
     const boxes: TextBox[] = [];
     let index = 0;
+
     for (const item of tc.items as any[]) {
       const text = String(item?.str || '');
       if (!text.trim()) continue;
       const transform = item.transform || [1, 0, 0, 10, 0, 0];
       const x = (Number(transform[4]) || 0) * scale;
-      const fontHeight = Math.max(6, (Number(item.height) || Math.hypot(Number(transform[2]) || 0, Number(transform[3]) || 10)) * scale);
+      const fontHeight = Math.max(
+        6,
+        (Number(item.height) || Math.hypot(Number(transform[2]) || 0, Number(transform[3]) || 10)) * scale,
+      );
       const y = viewport.height - ((Number(transform[5]) || 0) * scale) - fontHeight;
-      const w = Math.max(4, (Number(item.width) || text.length * fontHeight * 0.45) * scale);
-      const h = Math.max(fontHeight * 1.18, 8);
+      const w = Math.max(5, (Number(item.width) || text.length * fontHeight * .46) * scale);
+      const h = Math.max(fontHeight * 1.2, 8);
       if (x > viewport.width || y > viewport.height || x + w < 0 || y + h < 0) continue;
-      const bg = sampleBackground(ctx, x, y, w, h);
+
+      const background = sampleBackground(ctx, x, y, w, h);
       const style = (tc.styles || {})[item.fontName] || {};
+      const fontFamily = String(style.fontFamily || 'Arial, sans-serif');
+      const inferred = `${String(item.fontName || '')} ${fontFamily}`;
+      const bold = /bold|black|semibold|demi/i.test(inferred);
+      const italic = /italic|oblique/i.test(inferred);
+      const fontSize = clamp(fontHeight / viewport.width * 100, .62, 8);
+
       boxes.push({
         id: `p${pageNo}-t${index++}`,
         original: text,
         text,
         x: clamp(x / viewport.width * 100, 0, 100),
         y: clamp(y / viewport.height * 100, 0, 100),
-        w: clamp(w / viewport.width * 100, 0.5, 100),
-        h: clamp(h / viewport.height * 100, 0.6, 20),
-        fontSize: clamp(fontHeight / viewport.width * 100, 0.65, 8),
-        fontFamily: style.fontFamily || 'Arial, sans-serif',
-        background: bg,
-        color: contrastColor(bg),
-        bold: /bold|black|semibold/i.test(String(item.fontName || '') + ' ' + String(style.fontFamily || '')),
-        italic: /italic|oblique/i.test(String(item.fontName || '') + ' ' + String(style.fontFamily || '')),
+        w: clamp(w / viewport.width * 100, .55, 100),
+        h: clamp(h / viewport.height * 100, .65, 20),
+        fontSize,
+        fontFamily,
+        background,
+        color: contrastColor(background),
+        bold,
+        italic,
         underline: false,
         align: 'left',
+        originalFontSize: fontSize,
+        originalBold: bold,
+        originalItalic: italic,
+        originalUnderline: false,
+        originalAlign: 'left',
         changed: false,
       });
     }
 
-    pages.push({
-      id: `page-${pageNo}`,
-      image: canvas.toDataURL('image/jpeg', 0.94),
-      width: canvas.width,
-      height: canvas.height,
-      boxes,
-    });
+    let image = '';
+    try {
+      image = canvas.toDataURL('image/webp', .93);
+      if (!image.startsWith('data:image/webp')) image = canvas.toDataURL('image/jpeg', .95);
+    } catch {
+      image = canvas.toDataURL('image/jpeg', .95);
+    }
+
+    pages.push({ id: `page-${pageNo}`, image, width: canvas.width, height: canvas.height, boxes });
   }
   return pages;
 }
@@ -188,12 +262,94 @@ function isImage(source: OriginalDocumentRecord) {
   return source.type.startsWith('image/') || /\.(png|jpe?g|webp|bmp|gif)$/i.test(source.name);
 }
 
+function loadSavedEdits(id: string): SavedEdit[] {
+  try {
+    const raw = localStorage.getItem(editKey(id));
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function applySavedEdits(pages: PageModel[], edits: SavedEdit[]): PageModel[] {
+  if (!edits.length) return pages;
+  const next = pages.map((page) => ({ ...page, boxes: [...page.boxes] }));
+  for (const edit of edits) {
+    const page = next[edit.page];
+    if (!page) continue;
+    if (edit.custom) {
+      const box: TextBox = {
+        id: edit.id,
+        original: '',
+        text: edit.text || '',
+        x: edit.x ?? 10,
+        y: edit.y ?? 10,
+        w: edit.w ?? 28,
+        h: edit.h ?? 4,
+        fontSize: edit.fontSize || 2.1,
+        fontFamily: edit.fontFamily || 'Arial, sans-serif',
+        background: edit.background || 'rgb(255,255,255)',
+        color: edit.color || '#111827',
+        bold: !!edit.bold,
+        italic: !!edit.italic,
+        underline: !!edit.underline,
+        align: edit.align || 'left',
+        originalFontSize: edit.fontSize || 2.1,
+        originalBold: false,
+        originalItalic: false,
+        originalUnderline: false,
+        originalAlign: 'left',
+        changed: true,
+        custom: true,
+      };
+      if (!page.boxes.some((b) => b.id === box.id)) page.boxes.push(box);
+      continue;
+    }
+    page.boxes = page.boxes.map((box) => box.id !== edit.id ? box : patchWithChangeState(box, {
+      text: edit.text,
+      fontSize: edit.fontSize,
+      bold: edit.bold,
+      italic: edit.italic,
+      underline: edit.underline,
+      align: edit.align,
+    }));
+  }
+  return next;
+}
+
+function serializeEdits(pages: PageModel[]): SavedEdit[] {
+  const out: SavedEdit[] = [];
+  pages.forEach((page, pageIndex) => {
+    page.boxes.filter((box) => box.changed || box.custom).forEach((box) => {
+      out.push({
+        page: pageIndex,
+        id: box.id,
+        text: box.text,
+        fontSize: box.fontSize,
+        bold: box.bold,
+        italic: box.italic,
+        underline: box.underline,
+        align: box.align,
+        custom: box.custom,
+        ...(box.custom ? {
+          x: box.x, y: box.y, w: box.w, h: box.h,
+          fontFamily: box.fontFamily, background: box.background, color: box.color,
+        } : {}),
+      });
+    });
+  });
+  return out;
+}
+
 export default function ExactResumeEditor({ id, onOpenGuided }: { id: string; onOpenGuided: () => void }) {
   const [source, setSource] = useState<OriginalDocumentRecord | null>(null);
   const [pages, setPages] = useState<PageModel[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hydrated, setHydrated] = useState(false);
   const [error, setError] = useState('');
-  const [active, setActive] = useState<{ page: number; id: string } | null>(null);
+  const [mode, setMode] = useState<ViewMode>('original');
+  const [selected, setSelected] = useState<{ page: number; id: string } | null>(null);
   const [downloading, setDownloading] = useState(false);
   const info = useMemo(() => importInfoFor(id), [id]);
 
@@ -201,18 +357,27 @@ export default function ExactResumeEditor({ id, onOpenGuided }: { id: string; on
     let cancelled = false;
     (async () => {
       setLoading(true);
+      setHydrated(false);
       setError('');
       try {
         const original = await loadOriginalDocument(id) || await claimPendingOriginal(id);
         if (cancelled) return;
         setSource(original);
         if (!original) {
-          setError('The original file is not available for this older import. Re-upload it once to use Exact Edit without losing layout, fonts, photos or alignment.');
+          setError('This older import does not have its original file saved. Re-upload it once and Exact Edit will preserve the real layout, photo and graphics.');
           return;
         }
-        if (isPdf(original)) setPages(await renderPdf(original.blob));
-        else if (isImage(original)) setPages(await renderImage(original.blob));
-        else setError('Exact visual editing is available for PDF and image resumes. Your original file is still preserved; open the structured editor or re-upload a PDF export for pixel-safe editing.');
+
+        let rendered: PageModel[] = [];
+        if (isPdf(original)) rendered = await renderPdf(original.blob);
+        else if (isImage(original)) rendered = await renderImage(original.blob);
+        else {
+          setError('Exact visual editing is available for PDF and image resumes. Your original file is preserved, but DOCX exact pagination depends on Microsoft Word fonts and rendering. Export the DOCX as PDF and upload that for exact visual editing.');
+          return;
+        }
+        if (cancelled) return;
+        setPages(applySavedEdits(rendered, loadSavedEdits(id)));
+        setHydrated(true);
       } catch (e: any) {
         if (!cancelled) setError(e?.message || 'Could not open the original resume.');
       } finally {
@@ -222,67 +387,142 @@ export default function ExactResumeEditor({ id, onOpenGuided }: { id: string; on
     return () => { cancelled = true; };
   }, [id]);
 
-  const activeBox = active ? pages[active.page]?.boxes.find((b) => b.id === active.id) : null;
+  useEffect(() => {
+    if (!hydrated || !pages.length) return;
+    try {
+      const edits = serializeEdits(pages);
+      if (edits.length) localStorage.setItem(editKey(id), JSON.stringify(edits));
+      else localStorage.removeItem(editKey(id));
+    } catch {
+      // Editing still works if browser storage is unavailable.
+    }
+  }, [hydrated, id, pages]);
+
+  const selectedBox = selected ? pages[selected.page]?.boxes.find((box) => box.id === selected.id) : null;
+  const editCount = useMemo(() => pages.reduce((n, page) => n + page.boxes.filter((box) => box.changed || box.custom).length, 0), [pages]);
 
   const patchBox = (pageIndex: number, boxId: string, patch: Partial<TextBox>) => {
     setPages((prev) => prev.map((page, pi) => pi !== pageIndex ? page : {
       ...page,
-      boxes: page.boxes.map((box) => box.id === boxId ? { ...box, ...patch } : box),
+      boxes: page.boxes.map((box) => box.id === boxId ? patchWithChangeState(box, patch) : box),
     }));
+  };
+
+  const selectBox = (page: number, id2: string) => {
+    setSelected({ page, id: id2 });
+  };
+
+  const resetSelected = () => {
+    if (!selected || !selectedBox) return;
+    if (selectedBox.custom) {
+      setPages((prev) => prev.map((page, pi) => pi !== selected.page ? page : {
+        ...page,
+        boxes: page.boxes.filter((box) => box.id !== selected.id),
+      }));
+      setSelected(null);
+      return;
+    }
+    patchBox(selected.page, selected.id, {
+      text: selectedBox.original,
+      fontSize: selectedBox.originalFontSize,
+      bold: selectedBox.originalBold,
+      italic: selectedBox.originalItalic,
+      underline: selectedBox.originalUnderline,
+      align: selectedBox.originalAlign,
+    });
   };
 
   const addText = () => {
     if (!pages.length) return;
+    const pageIndex = selected?.page ?? 0;
     const id2 = `custom-${Date.now().toString(36)}`;
     const box: TextBox = {
-      id: id2, original: '', text: 'New text', x: 10, y: 10, w: 30, h: 4,
-      fontSize: 2.2, fontFamily: 'Arial, sans-serif', background: 'rgba(255,255,255,.92)',
-      color: '#111827', bold: false, italic: false, underline: false, align: 'left', changed: true, custom: true,
+      id: id2,
+      original: '',
+      text: 'New text',
+      x: 10,
+      y: 10,
+      w: 28,
+      h: 4,
+      fontSize: 2.1,
+      fontFamily: 'Arial, sans-serif',
+      background: 'rgb(255,255,255)',
+      color: '#111827',
+      bold: false,
+      italic: false,
+      underline: false,
+      align: 'left',
+      originalFontSize: 2.1,
+      originalBold: false,
+      originalItalic: false,
+      originalUnderline: false,
+      originalAlign: 'left',
+      changed: true,
+      custom: true,
     };
-    setPages((prev) => prev.map((page, pi) => pi === 0 ? { ...page, boxes: [...page.boxes, box] } : page));
-    setActive({ page: 0, id: id2 });
+    setPages((prev) => prev.map((page, pi) => pi === pageIndex ? { ...page, boxes: [...page.boxes, box] } : page));
+    setMode('edit');
+    setSelected({ page: pageIndex, id: id2 });
   };
 
-  const resetActive = () => {
-    if (!active || !activeBox) return;
-    if (activeBox.custom) {
-      setPages((prev) => prev.map((page, pi) => pi !== active.page ? page : { ...page, boxes: page.boxes.filter((b) => b.id !== active.id) }));
-      setActive(null);
-      return;
-    }
-    patchBox(active.page, active.id, { text: activeBox.original, changed: false, bold: activeBox.bold, italic: activeBox.italic, underline: false });
+  const clearAllEdits = () => {
+    if (!confirm('Discard all Exact Edit changes and return to the untouched uploaded resume?')) return;
+    setPages((prev) => prev.map((page) => ({
+      ...page,
+      boxes: page.boxes
+        .filter((box) => !box.custom)
+        .map((box) => ({
+          ...box,
+          text: box.original,
+          fontSize: box.originalFontSize,
+          bold: box.originalBold,
+          italic: box.originalItalic,
+          underline: box.originalUnderline,
+          align: box.originalAlign,
+          changed: false,
+        })),
+    })));
+    setSelected(null);
   };
 
-  const anyChanges = pages.some((p) => p.boxes.some((b) => b.changed || b.custom));
+  const downloadOriginal = () => {
+    if (!source) return;
+    saveBlob(source.blob, source.name || 'resume');
+  };
 
-  const download = async () => {
-    if (!source || downloading) return;
-    if (!anyChanges && isPdf(source)) {
-      saveBlob(source.blob, source.name || 'resume.pdf');
-      return;
-    }
+  const downloadEdited = async () => {
+    if (!source || !editCount || downloading) return;
     setDownloading(true);
     setError('');
     try {
       const html = pages.map((page) => {
-        const overlays = page.boxes.filter((b) => b.changed || b.custom).map((b) => `
-          <div style="position:absolute;left:${b.x}%;top:${b.y}%;width:${b.w}%;min-height:${b.h}%;box-sizing:border-box;background:${b.background};color:${b.color};font-family:${b.fontFamily};font-size:${b.fontSize}cqw;font-weight:${b.bold ? 700 : 400};font-style:${b.italic ? 'italic' : 'normal'};text-decoration:${b.underline ? 'underline' : 'none'};text-align:${b.align};line-height:1.08;white-space:pre-wrap;overflow:visible;">${escapeHtml(b.text)}</div>`).join('');
-        return `<section class="sheet exact-print-page" style="position:relative;overflow:hidden;container-type:inline-size;"><img src="${page.image}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:fill;display:block;"/>${overlays}</section>`;
+        const overlays = page.boxes.filter((box) => box.changed || box.custom).map((box) => {
+          const fontMm = clamp(box.fontSize * 2.1, 1.3, 20);
+          return `<div style="position:absolute;left:${box.x}%;top:${box.y}%;width:${box.w}%;min-height:${box.h}%;box-sizing:border-box;padding:0 .15mm;background:${box.background};color:${box.color};font-family:${box.fontFamily};font-size:${fontMm}mm;font-weight:${box.bold ? 700 : 400};font-style:${box.italic ? 'italic' : 'normal'};text-decoration:${box.underline ? 'underline' : 'none'};text-align:${box.align};line-height:1.06;white-space:pre-wrap;overflow:visible;">${escapeHtml(box.text)}</div>`;
+        }).join('');
+        return `<section class="sheet exact-print-page"><img alt="" src="${page.image}"/>${overlays}</section>`;
       }).join('');
+
+      if (html.length > 2_900_000) {
+        throw new Error('This resume is too large for a safe edited export. Download the untouched original, or edit fewer pages at once.');
+      }
+
       const css = `
         @page { size: A4; margin: 0; }
         * { box-sizing: border-box; }
-        html,body,.print-root { margin:0; padding:0; background:#fff; }
-        .exact-print-page { width:210mm; height:297mm; page-break-after:always; }
+        html, body, .print-root { margin:0; padding:0; background:#fff; }
+        .exact-print-page { position:relative; width:210mm; height:297mm; overflow:hidden; page-break-after:always; }
         .exact-print-page:last-child { page-break-after:auto; }
+        .exact-print-page > img { position:absolute; inset:0; width:100%; height:100%; object-fit:fill; display:block; }
       `;
+      const title = `edited-${source.name.replace(/\.[^.]+$/, '') || 'resume'}`;
       const response = await fetch('/api/pdf', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ html, css, title: `edited-${source.name.replace(/\.[^.]+$/, '') || 'resume'}` }),
+        body: JSON.stringify({ html, css, title }),
       });
-      if (!response.ok) throw new Error(await response.text() || 'Could not generate PDF.');
-      saveBlob(await response.blob(), `edited-${source.name.replace(/\.[^.]+$/, '') || 'resume'}.pdf`);
+      if (!response.ok) throw new Error(await response.text() || 'Could not generate the edited PDF.');
+      saveBlob(await response.blob(), `${title}.pdf`);
     } catch (e: any) {
       setError(e?.message || 'Could not generate the edited PDF.');
     } finally {
@@ -291,127 +531,253 @@ export default function ExactResumeEditor({ id, onOpenGuided }: { id: string; on
   };
 
   if (loading) {
-    return <div className="card pad" style={{ maxWidth: 760, margin: '40px auto', textAlign: 'center' }}><h3>Opening your original resume…</h3><p className="hint">Keeping the uploaded layout, photo, fonts and graphics intact.</p></div>;
+    return (
+      <div className="card pad" style={{ maxWidth: 720, margin: '42px auto', textAlign: 'center' }}>
+        <div style={{ fontSize: 34, marginBottom: 8 }}>📄</div>
+        <h3 style={{ marginBottom: 6 }}>Opening your original resume…</h3>
+        <p className="hint">No template conversion. Keeping the uploaded layout, photo, spacing and graphics intact.</p>
+      </div>
+    );
   }
 
   if (!source || !pages.length) {
     return (
       <div className="card pad" style={{ maxWidth: 760, margin: '32px auto' }}>
-        <h2 style={{ color: 'var(--navy-900)' }}>Exact Edit needs the original file</h2>
+        <h2 style={{ color: 'var(--navy-900)' }}>Open the real source file</h2>
         <p className="hint" style={{ fontSize: 14 }}>{error}</p>
         <div className="row" style={{ marginTop: 16, flexWrap: 'wrap' }}>
-          <button className="btn primary" onClick={() => navigate('/import')}>📤 Re-upload original resume</button>
-          <button className="btn" onClick={onOpenGuided}>Open structured editor</button>
-          {source && <button className="btn" onClick={() => saveBlob(source.blob, source.name)}>Download original</button>}
+          <button className="btn primary" onClick={() => navigate('/import')}>📤 Re-upload resume</button>
+          <button className="btn" onClick={onOpenGuided}>Use structured editor</button>
+          {source && <button className="btn" onClick={downloadOriginal}>Download original</button>}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="exact-editor-root">
-      <div className="exact-topbar no-print">
-        <div style={{ minWidth: 0 }}>
-          <div className="page-title" style={{ fontSize: 20 }}>Exact Resume Editor</div>
-          <div className="page-sub" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {source.name}{info?.meta?.pages ? ` · ${info.meta.pages} page${info.meta.pages > 1 ? 's' : ''}` : ''} · original layout preserved
+    <div className="exact2-root">
+      <header className="exact2-head no-print">
+        <div className="exact2-title-wrap">
+          <div className="exact2-kicker">Original resume workspace</div>
+          <div className="page-title exact2-title">{source.name}</div>
+          <div className="page-sub exact2-sub">
+            {info?.meta?.pages ? `${info.meta.pages} page${info.meta.pages > 1 ? 's' : ''} · ` : ''}
+            source layout locked · photo &amp; artwork preserved
           </div>
         </div>
-        <div className="row exact-actions">
+        <div className="exact2-head-actions">
           <button className="btn" onClick={() => navigate('/import')}>Upload another</button>
-          <button className="btn" onClick={onOpenGuided}>Structured editor</button>
-          <button className="btn primary" onClick={download} disabled={downloading}>{downloading ? 'Preparing PDF…' : anyChanges ? 'Download edited PDF' : 'Download original PDF'}</button>
+          <button className="btn" onClick={downloadOriginal}>Download original</button>
+          {editCount > 0 && (
+            <button className="btn primary" onClick={downloadEdited} disabled={downloading}>
+              {downloading ? 'Preparing…' : `Download edited PDF (${editCount})`}
+            </button>
+          )}
+        </div>
+      </header>
+
+      <div className="exact2-modebar no-print">
+        <div className="exact2-segment" role="tablist" aria-label="Resume view mode">
+          <button role="tab" aria-selected={mode === 'original'} className={mode === 'original' ? 'active' : ''} onClick={() => { setMode('original'); setSelected(null); }}>
+            👁 Original
+          </button>
+          <button role="tab" aria-selected={mode === 'edit'} className={mode === 'edit' ? 'active' : ''} onClick={() => setMode('edit')}>
+            ✎ Quick edit
+          </button>
+        </div>
+        <div className="exact2-mode-actions">
+          {mode === 'edit' && <button className="btn small" onClick={addText}>＋ Add text</button>}
+          {editCount > 0 && <button className="btn small" onClick={clearAllEdits}>Reset all</button>}
+          <button className="btn small" onClick={onOpenGuided}>Structured editor</button>
         </div>
       </div>
 
-      <div className="exact-toolbar no-print" aria-label="Text formatting toolbar">
-        <button className="btn small" onClick={addText}>＋ Add text</button>
-        <button className="btn small" disabled={!activeBox} onClick={() => active && activeBox && patchBox(active.page, active.id, { bold: !activeBox.bold, changed: true })}><b>B</b></button>
-        <button className="btn small" disabled={!activeBox} onClick={() => active && activeBox && patchBox(active.page, active.id, { italic: !activeBox.italic, changed: true })}><i>I</i></button>
-        <button className="btn small" disabled={!activeBox} onClick={() => active && activeBox && patchBox(active.page, active.id, { underline: !activeBox.underline, changed: true })}><u>U</u></button>
-        <button className="btn small" disabled={!activeBox} onClick={() => active && activeBox && patchBox(active.page, active.id, { fontSize: clamp(activeBox.fontSize * .9, .55, 9), changed: true })}>A−</button>
-        <button className="btn small" disabled={!activeBox} onClick={() => active && activeBox && patchBox(active.page, active.id, { fontSize: clamp(activeBox.fontSize * 1.1, .55, 9), changed: true })}>A＋</button>
-        <button className="btn small" disabled={!activeBox} onClick={() => active && patchBox(active.page, active.id, { align: 'left', changed: true })}>⇤</button>
-        <button className="btn small" disabled={!activeBox} onClick={() => active && patchBox(active.page, active.id, { align: 'center', changed: true })}>≡</button>
-        <button className="btn small" disabled={!activeBox} onClick={() => active && patchBox(active.page, active.id, { align: 'right', changed: true })}>⇥</button>
-        <button className="btn small" disabled={!activeBox} onClick={resetActive}>{activeBox?.custom ? 'Delete text' : 'Reset text'}</button>
-        <span className="hint exact-toolbar-hint">Tap/click text exactly where it appears, then type. Photo and page artwork stay untouched.</span>
-      </div>
+      {mode === 'original' && (
+        <div className="exact2-note no-print">
+          <b>Untouched view.</b> This is the uploaded document itself — not a CraftCV template recreation. Switch to Quick edit only when you need to change text.
+        </div>
+      )}
 
-      {error && <div className="notice err" style={{ marginBottom: 12 }}>{error}</div>}
+      {mode === 'edit' && !pages.some((page) => page.boxes.length) && (
+        <div className="notice no-print" style={{ marginBottom: 14 }}>
+          This file is image-only, so it has no selectable PDF text layer. The original visual is still preserved. You can add text overlays here, or use Structured editor for OCR-based field editing.
+        </div>
+      )}
 
-      <div className="exact-pages">
-        {pages.map((page, pageIndex) => (
-          <div key={page.id} className="exact-page-wrap">
-            <div className="exact-page" style={{ aspectRatio: `${page.width} / ${page.height}` }}>
-              <img src={page.image} alt={`Original resume page ${pageIndex + 1}`} draggable={false} />
-              {page.boxes.map((box) => {
-                const focused = active?.page === pageIndex && active.id === box.id;
-                const showReplacement = focused || box.changed || box.custom;
-                return (
+      {error && <div className="notice err no-print" style={{ marginBottom: 14 }}>{error}</div>}
+
+      <div className={`exact2-workspace ${mode === 'edit' ? 'editing' : 'viewing'}`}>
+        <main className="exact2-pages" aria-label="Resume pages">
+          {pages.map((page, pageIndex) => (
+            <section key={page.id} className="exact2-page-wrap">
+              <div className="exact2-page" style={{ aspectRatio: `${page.width} / ${page.height}` }}>
+                <img src={page.image} alt={`Original resume page ${pageIndex + 1}`} draggable={false} />
+
+                {page.boxes.filter((box) => box.changed || box.custom).map((box) => (
                   <div
-                    key={box.id}
-                    className={`exact-text-box ${showReplacement ? 'visible' : ''} ${focused ? 'focused' : ''}`}
+                    key={`replacement-${box.id}`}
+                    className="exact2-replacement"
                     style={{
                       left: `${box.x}%`, top: `${box.y}%`, width: `${box.w}%`, minHeight: `${box.h}%`,
-                      fontSize: `clamp(6px, ${box.fontSize}cqw, 48px)`, fontFamily: box.fontFamily,
-                      background: showReplacement ? box.background : 'transparent', color: showReplacement ? box.color : 'transparent',
+                      fontSize: `clamp(6px, ${box.fontSize}cqw, 50px)`, fontFamily: box.fontFamily,
+                      background: box.background, color: box.color,
                       fontWeight: box.bold ? 700 : 400, fontStyle: box.italic ? 'italic' : 'normal',
                       textDecoration: box.underline ? 'underline' : 'none', textAlign: box.align,
-                    }}
-                    contentEditable
-                    suppressContentEditableWarning
-                    spellCheck
-                    role="textbox"
-                    aria-label={`Editable text: ${box.original || 'new text'}`}
-                    onFocus={(e) => {
-                      setActive({ page: pageIndex, id: box.id });
-                      if (!showReplacement) {
-                        e.currentTarget.style.background = box.background;
-                        e.currentTarget.style.color = box.color;
-                      }
-                    }}
-                    onBlur={(e) => {
-                      const text = e.currentTarget.innerText.replace(/\r/g, '').trimEnd();
-                      patchBox(pageIndex, box.id, { text, changed: box.custom || text !== box.original || box.bold !== /bold|black|semibold/i.test(box.fontFamily) || box.italic || box.underline });
                     }}
                   >
                     {box.text}
                   </div>
-                );
-              })}
-            </div>
-            <div className="hint" style={{ textAlign: 'center', marginTop: 6 }}>Page {pageIndex + 1} · original visual is the locked background</div>
-          </div>
-        ))}
+                ))}
+
+                {mode === 'edit' && page.boxes.map((box) => {
+                  const active = selected?.page === pageIndex && selected.id === box.id;
+                  return (
+                    <button
+                      key={`hit-${box.id}`}
+                      type="button"
+                      className={`exact2-hit ${active ? 'active' : ''} ${box.changed || box.custom ? 'changed' : ''}`}
+                      aria-label={`Edit text: ${box.original || box.text || 'new text'}`}
+                      title={box.original || box.text || 'Edit text'}
+                      onClick={() => selectBox(pageIndex, box.id)}
+                      style={{ left: `${box.x}%`, top: `${box.y}%`, width: `${Math.max(box.w, 1.3)}%`, height: `${Math.max(box.h, 1.4)}%` }}
+                    />
+                  );
+                })}
+              </div>
+              <div className="exact2-page-label no-print">Page {pageIndex + 1}</div>
+            </section>
+          ))}
+        </main>
+
+        {mode === 'edit' && (
+          <aside className="exact2-inspector no-print" aria-label="Quick edit controls">
+            {selectedBox && selected ? (
+              <>
+                <div className="exact2-inspector-head">
+                  <div>
+                    <div className="exact2-kicker">Selected text</div>
+                    <b>{selectedBox.custom ? 'New text block' : 'Edit only this text'}</b>
+                  </div>
+                  <button className="exact2-close" aria-label="Close text editor" onClick={() => setSelected(null)}>×</button>
+                </div>
+
+                {!selectedBox.custom && (
+                  <div className="exact2-original-copy" title={selectedBox.original}>
+                    <span>Original</span>
+                    <div>{selectedBox.original}</div>
+                  </div>
+                )}
+
+                <label className="f" htmlFor="exact-edit-text">Text</label>
+                <textarea
+                  id="exact-edit-text"
+                  className="textarea exact2-textarea"
+                  value={selectedBox.text}
+                  autoFocus
+                  onChange={(e) => patchBox(selected.page, selected.id, { text: e.target.value })}
+                />
+
+                <div className="exact2-format-row">
+                  <button className={`btn small ${selectedBox.bold ? 'primary' : ''}`} onClick={() => patchBox(selected.page, selected.id, { bold: !selectedBox.bold })}><b>B</b></button>
+                  <button className={`btn small ${selectedBox.italic ? 'primary' : ''}`} onClick={() => patchBox(selected.page, selected.id, { italic: !selectedBox.italic })}><i>I</i></button>
+                  <button className={`btn small ${selectedBox.underline ? 'primary' : ''}`} onClick={() => patchBox(selected.page, selected.id, { underline: !selectedBox.underline })}><u>U</u></button>
+                  <span className="exact2-divider" />
+                  <button className="btn small" aria-label="Decrease font size" onClick={() => patchBox(selected.page, selected.id, { fontSize: clamp(selectedBox.fontSize * .94, .55, 9) })}>A−</button>
+                  <button className="btn small" aria-label="Increase font size" onClick={() => patchBox(selected.page, selected.id, { fontSize: clamp(selectedBox.fontSize * 1.06, .55, 9) })}>A＋</button>
+                </div>
+
+                <div className="exact2-format-row">
+                  <button className={`btn small ${selectedBox.align === 'left' ? 'primary' : ''}`} onClick={() => patchBox(selected.page, selected.id, { align: 'left' })}>Left</button>
+                  <button className={`btn small ${selectedBox.align === 'center' ? 'primary' : ''}`} onClick={() => patchBox(selected.page, selected.id, { align: 'center' })}>Center</button>
+                  <button className={`btn small ${selectedBox.align === 'right' ? 'primary' : ''}`} onClick={() => patchBox(selected.page, selected.id, { align: 'right' })}>Right</button>
+                </div>
+
+                <div className="exact2-inspector-foot">
+                  <button className="btn" onClick={resetSelected}>{selectedBox.custom ? 'Delete block' : 'Restore original'}</button>
+                  {selectedBox.changed && <span className="exact2-saved">Saved locally ✓</span>}
+                </div>
+              </>
+            ) : (
+              <div className="exact2-empty-inspector">
+                <div className="exact2-empty-icon">✎</div>
+                <h3>Click the text you want to change</h3>
+                <p>Nothing moves until you edit it. The page, photo and graphics stay locked underneath.</p>
+                <button className="btn" onClick={addText}>＋ Add a new text block</button>
+                {editCount > 0 && <div className="exact2-edit-count">{editCount} saved change{editCount === 1 ? '' : 's'}</div>}
+              </div>
+            )}
+          </aside>
+        )}
       </div>
 
       <style>{`
-        .exact-editor-root { max-width: 1180px; margin: 0 auto; animation: exactEnter .28s cubic-bezier(.22,.8,.22,1) both; }
-        @keyframes exactEnter { from { opacity:.25; transform:translateX(18px); } to { opacity:1; transform:none; } }
-        .exact-topbar { display:flex; align-items:center; justify-content:space-between; gap:14px; margin-bottom:12px; position:sticky; top:0; z-index:30; background:rgba(245,247,250,.96); backdrop-filter:blur(9px); padding:10px 0; }
-        .exact-actions { flex-wrap:wrap; justify-content:flex-end; }
-        .exact-toolbar { position:sticky; top:68px; z-index:29; display:flex; align-items:center; gap:6px; overflow-x:auto; padding:8px; margin-bottom:14px; border:1px solid var(--silver-200); border-radius:10px; background:rgba(255,255,255,.97); box-shadow:var(--shadow-sm); scrollbar-width:thin; }
-        .exact-toolbar .btn { flex:0 0 auto; min-width:38px; }
-        .exact-toolbar-hint { margin-left:6px; min-width:280px; }
-        .exact-pages { display:grid; gap:22px; justify-items:center; }
-        .exact-page-wrap { width:min(100%, 900px); }
-        .exact-page { position:relative; width:100%; overflow:hidden; background:#fff; box-shadow:0 14px 42px rgba(10,22,48,.16); border:1px solid var(--silver-200); container-type:inline-size; }
-        .exact-page > img { position:absolute; inset:0; width:100%; height:100%; object-fit:fill; user-select:none; pointer-events:none; }
-        .exact-text-box { position:absolute; z-index:2; padding:0 1px; margin:0; border:1px solid transparent; outline:none; line-height:1.05; white-space:pre-wrap; overflow:visible; cursor:text; caret-color:#2563eb; min-width:4px; border-radius:1px; }
-        .exact-text-box:hover { border-color:rgba(37,99,235,.22); }
-        .exact-text-box.focused { border-color:#2563eb; box-shadow:0 0 0 2px rgba(37,99,235,.15); z-index:4; }
-        @media (max-width: 760px) {
-          .exact-editor-root { margin:0 -6px; }
-          .exact-topbar { align-items:flex-start; flex-direction:column; padding:8px 0; }
-          .exact-actions { width:100%; justify-content:flex-start; overflow-x:auto; flex-wrap:nowrap; padding-bottom:2px; }
-          .exact-actions .btn { flex:0 0 auto; }
-          .exact-toolbar { top:122px; margin-left:-2px; margin-right:-2px; border-radius:8px; }
-          .exact-toolbar-hint { display:none; }
-          .exact-pages { gap:16px; }
-          .exact-page-wrap { width:100%; }
+        .exact2-root { max-width: 1260px; margin: 0 auto; }
+        .exact2-head { display:flex; align-items:flex-start; justify-content:space-between; gap:18px; margin-bottom:12px; }
+        .exact2-title-wrap { min-width:0; }
+        .exact2-kicker { color:var(--navy-500, #365486); font-size:11px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; margin-bottom:3px; }
+        .exact2-title { font-size:20px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:680px; }
+        .exact2-sub { margin-top:3px; }
+        .exact2-head-actions, .exact2-mode-actions { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+        .exact2-modebar { position:sticky; top:0; z-index:45; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:9px 10px; margin-bottom:12px; border:1px solid var(--silver-200); border-radius:12px; background:rgba(255,255,255,.96); backdrop-filter:blur(10px); box-shadow:0 5px 20px rgba(15,33,72,.08); }
+        .exact2-segment { display:inline-flex; padding:3px; background:var(--silver-100, #f2f4f7); border-radius:9px; gap:2px; }
+        .exact2-segment button { border:0; background:transparent; color:var(--navy-700); padding:8px 13px; border-radius:7px; font-weight:800; cursor:pointer; }
+        .exact2-segment button.active { background:#fff; color:var(--navy-900); box-shadow:0 1px 5px rgba(15,33,72,.13); }
+        .exact2-note { margin-bottom:14px; padding:10px 13px; border-radius:10px; background:#f8fafc; border:1px solid var(--silver-200); color:#42526b; font-size:13px; }
+        .exact2-workspace.editing { display:grid; grid-template-columns:minmax(0, 1fr) 330px; gap:18px; align-items:start; }
+        .exact2-pages { display:grid; gap:22px; justify-items:center; min-width:0; }
+        .exact2-page-wrap { width:min(100%, 900px); }
+        .exact2-page { position:relative; width:100%; overflow:hidden; background:#fff; box-shadow:0 16px 46px rgba(10,22,48,.14); border:1px solid rgba(15,33,72,.12); container-type:inline-size; }
+        .exact2-page > img { position:absolute; inset:0; width:100%; height:100%; object-fit:fill; display:block; pointer-events:none; user-select:none; }
+        .exact2-page-label { text-align:center; margin-top:7px; font-size:11.5px; color:var(--silver-600, #6b7280); }
+        .exact2-hit { position:absolute; z-index:4; border:1px solid transparent; background:transparent; border-radius:2px; cursor:text; padding:0; min-width:5px; min-height:6px; transition:border-color .12s ease, box-shadow .12s ease, background .12s ease; }
+        .exact2-hit:hover { border-color:rgba(37,99,235,.48); background:rgba(37,99,235,.035); }
+        .exact2-hit.active { border-color:#2563eb; box-shadow:0 0 0 2px rgba(37,99,235,.16); background:rgba(37,99,235,.04); }
+        .exact2-hit.changed { border-color:rgba(5,150,105,.35); }
+        .exact2-hit.changed.active { border-color:#2563eb; }
+        .exact2-replacement { position:absolute; z-index:3; box-sizing:border-box; padding:0 1px; margin:0; line-height:1.06; white-space:pre-wrap; overflow:visible; pointer-events:none; }
+        .exact2-inspector { position:sticky; top:72px; padding:16px; border:1px solid var(--silver-200); border-radius:14px; background:#fff; box-shadow:0 12px 34px rgba(15,33,72,.09); min-height:260px; }
+        .exact2-inspector-head { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:12px; }
+        .exact2-close { border:0; background:var(--silver-100); color:var(--navy-700); width:30px; height:30px; border-radius:50%; font-size:22px; line-height:1; cursor:pointer; }
+        .exact2-original-copy { padding:9px 10px; margin-bottom:12px; border:1px solid var(--silver-200); border-radius:9px; background:#fafbfc; }
+        .exact2-original-copy span { display:block; font-size:10px; text-transform:uppercase; letter-spacing:.06em; font-weight:800; color:var(--silver-600); margin-bottom:3px; }
+        .exact2-original-copy div { font-size:12px; color:var(--navy-700); max-height:62px; overflow:auto; }
+        .exact2-textarea { min-height:105px; resize:vertical; font-size:14px; line-height:1.45; }
+        .exact2-format-row { display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-top:10px; }
+        .exact2-divider { width:1px; height:24px; background:var(--silver-200); margin:0 2px; }
+        .exact2-inspector-foot { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:16px; padding-top:13px; border-top:1px solid var(--silver-200); }
+        .exact2-saved { color:#047857; font-size:11.5px; font-weight:700; }
+        .exact2-empty-inspector { text-align:center; padding:24px 8px; }
+        .exact2-empty-icon { width:48px; height:48px; display:grid; place-items:center; border-radius:50%; background:#eef4ff; color:#1d4ed8; font-size:22px; margin:0 auto 12px; }
+        .exact2-empty-inspector h3 { margin:0 0 6px; color:var(--navy-900); font-size:16px; }
+        .exact2-empty-inspector p { margin:0 auto 14px; color:var(--silver-600); font-size:12.5px; line-height:1.55; max-width:250px; }
+        .exact2-edit-count { margin-top:13px; color:#047857; font-size:12px; font-weight:800; }
+        @media (max-width: 920px) {
+          .exact2-workspace.editing { grid-template-columns:minmax(0,1fr) 290px; gap:12px; }
+          .exact2-inspector { padding:13px; }
         }
-        @media (prefers-reduced-motion: reduce) { .exact-editor-root { animation:none; } }
+        @media (max-width: 760px) {
+          .exact2-root { margin:0 -4px; }
+          .exact2-head { flex-direction:column; gap:10px; }
+          .exact2-title { max-width:92vw; font-size:18px; }
+          .exact2-head-actions { width:100%; justify-content:flex-start; overflow-x:auto; flex-wrap:nowrap; padding-bottom:2px; }
+          .exact2-head-actions .btn { flex:0 0 auto; }
+          .exact2-modebar { top:0; padding:7px; border-radius:10px; align-items:center; }
+          .exact2-mode-actions { overflow-x:auto; flex-wrap:nowrap; justify-content:flex-end; }
+          .exact2-mode-actions .btn { flex:0 0 auto; }
+          .exact2-segment button { padding:7px 10px; font-size:12.5px; }
+          .exact2-workspace.editing { display:block; }
+          .exact2-pages { gap:16px; padding-bottom:230px; }
+          .exact2-page-wrap { width:100%; }
+          .exact2-inspector { position:fixed; left:8px; right:8px; bottom:calc(66px + env(safe-area-inset-bottom)); top:auto; z-index:90; max-height:42vh; overflow:auto; border-radius:16px 16px 12px 12px; box-shadow:0 -14px 40px rgba(15,33,72,.18); }
+          .exact2-empty-inspector { padding:12px 6px; }
+          .exact2-empty-icon { display:none; }
+          .exact2-empty-inspector p { margin-bottom:9px; }
+          .exact2-original-copy { display:none; }
+          .exact2-textarea { min-height:78px; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .exact2-hit { transition:none; }
+        }
       `}</style>
     </div>
   );

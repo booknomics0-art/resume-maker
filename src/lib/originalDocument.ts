@@ -92,7 +92,27 @@ async function remove(id: string) {
   }
 }
 
+function looksLikeResumeFile(file: File) {
+  const name = (file.name || '').toLowerCase();
+  const type = (file.type || '').toLowerCase();
+  return /\.(pdf|docx?|txt|json|jpe?g|png|webp|bmp|gif|avif)$/i.test(name)
+    || type === 'application/pdf'
+    || type === 'text/plain'
+    || type.startsWith('image/')
+    || type.includes('wordprocessingml')
+    || type === 'application/msword';
+}
+
+function resumeUploadInputPresent() {
+  const inputs = Array.from(document.querySelectorAll('input[type="file"]')) as HTMLInputElement[];
+  return inputs.some((input) => {
+    const accept = (input.accept || '').toLowerCase();
+    return accept.includes('.pdf') && accept.includes('.docx') && accept.includes('.txt');
+  });
+}
+
 export async function savePendingOriginal(file: File) {
+  if (!looksLikeResumeFile(file)) return;
   const blob = file.slice(0, file.size, file.type || 'application/octet-stream');
   await put({
     id: PENDING_ID,
@@ -130,13 +150,14 @@ export async function claimPendingOriginal(id: string): Promise<OriginalDocument
 }
 
 /**
- * Installs one capture listener for the actual resume upload input.
- * We deliberately require the broad resume `accept` signature so profile-photo
- * uploads on the import review screen never replace the preserved source file.
+ * Preserve the real upload before OCR/parser code touches it. Capture both the
+ * file input and drag/drop paths. Requiring the full resume input signature on
+ * `change` prevents profile-photo uploads from replacing the source resume.
  */
 export function installOriginalUploadCapture() {
   if (installed || typeof document === 'undefined') return;
   installed = true;
+
   document.addEventListener('change', (event) => {
     const input = event.target;
     if (!(input instanceof HTMLInputElement) || input.type !== 'file') return;
@@ -146,6 +167,18 @@ export function installOriginalUploadCapture() {
     if (!looksLikeResumeInput) return;
     const file = input.files?.[0];
     if (!file) return;
+    void savePendingOriginal(file);
+  }, true);
+
+  // React's importer accepts drag/drop too. Only capture while the actual
+  // resume upload input is mounted; once the import review/form is open that
+  // input is gone, so dragging a profile photo cannot replace the source file.
+  document.addEventListener('drop', (event) => {
+    if (!window.location.hash.startsWith('#/import')) return;
+    if (!resumeUploadInputPresent()) return;
+    const drag = event as DragEvent;
+    const file = drag.dataTransfer?.files?.[0];
+    if (!file || !looksLikeResumeFile(file)) return;
     void savePendingOriginal(file);
   }, true);
 }
