@@ -1,5 +1,7 @@
 export type ContactKind = 'email' | 'phone' | 'location' | 'linkedin' | 'website';
 
+const CONTACT_SELECTOR = '.s-contact > span, .contact-line, .mast-strip > span, .tint-contact > span, .quick-contact';
+
 /**
  * Classify rendered contact values without changing the resume data model.
  * Several template families render the same fields through different markup,
@@ -40,7 +42,7 @@ export function repairResumeImageSource(value: string): string {
 }
 
 function initialsFor(img: HTMLImageElement): string {
-  const name = img.closest('.sheet')?.querySelector('.s-name')?.textContent?.trim() || 'CV';
+  const name = img.closest('.sheet')?.querySelector('.s-name, .quick-name')?.textContent?.trim() || 'CV';
   return name
     .split(/\s+/)
     .filter(Boolean)
@@ -121,8 +123,7 @@ function enhancePhoto(img: HTMLImageElement) {
 }
 
 function enhance(root: ParentNode) {
-  root.querySelectorAll('.s-contact > span, .contact-line, .mast-strip > span, .tint-contact > span')
-    .forEach(enhanceContact);
+  root.querySelectorAll(CONTACT_SELECTOR).forEach(enhanceContact);
   enhanceRailContactBlocks(root);
   root.querySelectorAll<HTMLImageElement>(
     '.sheet img.s-photo, .sheet img.avatar, .sheet img.seal-photo, .sheet img.mast-photo, .sheet img.band-photo, .sheet img.spine-photo, .sheet img.tint-photo, .sheet img.rail-photo',
@@ -142,7 +143,7 @@ export function installTemplatePolish() {
       for (const mutation of mutations) {
         mutation.addedNodes.forEach((node) => {
           if (!(node instanceof Element)) return;
-          if (node.matches('.s-contact > span, .contact-line, .mast-strip > span, .tint-contact > span')) enhanceContact(node);
+          if (node.matches(CONTACT_SELECTOR)) enhanceContact(node);
           if (node.matches('.sheet img')) enhancePhoto(node as HTMLImageElement);
           enhance(node);
         });
