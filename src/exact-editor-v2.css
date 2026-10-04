@@ -1,0 +1,8 @@
+.exact2-workspace.viewing .exact2-replacement {
+  display: none !important;
+}
+
+/* Keep the untouched document inert in Original mode. */
+.exact2-workspace.viewing .exact2-page {
+  cursor: default;
+}
