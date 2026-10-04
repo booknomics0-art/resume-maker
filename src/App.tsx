@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 const Dashboard = lazy(() => import('./components/Dashboard'));
-const Editor = lazy(() => import('./components/Editor'));
+const Editor = lazy(() => import('./components/EnhancedEditor'));
 const Settings = lazy(() => import('./components/Settings'));
 const AuthPage = lazy(() => import('./components/AuthPage'));
 const Landing = lazy(() => import('./components/Landing'));
