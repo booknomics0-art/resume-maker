@@ -8,16 +8,19 @@ import ErrorBoundary from './components/ErrorBoundary';
 import { installOriginalUploadCapture } from './lib/originalDocument';
 import { installRouteMotion } from './lib/routeMotion';
 import { installMobileImportSaveGuard } from './lib/mobileImportSaveGuard';
+import { installTemplatePolish } from './lib/templatePolish';
 import './styles.css';
 import './templates.css';
+import './template-polish.css';
 import './exact-editor-v2.css';
 
 // Preserve the exact uploaded source file before the existing parser/OCR reads
-// it, keep route motion consistent, and make mobile import validation visible
-// even when the user is looking at the Preview pane.
+// it, keep route motion consistent, make mobile import validation visible, and
+// apply the shared contact/alignment/photo polish to every template family.
 installOriginalUploadCapture();
 installRouteMotion();
 installMobileImportSaveGuard();
+installTemplatePolish();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
