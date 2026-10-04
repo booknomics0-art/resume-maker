@@ -1,22 +1,20 @@
 import { useState } from 'react';
 import Editor from './Editor';
-import QuickResumeEditor from './QuickResumeEditor';
+import ExactResumeEditor from './ExactResumeEditor';
 import { importInfoFor } from '../lib/importDraft';
 
 /**
- * Keeps the existing guided editor completely intact, but gives freshly
- * imported resumes a much faster Word-like editing surface first.
- *
- * New resumes and normal saved resumes keep the old behaviour. An imported
- * resume opens in Quick Edit, and the user can jump to the full guided editor
- * at any time without losing plain-text changes.
+ * Keeps the existing guided editor intact. Freshly imported resumes open in
+ * Exact Edit first so the uploaded page artwork, photo, spacing and alignment
+ * stay visually locked to the source file. Users can still switch to the
+ * structured editor whenever they want the normal CraftCV workflow.
  */
 export default function EnhancedEditor({ id }: { id: string }) {
-  const [mode, setMode] = useState<'quick' | 'guided'>(() =>
-    id !== 'new' && !!importInfoFor(id) ? 'quick' : 'guided'
+  const [mode, setMode] = useState<'exact' | 'guided'>(() =>
+    id !== 'new' && !!importInfoFor(id) ? 'exact' : 'guided'
   );
 
   if (mode === 'guided') return <Editor id={id} />;
 
-  return <QuickResumeEditor id={id} onOpenGuided={() => setMode('guided')} />;
+  return <ExactResumeEditor id={id} onOpenGuided={() => setMode('guided')} />;
 }
