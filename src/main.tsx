@@ -7,14 +7,17 @@ import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';
 import { installOriginalUploadCapture } from './lib/originalDocument';
 import { installRouteMotion } from './lib/routeMotion';
+import { installMobileImportSaveGuard } from './lib/mobileImportSaveGuard';
 import './styles.css';
 import './templates.css';
 import './exact-editor-v2.css';
 
 // Preserve the exact uploaded source file before the existing parser/OCR reads
-// it, and add a light route transition without touching the router itself.
+// it, keep route motion consistent, and make mobile import validation visible
+// even when the user is looking at the Preview pane.
 installOriginalUploadCapture();
 installRouteMotion();
+installMobileImportSaveGuard();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
