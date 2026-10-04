@@ -9,6 +9,7 @@ import { installOriginalUploadCapture } from './lib/originalDocument';
 import { installRouteMotion } from './lib/routeMotion';
 import './styles.css';
 import './templates.css';
+import './exact-editor-v2.css';
 
 // Preserve the exact uploaded source file before the existing parser/OCR reads
 // it, and add a light route transition without touching the router itself.
