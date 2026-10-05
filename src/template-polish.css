@@ -141,6 +141,115 @@
   object-fit: cover !important;
 }
 
+/* -------------------------------------------------------------------------
+   Professional fallback for the retired Analyst/Ward Spine family.
+   Existing saved resumes keep working, but the vertical identity strip is
+   gone: no sideways section labels and no vertically written candidate name.
+   The photo moves into a restrained top-right header position instead.
+   ------------------------------------------------------------------------- */
+.tpl-spine {
+  display: block !important;
+  position: relative;
+  padding: 34px 42px 30px !important;
+  background: #fff !important;
+}
+
+.tpl-spine .spine {
+  position: absolute !important;
+  top: 34px !important;
+  right: 42px !important;
+  width: 72px !important;
+  height: 72px !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  display: block !important;
+  z-index: 2;
+}
+
+.tpl-spine .spine-label,
+.tpl-spine .spine-name {
+  display: none !important;
+  writing-mode: horizontal-tb !important;
+  transform: none !important;
+}
+
+.tpl-spine .spine-photo,
+.tpl-spine .spine-mono {
+  width: 72px !important;
+  height: 72px !important;
+  border-radius: 6px !important;
+  border: 1px solid var(--a) !important;
+  box-shadow: 4px 4px 0 color-mix(in srgb, var(--a) 65%, #fff) !important;
+  background: #fff !important;
+  color: var(--p) !important;
+  object-fit: cover !important;
+}
+
+.tpl-spine .spine-body {
+  width: 100% !important;
+  padding: 0 !important;
+  font-size: 12.8px !important;
+  line-height: 1.46 !important;
+}
+
+.tpl-spine .spine-body > .head {
+  min-height: 76px;
+  padding: 0 96px 13px 0 !important;
+  margin-bottom: 16px !important;
+  border-bottom: 2px solid var(--p) !important;
+}
+
+.tpl-spine .spine-body > .head::after {
+  width: 42px !important;
+  height: 3px !important;
+}
+
+.tpl-spine .s-name {
+  font-size: 28px !important;
+  letter-spacing: -.2px !important;
+}
+
+.tpl-spine .s-sec-title {
+  letter-spacing: 2px !important;
+}
+
+/* Premium editor: the layout lock is important, but repeating the explanation
+   after every open wastes screen space. Keep the controls and the document. */
+.premium3-lock-note { display: none !important; }
+
+@media (max-width: 760px) {
+  /* Imported-resume mode switch: tabs are enough on a phone. */
+  .import-editor-copy span { display: none !important; }
+  .import-editor-copy { margin-bottom: 5px !important; }
+
+  /* Premium Exact: remove technical metadata that does not help editing. */
+  .premium3-title > span,
+  .premium3-title p,
+  .premium3-page-label,
+  .premium3-meta,
+  .premium3-empty p,
+  .premium3-inspector-head span {
+    display: none !important;
+  }
+
+  .premium3-title h2 { margin: 0 !important; }
+  .premium3-head { margin-bottom: 6px !important; }
+
+  /* Template picker: preserve filters/search, remove explanatory duplication. */
+  .tpl-meta,
+  .tpl-blurb,
+  .tpl-count {
+    display: none !important;
+  }
+
+  .tpl-tools { gap: 6px !important; }
+  .tpl-chips-fam { padding-top: 5px !important; margin-top: 0 !important; }
+  .tpl-chip { min-height: 32px !important; }
+}
+
 @media print {
   .sheet .contact-item::before { opacity: .76; }
   .sheet .s-table .edu-year,
