@@ -18,14 +18,10 @@ const CATALOGUE = TEMPLATES.filter((t) => !REMOVED_TEMPLATE_IDS.has(t.id));
 const ACTIVE_GALLERY_FAMILIES = (Object.keys(LAYOUT_META) as LayoutId[])
   .filter((layout) => CATALOGUE.some((t) => t.layout === layout));
 
-const countBy = (key: 'category' | 'layout') => CATALOGUE.reduce((acc, t) => {
-  const k = String(t[key]);
-  acc[k] = (acc[k] ?? 0) + 1;
+const countByCategory = CATALOGUE.reduce((acc, t) => {
+  acc[t.category] = (acc[t.category] ?? 0) + 1;
   return acc;
 }, {} as Record<string, number>);
-
-const countByCategory = countBy('category');
-const countByFamily = countBy('layout');
 
 /** Lazy-mount A4 previews so the picker remains smooth on phones. */
 function useNearViewport<T extends HTMLElement>(rootMargin = '700px') {
