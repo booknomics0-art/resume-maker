@@ -193,6 +193,7 @@ ok('layout: tint-sheet facts rail is on the left',
 
 // ---- the editor's print root contains ONLY the sheet ------------------------
 const editor = readFileSync(join(root, 'src', 'components', 'Editor.tsx'), 'utf8');
+const mobileDownload = readFileSync(join(root, 'src', 'lib', 'mobilePdfDownload.ts'), 'utf8');
 const pdfApi = readFileSync(join(root, 'api', 'pdf.ts'), 'utf8');
 const m = editor.match(/<div className="print-root"[\s\S]*?>([\s\S]*?)<\/div>/);
 ok('editor: print-root exists', !!m);
@@ -202,7 +203,7 @@ ok('multi-page: the editor shows a live page count (A4 · N pages) badge',
   editor.includes('page-badge') && /onPages=\{setPages\}/.test(editor));
 
 ok('download: direct PDF uses the browser download flow',
-  editor.includes("fetch('/api/pdf'") && editor.includes('link.download = filename'));
+  editor.includes("fetch('/api/pdf'") && mobileDownload.includes('link.download = download.filename'));
 ok('download: browser print remains a resilient fallback',
   editor.includes('window.print()') && editor.includes('download_fallback'));
 ok('download: PDF renderer prints backgrounds and honours A4 CSS',
