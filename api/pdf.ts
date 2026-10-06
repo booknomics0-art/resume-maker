@@ -25,7 +25,6 @@ const PRINT_GUARD_CSS = `
   .sheet .s-item > ul > li:first-child, .sheet .tl-body > ul > li:first-child { break-after: avoid-page; page-break-after: avoid; }
   .sheet .s-table tr, .sheet .bar, .sheet .dots, .sheet .contact-item, .sheet .s-skill { break-inside: avoid-page; page-break-inside: avoid; }
   .sheet p, .sheet li { orphans: 3; widows: 3; }
-  .sheet, .sheet * { max-width: 100%; }
   .tpl-timeline .tl-row { display: block !important; position: relative; min-height: 42px; padding-left: 128px; margin-bottom: 13px; background: linear-gradient(var(--a), var(--a)) 116px 0 / 2px 100% no-repeat; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
   .tpl-timeline .tl-date { position: absolute; left: 0; top: 0; width: 96px; min-width: 96px; }
   .tpl-timeline .tl-dot { position: absolute; left: 104px; top: 0; width: 24px; height: 24px; }
