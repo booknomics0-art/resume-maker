@@ -27,33 +27,67 @@
   word-break: break-word;
 }
 
+/* Do not depend on Unicode glyphs for email/phone/location. Some mobile
+   browsers and the server-side PDF renderer do not ship the same symbol font,
+   which made those icons disappear while the ASCII LinkedIn `in` survived.
+   SVG masks are geometry, not font glyphs, so they render consistently in the
+   editor, template thumbnails, mobile preview and the downloaded PDF. */
 .sheet .contact-item::before {
   position: static !important;
   inset: auto !important;
-  display: inline-flex !important;
-  align-items: center;
-  justify-content: center;
+  content: "" !important;
+  display: block !important;
   flex: 0 0 13px;
   width: 13px !important;
   height: 15px !important;
   margin: 0 !important;
   padding: 0 !important;
-  background: none !important;
   border: 0 !important;
-  opacity: .7;
-  font-family: Arial, sans-serif;
-  font-size: 9.5px;
-  font-weight: 700;
-  line-height: 15px;
-  letter-spacing: 0;
+  background-color: currentColor !important;
+  opacity: .74;
   transform: none !important;
+  -webkit-mask-image: var(--contact-icon);
+  mask-image: var(--contact-icon);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center 2px;
+  mask-position: center 2px;
+  -webkit-mask-size: 11px 11px;
+  mask-size: 11px 11px;
 }
 
-.sheet .contact-item[data-contact-kind="email"]::before { content: "✉" !important; }
-.sheet .contact-item[data-contact-kind="phone"]::before { content: "☎" !important; }
-.sheet .contact-item[data-contact-kind="location"]::before { content: "⌖" !important; }
-.sheet .contact-item[data-contact-kind="linkedin"]::before { content: "in" !important; font-size: 8px; }
-.sheet .contact-item[data-contact-kind="website"]::before { content: "↗" !important; }
+.sheet .contact-item[data-contact-kind="email"] {
+  --contact-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='3' y='5' width='18' height='14' rx='2' fill='none' stroke='black' stroke-width='2'/%3E%3Cpath d='m4 7 8 6 8-6' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+.sheet .contact-item[data-contact-kind="phone"] {
+  --contact-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M22 16.9v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.69 2.8a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.28-1.28a2 2 0 0 1 2.11-.45c.9.33 1.84.56 2.8.69A2 2 0 0 1 22 16.9Z' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+.sheet .contact-item[data-contact-kind="location"] {
+  --contact-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='12' cy='10' r='2.5' fill='black'/%3E%3C/svg%3E");
+}
+
+.sheet .contact-item[data-contact-kind="website"] {
+  --contact-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='black' stroke-width='2'/%3E%3Cpath d='M3 12h18M12 3c2.4 2.5 3.6 5.5 3.6 9S14.4 18.5 12 21M12 3C9.6 5.5 8.4 8.5 8.4 12S9.6 18.5 12 21' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+
+/* Keep the compact, familiar LinkedIn mark; it uses plain ASCII and therefore
+   does not have the missing-glyph problem that affected the other symbols. */
+.sheet .contact-item[data-contact-kind="linkedin"]::before {
+  content: "in" !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  background: none !important;
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+  font-family: Arial, sans-serif;
+  font-size: 8px;
+  font-weight: 800;
+  line-height: 15px;
+  letter-spacing: -.2px;
+}
 
 /* Classic/minimal used ornamental separators between horizontal contacts.
    The icon above replaces those separators in the new vertical stack. */
@@ -251,7 +285,11 @@
 }
 
 @media print {
-  .sheet .contact-item::before { opacity: .76; }
+  .sheet .contact-item::before {
+    opacity: .8;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
   .sheet .s-table .edu-year,
   .sheet .sec-certs .s-dates { print-color-adjust: exact; }
 }
