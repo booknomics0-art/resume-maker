@@ -1,21 +1,16 @@
 /*
  * Professional multi-page resume pagination.
  *
- * This file is intentionally loaded after the template styles. Template identity
- * (type, colour, sidebars, bands, timeline details) stays untouched; these rules
- * only define the physical A4 page contract and fragmentation behaviour.
+ * Loaded after the template styles. Template identity (type, colour, sidebars,
+ * bands and timeline details) stays intact; these rules only define the physical
+ * A4 page contract and fragmentation behaviour.
  */
-
-:root {
-  --resume-print-top: 10mm;
-  --resume-print-right: 9mm;
-  --resume-print-bottom: 12mm;
-  --resume-print-left: 9mm;
-}
 
 @page {
   size: A4;
-  margin: var(--resume-print-top) var(--resume-print-right) var(--resume-print-bottom) var(--resume-print-left);
+  /* Literal values are intentional: Chromium paged-media support for CSS custom
+     properties inside @page is inconsistent across versions. */
+  margin: 10mm 9mm 12mm 9mm;
 }
 
 @media print {
@@ -28,8 +23,8 @@
     background: #fff !important;
   }
 
-  /* The @page margin owns the printable safe area. Do not re-introduce the old
-     210mm-wide root inside that narrower box or page 2+ can clip at the edges. */
+  /* @page owns the repeated printable safe area. Do not re-introduce the old
+     210mm-wide root inside that narrower box or continuation pages can clip. */
   .print-root {
     position: static !important;
     inset: auto !important;
@@ -100,8 +95,8 @@
     page-break-inside: avoid;
   }
 
-  /* The first evidence line stays attached to the next one where possible,
-     which keeps a job header from being followed by a lonely single bullet. */
+  /* Keep at least two evidence bullets together where possible, so a role
+     header is not followed by one lonely bullet at a page boundary. */
   .sheet .s-item > ul > li:first-child,
   .sheet .tl-body > ul > li:first-child {
     break-after: avoid-page;
@@ -126,11 +121,10 @@
     widows: 3;
   }
 
-  /* Chromium treats a one-row CSS grid as an indivisible page fragment. The
-     Timeline family used exactly that structure, so a large experience entry
-     could jump wholesale to page 2. In print only, preserve the same visual
-     columns with positioned date/node decorations while making the body a
-     normal breakable block. */
+  /* Chromium can treat a one-row CSS grid as an indivisible page fragment. The
+     Timeline family used that structure, which could push an entire experience
+     entry to page 2. In print only, retain the same visual columns while making
+     the body a normal breakable block. */
   .tpl-timeline .tl-row {
     display: block !important;
     position: relative;
@@ -168,13 +162,8 @@
     page-break-after: avoid;
   }
 
-  /* Repeated page margins are the safety net; these prevent decorative edges
-     and long tokens from escaping that box on any template family. */
-  .sheet,
-  .sheet * {
-    max-width: 100%;
-  }
-
+  /* Images/icons are atomic, but do not blanket max-width every descendant:
+     many template families intentionally use fixed rails, dates and ornaments. */
   .sheet img,
   .sheet svg {
     page-break-inside: avoid;
