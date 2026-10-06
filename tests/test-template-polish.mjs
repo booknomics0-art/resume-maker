@@ -24,6 +24,7 @@ await build({
 
 const mod = await import(pathToFileURL(outfile).href);
 const polishCss = readFileSync('src/template-polish.css', 'utf8');
+const polishTs = readFileSync('src/lib/templatePolish.ts', 'utf8');
 const gallery = readFileSync('src/components/TemplateGallery.tsx', 'utf8');
 const out = [];
 const ok = (name, cond) => out.push([name, !!cond]);
@@ -33,6 +34,34 @@ ok('Indian phone gets phone icon class', mod.classifyContactValue('+91 98765 432
 ok('city remains location', mod.classifyContactValue('Delhi, India') === 'location');
 ok('LinkedIn is distinct from website', mod.classifyContactValue('linkedin.com/in/test') === 'linkedin');
 ok('portfolio is website', mod.classifyContactValue('example.dev') === 'website');
+
+// Every contact rendering family is normalized by one runtime enhancer, so
+// individual templates cannot silently miss the icon treatment.
+ok('contact enhancer covers standard, masthead, tint and quick-editor surfaces',
+  polishTs.includes('.s-contact > span') &&
+  polishTs.includes('.contact-line') &&
+  polishTs.includes('.mast-strip > span') &&
+  polishTs.includes('.tint-contact > span') &&
+  polishTs.includes('.quick-contact'));
+ok('contact enhancer also covers facts-rail Contact blocks',
+  polishTs.includes('enhanceRailContactBlocks') && polishTs.includes("heading !== 'contact'"));
+
+// Font glyphs disappeared on some mobile/PDF environments. Email, phone and
+// location must use SVG masks instead of Unicode characters so all 50 template
+// variants and exported PDFs render the same icon geometry.
+ok('email icon is a font-independent SVG mask',
+  polishCss.includes('data-contact-kind="email"') &&
+  polishCss.includes("viewBox='0 0 24 24'") && polishCss.includes('mask-image: var(--contact-icon)'));
+ok('phone icon is a font-independent SVG mask',
+  polishCss.includes('data-contact-kind="phone"') && polishCss.includes('M22 16.9v3'));
+ok('location icon is a font-independent SVG mask',
+  polishCss.includes('data-contact-kind="location"') && polishCss.includes("M20 10c0 5-8 12-8 12"));
+ok('contact icons are forced into downloaded PDFs',
+  polishCss.includes('-webkit-print-color-adjust: exact') && polishCss.includes('print-color-adjust: exact'));
+ok('legacy Unicode email/phone/location glyphs are not used',
+  !polishCss.includes('content: "✉"') &&
+  !polishCss.includes('content: "☎"') &&
+  !polishCss.includes('content: "⌖"'));
 
 const spacedJpeg = 'data:image/jpeg;base64,/9j/ AAAA\nBBBB';
 ok('whitespace in old JPEG data URL is repaired',
