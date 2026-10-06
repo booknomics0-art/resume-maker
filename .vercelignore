@@ -1,0 +1,9 @@
+# Keep runtime/build inputs untouched. These files remain in GitHub and CI,
+# but do not need to be uploaded into Vercel production deployments.
+tests
+docs
+source
+supabase
+.github
+README.md
+netlify.toml
