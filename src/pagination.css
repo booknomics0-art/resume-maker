@@ -1,0 +1,182 @@
+/*
+ * Professional multi-page resume pagination.
+ *
+ * This file is intentionally loaded after the template styles. Template identity
+ * (type, colour, sidebars, bands, timeline details) stays untouched; these rules
+ * only define the physical A4 page contract and fragmentation behaviour.
+ */
+
+:root {
+  --resume-print-top: 10mm;
+  --resume-print-right: 9mm;
+  --resume-print-bottom: 12mm;
+  --resume-print-left: 9mm;
+}
+
+@page {
+  size: A4;
+  margin: var(--resume-print-top) var(--resume-print-right) var(--resume-print-bottom) var(--resume-print-left);
+}
+
+@media print {
+  html,
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: auto !important;
+    min-width: 0 !important;
+    background: #fff !important;
+  }
+
+  /* The @page margin owns the printable safe area. Do not re-introduce the old
+     210mm-wide root inside that narrower box or page 2+ can clip at the edges. */
+  .print-root {
+    position: static !important;
+    inset: auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    transform: none !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .print-root .sheet {
+    width: auto !important;
+    max-width: 100% !important;
+    min-height: 275mm !important; /* A4 minus 10mm top + 12mm bottom */
+    height: auto !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+  }
+
+  /* Paged-media typography: do not strand headings or single text lines. */
+  .sheet {
+    orphans: 3;
+    widows: 3;
+  }
+
+  .sheet .s-sec-title,
+  .sheet .s-item-head,
+  .sheet .head-right,
+  .sheet .label {
+    break-inside: avoid-page;
+    page-break-inside: avoid;
+  }
+
+  .sheet .s-sec-title,
+  .sheet .s-item-head {
+    break-after: avoid-page;
+    page-break-after: avoid;
+  }
+
+  /* A long job/project must be allowed to continue on the next page. The old
+     behaviour could move the whole entry to page 2 and leave half of page 1
+     empty. Keep the role/company/date header with the first bullets, but let the
+     rest of the evidence flow naturally. */
+  .sheet .sec,
+  .sheet .s-item,
+  .sheet .tl-row,
+  .sheet .tl-body,
+  .sheet .content {
+    break-inside: auto !important;
+    page-break-inside: auto !important;
+  }
+
+  .sheet .s-item > ul,
+  .sheet .tl-body > ul {
+    break-before: avoid-page;
+    page-break-before: avoid;
+  }
+
+  .sheet .s-item > ul > li,
+  .sheet .tl-body > ul > li,
+  .sheet .sec-achievements > ul > li {
+    break-inside: avoid-page;
+    page-break-inside: avoid;
+  }
+
+  /* The first evidence line stays attached to the next one where possible,
+     which keeps a job header from being followed by a lonely single bullet. */
+  .sheet .s-item > ul > li:first-child,
+  .sheet .tl-body > ul > li:first-child {
+    break-after: avoid-page;
+    page-break-after: avoid;
+  }
+
+  /* Small atomic rows should never be chopped in half. */
+  .sheet .s-table tr,
+  .sheet .bar,
+  .sheet .dots,
+  .sheet .contact-item,
+  .sheet .s-skill {
+    break-inside: avoid-page;
+    page-break-inside: avoid;
+  }
+
+  .sheet .sec-summary p,
+  .sheet .sec-highlight p,
+  .sheet li,
+  .sheet p {
+    orphans: 3;
+    widows: 3;
+  }
+
+  /* Chromium treats a one-row CSS grid as an indivisible page fragment. The
+     Timeline family used exactly that structure, so a large experience entry
+     could jump wholesale to page 2. In print only, preserve the same visual
+     columns with positioned date/node decorations while making the body a
+     normal breakable block. */
+  .tpl-timeline .tl-row {
+    display: block !important;
+    position: relative;
+    min-height: 42px;
+    padding-left: 128px;
+    margin-bottom: 13px;
+    background: linear-gradient(var(--a), var(--a)) 116px 0 / 2px 100% no-repeat;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
+
+  .tpl-timeline .tl-date {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 96px;
+    min-width: 96px;
+  }
+
+  .tpl-timeline .tl-dot {
+    position: absolute;
+    left: 104px;
+    top: 0;
+    width: 24px;
+    height: 24px;
+  }
+
+  .tpl-timeline .tl-dot::after {
+    display: none !important;
+  }
+
+  .tpl-timeline .tl-body > b,
+  .tpl-timeline .tl-body > .s-company {
+    break-after: avoid-page;
+    page-break-after: avoid;
+  }
+
+  /* Repeated page margins are the safety net; these prevent decorative edges
+     and long tokens from escaping that box on any template family. */
+  .sheet,
+  .sheet * {
+    max-width: 100%;
+  }
+
+  .sheet img,
+  .sheet svg {
+    page-break-inside: avoid;
+  }
+}
