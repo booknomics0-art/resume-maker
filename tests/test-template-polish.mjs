@@ -25,6 +25,7 @@ await build({
 const mod = await import(pathToFileURL(outfile).href);
 const polishCss = readFileSync('src/template-polish.css', 'utf8');
 const polishTs = readFileSync('src/lib/templatePolish.ts', 'utf8');
+const editor = readFileSync('src/components/Editor.tsx', 'utf8');
 const gallery = readFileSync('src/components/TemplateGallery.tsx', 'utf8');
 const out = [];
 const ok = (name, cond) => out.push([name, !!cond]);
@@ -46,22 +47,36 @@ ok('contact enhancer covers standard, masthead, tint and quick-editor surfaces',
 ok('contact enhancer also covers facts-rail Contact blocks',
   polishTs.includes('enhanceRailContactBlocks') && polishTs.includes("heading !== 'contact'"));
 
-// Font glyphs disappeared on some mobile/PDF environments. Email, phone and
-// location must use SVG masks instead of Unicode characters so all 50 template
-// variants and exported PDFs render the same icon geometry.
-ok('email icon is a font-independent SVG mask',
-  polishCss.includes('data-contact-kind="email"') &&
-  polishCss.includes("viewBox='0 0 24 24'") && polishCss.includes('mask-image: var(--contact-icon)'));
-ok('phone icon is a font-independent SVG mask',
-  polishCss.includes('data-contact-kind="phone"') && polishCss.includes('M22 16.9v3'));
-ok('location icon is a font-independent SVG mask',
-  polishCss.includes('data-contact-kind="location"') && polishCss.includes("M20 10c0 5-8 12-8 12"));
-ok('contact icons are forced into downloaded PDFs',
-  polishCss.includes('-webkit-print-color-adjust: exact') && polishCss.includes('print-color-adjust: exact'));
-ok('legacy Unicode email/phone/location glyphs are not used',
+// PDF regression: CSS masks can render in the live browser but disappear when
+// headless Chromium prints the serialized sheet. The icon must therefore be an
+// actual inline SVG child. Editor exports sheet.outerHTML, so that SVG travels
+// with the document into /api/pdf and becomes vector geometry in the PDF.
+ok('contact icons are created as real inline SVG nodes',
+  polishTs.includes("document.createElementNS(SVG_NS, name)") &&
+  polishTs.includes("class: 'contact-icon'") &&
+  polishTs.includes("'data-contact-icon': kind"));
+ok('all five contact kinds have SVG geometry',
+  polishTs.includes("kind === 'email'") &&
+  polishTs.includes("kind === 'phone'") &&
+  polishTs.includes("kind === 'location'") &&
+  polishTs.includes("kind === 'linkedin'") &&
+  polishTs.includes("svgNode('circle'"));
+ok('runtime prepends the SVG into each contact line',
+  polishTs.includes('el.prepend(createContactIcon(kind))'));
+ok('contact changes are reclassified without duplicating icons',
+  polishTs.includes("querySelector(':scope > .contact-icon')") &&
+  polishTs.includes("existing?.getAttribute('data-contact-icon') === kind"));
+ok('PDF export serializes the enhanced sheet HTML',
+  editor.includes('html: sheet.outerHTML'));
+ok('CSS no longer relies on masks or Unicode icon glyphs',
+  !polishCss.includes('mask-image: var(--contact-icon)') &&
   !polishCss.includes('content: "✉"') &&
   !polishCss.includes('content: "☎"') &&
   !polishCss.includes('content: "⌖"'));
+ok('inline SVG icons are print-preserved',
+  polishCss.includes('.sheet .contact-icon') &&
+  polishCss.includes('-webkit-print-color-adjust: exact') &&
+  polishCss.includes('print-color-adjust: exact'));
 
 const spacedJpeg = 'data:image/jpeg;base64,/9j/ AAAA\nBBBB';
 ok('whitespace in old JPEG data URL is repaired',
