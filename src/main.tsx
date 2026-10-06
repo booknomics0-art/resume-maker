@@ -13,6 +13,7 @@ import './styles.css';
 import './templates.css';
 import './template-polish.css';
 import './exact-editor-v2.css';
+import './pagination.css';
 
 // Preserve the exact uploaded source file before the existing parser/OCR reads
 // it, keep route motion consistent, make mobile import validation visible, and
