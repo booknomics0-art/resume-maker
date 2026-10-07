@@ -1,4 +1,4 @@
-// Legal & info pages for CraftCV — a 100% free resume builder.
+// Legal & info pages for ResumeMakery — a 100% free resume builder.
 // Includes: About, Contact, Privacy, Terms, FAQ, Disclaimer, Cookie, EULA.
 // No payments exist in the product, so there is no refund / shipping / cancellation policy.
 
@@ -20,11 +20,11 @@ const UPDATED = 'Last updated: 30 September 2026';
 
 export function AboutPage() {
   return (
-    <Shell title="About CraftCV" sub="Why this product exists — and who builds it">
+    <Shell title="About ResumeMakery" sub="Why this product exists — and who builds it">
       <h3 className="mt0">Our mission</h3>
       <p>
         Most people write a resume three or four times in their life, usually in a hurry, usually without help.
-        CraftCV exists so that anyone — a fresher in Patna, a nurse in Kochi, a sales manager in Pune — can
+        ResumeMakery exists so that anyone — a fresher in Patna, a nurse in Kochi, a sales manager in Pune — can
         produce a clean, honest, recruiter-ready resume in under ten minutes, without paying a rupee.
       </p>
       <h3>What makes it different</h3>
@@ -37,8 +37,8 @@ export function AboutPage() {
       </ul>
       <h3>Who we are</h3>
       <p>
-        CraftCV is built by a small independent team in India. We are not funded by advertising and we do not sell user data.
-        Write to us at <b>hello@craftcv.app</b>.
+        ResumeMakery is built by a small independent team in India. We are not funded by advertising and we do not sell user data.
+        Write to us at <b>hello@resumemakery.com</b>.
       </p>
     </Shell>
   );
@@ -50,10 +50,10 @@ export function ContactPage() {
       <div className="tbl-wrap">
         <table className="tbl">
           <tbody>
-            <tr><td><b>General & feedback</b></td><td style={{ wordBreak: 'break-all' }}>hello@craftcv.app</td></tr>
-            <tr><td><b>Support (bugs, import issues)</b></td><td style={{ wordBreak: 'break-all' }}>support@craftcv.app</td></tr>
-            <tr><td><b>Privacy & data requests</b></td><td style={{ wordBreak: 'break-all' }}>privacy@craftcv.app</td></tr>
-            <tr><td><b>Legal</b></td><td style={{ wordBreak: 'break-all' }}>legal@craftcv.app</td></tr>
+            <tr><td><b>General & feedback</b></td><td style={{ wordBreak: 'break-all' }}>hello@resumemakery.com</td></tr>
+            <tr><td><b>Support (bugs, import issues)</b></td><td style={{ wordBreak: 'break-all' }}>support@resumemakery.com</td></tr>
+            <tr><td><b>Privacy & data requests</b></td><td style={{ wordBreak: 'break-all' }}>privacy@resumemakery.com</td></tr>
+            <tr><td><b>Legal</b></td><td style={{ wordBreak: 'break-all' }}>legal@resumemakery.com</td></tr>
           </tbody>
         </table>
       </div>
@@ -69,21 +69,21 @@ export function PrivacyPage() {
   return (
     <Shell title="Privacy Policy" sub={UPDATED}>
       <p className="mt0">
-        <b>CraftCV</b> (“we”, “us”, “our”) is a free, browser-based resume builder. This Privacy Policy explains in
+        <b>ResumeMakery</b> (“we”, “us”, “our”) is a free, browser-based resume builder. This Privacy Policy explains in
         detail what personal information we collect, why we collect it, how it is stored, who it is shared with,
         how long it is kept, and what rights you have over it. It is written to satisfy the disclosure requirements
         of Google’s OAuth API verification, the Information Technology Act 2000, the SPDI Rules 2011 (India), and
-        the Digital Personal Data Protection Act 2023 (DPDP Act, India). By using CraftCV you agree to the practices
+        the Digital Personal Data Protection Act 2023 (DPDP Act, India). By using ResumeMakery you agree to the practices
         described below.
       </p>
 
       <h3>1. Who we are and how to contact us</h3>
       <ul>
-        <li><b>Service:</b> CraftCV — Free Resume Builder</li>
-        <li><b>Operator:</b> CraftCV (independent project, operated from India)</li>
-        <li><b>Grievance Officer / Data Protection contact:</b> <a href="mailto:privacy@craftcv.app">privacy@craftcv.app</a></li>
-        <li><b>General support:</b> <a href="mailto:support@craftcv.app">support@craftcv.app</a></li>
-        <li><b>Legal:</b> <a href="mailto:legal@craftcv.app">legal@craftcv.app</a></li>
+        <li><b>Service:</b> ResumeMakery — Free Resume Builder</li>
+        <li><b>Operator:</b> ResumeMakery (independent project, operated from India)</li>
+        <li><b>Grievance Officer / Data Protection contact:</b> <a href="mailto:privacy@resumemakery.com">privacy@resumemakery.com</a></li>
+        <li><b>General support:</b> <a href="mailto:support@resumemakery.com">support@resumemakery.com</a></li>
+        <li><b>Legal:</b> <a href="mailto:legal@resumemakery.com">legal@resumemakery.com</a></li>
         <li><b>Response time:</b> we acknowledge every privacy request within 7 days and resolve it within 30 days, as required by Indian law</li>
       </ul>
 
@@ -165,8 +165,8 @@ export function PrivacyPage() {
         <li>No advertising identifiers, no cross-site tracking pixels, no fingerprinting</li>
         <li>No third-party analytics cookies (no Google Analytics, no Facebook Pixel, no Mixpanel)</li>
         <li>No biometric data, no precise GPS location, no contacts, no camera or microphone access</li>
-        <li>No purchase history — CraftCV has no billing system, because the service is free</li>
-        <li>No “scraped” personal data — everything you see in CraftCV came from you</li>
+        <li>No purchase history — ResumeMakery has no billing system, because the service is free</li>
+        <li>No “scraped” personal data — everything you see in ResumeMakery came from you</li>
       </ul>
 
       <h3>3. How and why we use your information (legal basis)</h3>
@@ -196,15 +196,15 @@ export function PrivacyPage() {
       <p>
         We <b>do not request</b> and Google does <b>not send</b> your contacts, calendar, drive, Gmail, location,
         YouTube, or any other Google service data. The OAuth scopes used are exactly
-        <code> openid email profile</code>. A full list of the scopes and the data Google exposes to CraftCV is also
+        <code> openid email profile</code>. A full list of the scopes and the data Google exposes to ResumeMakery is also
         available on Google’s consent screen at sign-in time.
       </p>
       <p>
-        CraftCV does not send any data back to Google from your account. We do not push resume content, downloads,
+        ResumeMakery does not send any data back to Google from your account. We do not push resume content, downloads,
         or analytics into Google services, and we do not use Google signals for advertising.
       </p>
       <p>
-        Google’s use of information it collects from CraftCV’s OAuth flow is governed by
+        Google’s use of information it collects from ResumeMakery’s OAuth flow is governed by
         <a href="https://policies.google.com/privacy" target="_blank" rel="noreferrer"> Google’s Privacy Policy</a> and
         the <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noreferrer">
         Google API Services User Data Policy</a> (including the Limited Use requirements). Google’s
@@ -218,16 +218,16 @@ export function PrivacyPage() {
             <code>localStorage</code> and <code>sessionStorage</code> so the app loads instantly and works offline.
             You can clear it at any time from your browser settings; clearing it signs you out, but your resumes
             remain safe in your cloud account.</li>
-        <li><b>In your CraftCV account (cloud)</b> — resumes, profile and analytics events are stored in a
+        <li><b>In your ResumeMakery account (cloud)</b> — resumes, profile and analytics events are stored in a
             PostgreSQL database hosted on <b>Supabase</b> (Frankfurt / Singapore region, chosen by Supabase based on
             the user). The database is encrypted at rest (AES-256) and all traffic uses TLS 1.2+. Row-level
             security (RLS) policies on every table ensure that only your account can read your rows. Our
             operations team cannot browse individual resumes in normal operation.</li>
-        <li><b>Static hosting / CDN</b> — the CraftCV web app itself (HTML, CSS, JS, fonts, icons) is served by
+        <li><b>Static hosting / CDN</b> — the ResumeMakery web app itself (HTML, CSS, JS, fonts, icons) is served by
             <b>Vercel</b> (and a small set of static files by <b>Cloudflare</b> for the OCR engine assets).
             Vercel processes only standard HTTP request metadata — IP, user-agent, referrer — for caching, DDoS
             protection and analytics (aggregate counts only, no personal data).</li>
-        <li><b>Cross-border transfer</b> — by using CraftCV you understand that your data may be processed in
+        <li><b>Cross-border transfer</b> — by using ResumeMakery you understand that your data may be processed in
             Supabase’s data centres outside India. We have selected Supabase because it provides contractual
             safeguards equivalent to those required by the DPDP Act for cross-border transfer.</li>
       </ul>
@@ -254,12 +254,12 @@ export function PrivacyPage() {
       </p>
 
       <h3>7. Cookies, local storage and SDKs</h3>
-      <p>CraftCV does not set any third-party tracking cookies. We use only <i>strictly necessary</i> browser storage to run the app:</p>
+      <p>ResumeMakery does not set any third-party tracking cookies. We use only <i>strictly necessary</i> browser storage to run the app:</p>
       <div className="tbl-wrap">
         <table className="tbl">
           <thead><tr><th>Name</th><th>Type</th><th>Purpose</th><th>Duration</th></tr></thead>
           <tbody>
-            <tr><td><code>sb-*-auth-token</code></td><td>localStorage</td><td>Keeps you signed in to your CraftCV account (Supabase Auth)</td><td>Until logout or 7 days idle</td></tr>
+            <tr><td><code>sb-*-auth-token</code></td><td>localStorage</td><td>Keeps you signed in to your ResumeMakery account (Supabase Auth)</td><td>Until logout or 7 days idle</td></tr>
             <tr><td><code>craftcv.session.v2</code></td><td>localStorage</td><td>Local session mirror (so the UI knows who is signed in synchronously)</td><td>Until logout</td></tr>
             <tr><td><code>craftcv.users.v2</code></td><td>localStorage</td><td>Local account record (offline-fallback mode)</td><td>Until you clear browser data</td></tr>
             <tr><td><code>craftcv.resumes.v1</code></td><td>localStorage</td><td>Offline copy of your resumes (so the app loads instantly)</td><td>Until cleared</td></tr>
@@ -271,7 +271,7 @@ export function PrivacyPage() {
       </div>
       <p>
         We do <b>not</b> load Google Analytics, Facebook Pixel, Hotjar, Mixpanel, Segment, Amplitude, Sentry, ad-tech,
-        or any other third-party tracking SDK. The only third-party JavaScript that runs inside CraftCV is the
+        or any other third-party tracking SDK. The only third-party JavaScript that runs inside ResumeMakery is the
         Tesseract.js OCR engine and a Supabase Auth client — both bundled into the app itself, neither sends
         personal data to a third party beyond the operations described above.
       </p>
@@ -297,10 +297,10 @@ export function PrivacyPage() {
       <ul>
         <li><b>Right to access</b> — Settings → “Export data” downloads all your data as a single JSON file (account profile, resumes, cover letters, events)</li>
         <li><b>Right to correct</b> — edit anything directly in the app; the cloud copy updates automatically</li>
-        <li><b>Right to delete (erasure)</b> — Settings → “Delete account” removes all your data permanently from production systems. Backups expire within 30 days. You can also email <a href="mailto:privacy@craftcv.app">privacy@craftcv.app</a> to request deletion</li>
-        <li><b>Right to withdraw consent</b> — sign out, disconnect the Google account (Google account → “Third-party apps with account access” → CraftCV → “Remove access”), or email us</li>
-        <li><b>Right to nominate</b> — under the DPDP Act you may nominate another person to exercise your rights in the event of death or incapacity; write to <a href="mailto:privacy@craftcv.app">privacy@craftcv.app</a></li>
-        <li><b>Right to grievance redressal</b> — write to <a href="mailto:privacy@craftcv.app">privacy@craftcv.app</a>. We respond within 7 days and resolve within 30 days, as required by the IT Rules 2011</li>
+        <li><b>Right to delete (erasure)</b> — Settings → “Delete account” removes all your data permanently from production systems. Backups expire within 30 days. You can also email <a href="mailto:privacy@resumemakery.com">privacy@resumemakery.com</a> to request deletion</li>
+        <li><b>Right to withdraw consent</b> — sign out, disconnect the Google account (Google account → “Third-party apps with account access” → ResumeMakery → “Remove access”), or email us</li>
+        <li><b>Right to nominate</b> — under the DPDP Act you may nominate another person to exercise your rights in the event of death or incapacity; write to <a href="mailto:privacy@resumemakery.com">privacy@resumemakery.com</a></li>
+        <li><b>Right to grievance redressal</b> — write to <a href="mailto:privacy@resumemakery.com">privacy@resumemakery.com</a>. We respond within 7 days and resolve within 30 days, as required by the IT Rules 2011</li>
         <li><b>Right to complain</b> — if unsatisfied, you may complain to the Data Protection Board of India under the DPDP Act 2023</li>
       </ul>
 
@@ -318,9 +318,9 @@ export function PrivacyPage() {
 
       <h3>11. Children’s privacy</h3>
       <p>
-        CraftCV is intended for users aged <b>16 and above</b>. We do not knowingly collect personal information
+        ResumeMakery is intended for users aged <b>16 and above</b>. We do not knowingly collect personal information
         from anyone under 16. If you believe a child under 16 has created an account, email
-        <a href="mailto:privacy@craftcv.app"> privacy@craftcv.app</a> and we will delete the account within 7 days.
+        <a href="mailto:privacy@resumemakery.com"> privacy@resumemakery.com</a> and we will delete the account within 7 days.
         The service is not directed at children, and we do not show behavioural advertising to anyone.
       </p>
 
@@ -330,12 +330,12 @@ export function PrivacyPage() {
         (access, rectification, erasure, restriction of processing, data portability, objection, withdrawal of
         consent, and the right to lodge a complaint with your local data-protection authority). We honour all
         of these rights — the easiest way to exercise them is the in-app “Export data” and “Delete account”
-        buttons, or by emailing <a href="mailto:privacy@craftcv.app">privacy@craftcv.app</a>.
+        buttons, or by emailing <a href="mailto:privacy@resumemakery.com">privacy@resumemakery.com</a>.
       </p>
 
       <h3>13. Automated decision-making</h3>
       <p>
-        CraftCV does <b>not</b> make automated decisions about you that produce legal effects (e.g. credit
+        ResumeMakery does <b>not</b> make automated decisions about you that produce legal effects (e.g. credit
         scoring, employment screening). The ATS score we display is a <i>suggestion</i> for you to act on, not
         a decision we make about you. The AI rewrite feature, if enabled, returns suggestions that you can
         accept, edit or ignore.
@@ -351,7 +351,7 @@ export function PrivacyPage() {
       <h3>15. How to contact us</h3>
       <p>
         For any privacy question — access, deletion, correction, complaint, or general — email
-        <a href="mailto:privacy@craftcv.app"> privacy@craftcv.app</a>. We respond within 7 days and resolve
+        <a href="mailto:privacy@resumemakery.com"> privacy@resumemakery.com</a>. We respond within 7 days and resolve
         within 30 days, as required by the IT Rules 2011 and the DPDP Act 2023.
       </p>
     </Shell>
@@ -363,13 +363,13 @@ export function TermsPage() {
     <Shell title="Terms of Service" sub={UPDATED}>
       <h3 className="mt0">1. Agreement</h3>
       <p>
-        By creating an account or using CraftCV you agree to these Terms and our Privacy Policy. These form a binding agreement
+        By creating an account or using ResumeMakery you agree to these Terms and our Privacy Policy. These form a binding agreement
         under the Indian Contract Act, 1872. If you do not agree, please do not use the service.
       </p>
 
       <h3>2. The service</h3>
       <ul>
-        <li>CraftCV is a browser-based resume builder with cloud sync, templates, import tools and PDF export</li>
+        <li>ResumeMakery is a browser-based resume builder with cloud sync, templates, import tools and PDF export</li>
         <li>The service is provided <b>free of charge</b>. There are no paid plans, in-app purchases or subscriptions</li>
         <li>We may add, change or remove features at any time. We will give reasonable notice before removing anything that affects saved resumes</li>
       </ul>
@@ -398,7 +398,7 @@ export function TermsPage() {
 
       <h3>6. Intellectual property</h3>
       <p>
-        The CraftCV software, template designs, example text and brand are owned by CraftCV. Templates are original works created
+        The ResumeMakery software, template designs, example text and brand are owned by ResumeMakery. Templates are original works created
         by our team. You receive a personal, non-exclusive licence to use them for your own resumes — including sending those resumes
         to any employer — but not to resell the templates themselves.
       </p>
@@ -417,7 +417,7 @@ export function TermsPage() {
 
       <h3>9. Limitation of liability</h3>
       <p>
-        To the maximum extent permitted by law, CraftCV is not liable for indirect, incidental or consequential damages. Because the
+        To the maximum extent permitted by law, ResumeMakery is not liable for indirect, incidental or consequential damages. Because the
         service is free, our total liability for any claim is limited to ₹1,000.
       </p>
 
@@ -431,16 +431,16 @@ export function TermsPage() {
       <p>These Terms are governed by the laws of India. Courts in New Delhi have exclusive jurisdiction.</p>
 
       <h3>12. Contact</h3>
-      <p>legal@craftcv.app</p>
+      <p>legal@resumemakery.com</p>
     </Shell>
   );
 }
 
 export function FaqPage() {
   const faqs: [string, string][] = [
-    ['Is CraftCV really free?', 'Yes — 100%. Unlimited resumes, unlimited PDF downloads, every template, no watermark. There is no paid plan and nothing to unlock.'],
-    ['How do you make money then?', 'Right now we don’t. CraftCV is an independent project; we may add optional services (like career coaching partners) in future, but the builder itself will stay free.'],
-    ['Where is my data saved?', 'In your CraftCV account — a secure PostgreSQL database hosted on Supabase with row-level security — plus a local copy in your browser so the app works offline. You can export or delete everything from Settings.'],
+    ['Is ResumeMakery really free?', 'Yes — 100%. Unlimited resumes, unlimited PDF downloads, every template, no watermark. There is no paid plan and nothing to unlock.'],
+    ['How do you make money then?', 'Right now we don’t. ResumeMakery is an independent project; we may add optional services (like career coaching partners) in future, but the builder itself will stay free.'],
+    ['Where is my data saved?', 'In your ResumeMakery account — a secure PostgreSQL database hosted on Supabase with row-level security — plus a local copy in your browser so the app works offline. You can export or delete everything from Settings.'],
     ['Can I use it on my phone?', 'Yes. The editor, template gallery and PDF export all work on mobile browsers. Use “Whole page” in the preview to see the full A4 sheet.'],
     ['Will my resume pass ATS?', 'Single-column templates (Classic, Minimal, Dense, Executive) use standard headings and plain structure that ATS parsers read reliably. Two-column and photo templates look great for direct email / LinkedIn applications; for strict ATS portals choose a single-column layout.'],
     ['How do I import my old resume?', 'Go to Upload & Edit, drop a PDF, DOCX or a clear photo of your printed resume. Text is extracted on your device (with OCR for images) and the editor is pre-filled. Check names, phone numbers and dates afterwards.'],
@@ -458,7 +458,7 @@ export function FaqPage() {
         </div>
       ))}
       <div className="notice" style={{ marginTop: 8 }}>
-        Something else? <a href="#/contact">Contact us</a> — we reply within 2 working days.
+        Something else? <a href="/contact">Contact us</a> — we reply within 2 working days.
       </div>
     </Shell>
   );
@@ -468,7 +468,7 @@ export function DisclaimerPage() {
   return (
     <Shell title="Disclaimer" sub={UPDATED}>
       <ul className="mt0">
-        <li><b>No employment guarantee.</b> CraftCV helps you present your experience clearly; it cannot guarantee interviews or job offers.</li>
+        <li><b>No employment guarantee.</b> ResumeMakery helps you present your experience clearly; it cannot guarantee interviews or job offers.</li>
         <li><b>Example content.</b> Sample summaries, bullets and numbers are illustrative. Do not submit them without replacing with your own facts.</li>
         <li><b>OCR & import accuracy.</b> Text extracted from PDFs, DOCX files and photos may contain mistakes. Always review imported fields.</li>
         <li><b>AI suggestions.</b> If you enable the optional AI webhook, generated text may be inaccurate. You are responsible for what you submit.</li>
@@ -482,12 +482,12 @@ export function DisclaimerPage() {
 export function CookiePage() {
   return (
     <Shell title="Cookie Policy" sub={UPDATED}>
-      <p className="mt0">CraftCV uses a minimal set of browser storage, all of it strictly necessary to run the app.</p>
+      <p className="mt0">ResumeMakery uses a minimal set of browser storage, all of it strictly necessary to run the app.</p>
       <div className="tbl-wrap">
         <table className="tbl">
           <thead><tr><th>Name</th><th>Type</th><th>Purpose</th><th>Duration</th></tr></thead>
           <tbody>
-            <tr><td>sb-*-auth-token</td><td>localStorage</td><td>Keeps you signed in to your CraftCV account (Supabase Auth)</td><td>Until logout</td></tr>
+            <tr><td>sb-*-auth-token</td><td>localStorage</td><td>Keeps you signed in to your ResumeMakery account (Supabase Auth)</td><td>Until logout</td></tr>
             <tr><td>craftcv.session.v2</td><td>localStorage</td><td>Local session mirror</td><td>Until logout</td></tr>
             <tr><td>craftcv.resumes.v1</td><td>localStorage</td><td>Offline copy of your resumes</td><td>Until deleted</td></tr>
             <tr><td>craftcv.audit.v2</td><td>localStorage</td><td>Local security log (rate limiting)</td><td>Rolling 200 entries</td></tr>
@@ -508,7 +508,7 @@ export function EulaPage() {
     <Shell title="End User Licence Agreement" sub={UPDATED}>
       <h3 className="mt0">1. Licence grant</h3>
       <p>
-        CraftCV grants you a personal, non-exclusive, non-transferable, revocable licence to use the CraftCV web application and its
+        ResumeMakery grants you a personal, non-exclusive, non-transferable, revocable licence to use the ResumeMakery web application and its
         templates to create resumes for yourself (or for a person who has asked you to help them).
       </p>
       <h3>2. Restrictions</h3>
@@ -518,7 +518,7 @@ export function EulaPage() {
         <li>Do not remove notices or circumvent security features</li>
       </ul>
       <h3>3. Ownership</h3>
-      <p>The software and templates remain the property of CraftCV. Your resume content remains yours.</p>
+      <p>The software and templates remain the property of ResumeMakery. Your resume content remains yours.</p>
       <h3>4. Term</h3>
       <p>This licence lasts while you use the service and ends automatically if you breach these terms.</p>
       <h3>5. No warranty</h3>

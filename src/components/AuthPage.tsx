@@ -171,7 +171,7 @@ export default function AuthPage({ onAuth, notice }: { onAuth: () => void; notic
               // No local account either — offer a clear path instead of a raw network error.
               setError(
                 local.error
-                  || 'Could not reach the cloud sign-in service. Check your internet, or create an account (Sign up) to use CraftCV offline in this browser.',
+                  || 'Could not reach the cloud sign-in service. Check your internet, or create an account (Sign up) to use ResumeMakery offline in this browser.',
               );
               return;
             }
@@ -256,7 +256,7 @@ export default function AuthPage({ onAuth, notice }: { onAuth: () => void; notic
         <div className="brand" style={{ padding: '0 0 26px' }}>
           <div className="brand-badge">CV</div>
           <div>
-            <div className="brand-name">CraftCV</div>
+            <div className="brand-name">ResumeMakery</div>
             <div className="brand-sub">Resume Studio</div>
           </div>
         </div>
@@ -427,7 +427,7 @@ export default function AuthPage({ onAuth, notice }: { onAuth: () => void; notic
             )}
 
             <div className="hint" style={{ textAlign: 'center', fontSize: 11.5, lineHeight: 1.5 }}>
-              By continuing, you agree to our <a href="#/terms">Terms</a> and <a href="#/privacy">Privacy Policy</a>.
+              By continuing, you agree to our <a href="/terms">Terms</a> and <a href="/privacy">Privacy Policy</a>.
             </div>
           </div>
         </form>

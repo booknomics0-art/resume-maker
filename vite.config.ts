@@ -17,7 +17,7 @@ function productionHeadTags() {
           "connect-src 'self' blob: https://*.supabase.co wss://*.supabase.co;",
           "connect-src 'self' blob: https://*.supabase.co wss://*.supabase.co https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com;",
         )
-        .replaceAll('https://resume-maker-ivory-ten.vercel.app', PRODUCTION_DOMAIN)
+        .replaceAll('https://www.resumemakery.com', PRODUCTION_DOMAIN)
         .replace(
           'No third-party analytics cookies, no advertising trackers, no fingerprinting.',
           'Google Analytics 4 is used for aggregate traffic measurement. No resume content is sent to Google Analytics; no advertising trackers or fingerprinting.',

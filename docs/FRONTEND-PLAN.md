@@ -1,4 +1,4 @@
-# CraftCV — Frontend & UI/UX Plan (detailed)
+# ResumeMakery — Frontend & UI/UX Plan (detailed)
 
 Theme: **navy blue with silver** throughout (design tokens in `src/styles.css`).
 

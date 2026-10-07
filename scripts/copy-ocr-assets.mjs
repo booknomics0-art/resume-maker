@@ -7,7 +7,7 @@
  *   1. the web worker      (tesseract.js/dist/worker.min.js)
  *   2. the wasm core       (tesseract.js-core/tesseract-core-simd-lstm.wasm.js)
  *   3. the language model  (@tesseract.js-data/eng/eng.traineddata.gz)
- * CraftCV ships a strict Content-Security-Policy (`script-src 'self'`,
+ * ResumeMakery ships a strict Content-Security-Policy (`script-src 'self'`,
  * `connect-src 'self'`) and `Cross-Origin-Embedder-Policy: require-corp`, so
  * every one of those CDN requests is BLOCKED in production. That is exactly why
  * scanned PDFs failed with "OCR could not recover it" — the OCR engine never

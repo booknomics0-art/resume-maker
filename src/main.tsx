@@ -10,6 +10,7 @@ import { installRouteMotion } from './lib/routeMotion';
 import { installMobileImportSaveGuard } from './lib/mobileImportSaveGuard';
 import { installTemplatePolish } from './lib/templatePolish';
 import './styles.css';
+import './brand.css';
 import './templates.css';
 import './template-polish.css';
 import './exact-editor-v2.css';

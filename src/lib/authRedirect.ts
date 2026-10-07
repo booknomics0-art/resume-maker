@@ -13,8 +13,8 @@
  *     explanation. So we snapshot the parameters **synchronously, at import
  *     time** — before any async work can clean the URL (`main.tsx` imports this
  *     module first).
- *  2. The app uses hash routing (`#/editor/abc`). Auth parameters must never be
- *     mistaken for a route, and the route must survive the cleanup.
+ *  2. Legacy versions used hash routing (`#/editor/abc`). Auth parameters must never be
+ *     mistaken for a legacy route, and clean History API paths must survive cleanup.
  *
  * Pure module: no imports, no side effects beyond the one-time snapshot, so it
  * can be unit-tested in Node (see `tests/test-google-auth.mjs`).
@@ -150,7 +150,6 @@ export function clearRedirectParams(): void {
       const rest = hp.toString();
       url.hash = rest ? `#${rest}` : '';
     }
-    if (!url.hash) url.hash = '#/';
     window.history.replaceState(window.history.state, '', url.toString());
   } catch {
     /* cosmetic only — never let URL cleanup break sign-in */
@@ -160,7 +159,7 @@ export function clearRedirectParams(): void {
 /**
  * Where the provider should send the user back to. The address bar is reduced to
  * origin + path (no `?` / no `#`) so Supabase's redirect allow-list can match it
- * exactly and Google never has to deal with our hash routes.
+ * exactly. Legacy hash routes are never used as OAuth redirect destinations.
  */
 export function authRedirectUrl(): string {
   if (typeof window === 'undefined' || !window.location) return '';

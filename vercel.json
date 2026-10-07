@@ -41,5 +41,11 @@
       "includeFiles": "node_modules/@sparticuz/chromium/bin/**",
       "excludeFiles": "{tests/**,docs/**,source/**,src/**,public/**,supabase/**,scripts/**,.github/**,README.md,netlify.toml}"
     }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }

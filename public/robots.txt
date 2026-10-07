@@ -1,7 +1,10 @@
-# CraftCV — crawl everything public.
+# ResumeMakery — public pages are crawlable; private app routes are not search landing pages.
 User-agent: *
 Allow: /
 Disallow: /.well-known/
+Disallow: /dashboard
+Disallow: /settings
+Disallow: /editor/
+Disallow: /import
 
-# Sitemap of the live production deployment.
 Sitemap: https://www.resumemakery.com/sitemap.xml

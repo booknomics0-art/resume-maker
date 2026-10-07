@@ -466,7 +466,7 @@ export default function QuickResumeEditor({ id, onOpenGuided }: { id: string; on
           <div className="page-title" style={{ fontSize: 21 }}>⚡ Quick Word-like Editor</div>
           <div className="page-sub">
             {importInfo ? `Imported from ${importInfo.fileName} · ` : ''}
-            click any text, select words, format them, then download. Plain text edits stay synced with CraftCV.
+            click any text, select words, format them, then download. Plain text edits stay synced with ResumeMakery.
           </div>
         </div>
         <div className="row" style={{ flexWrap: 'wrap' }}>

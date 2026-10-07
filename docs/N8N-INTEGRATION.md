@@ -1,4 +1,4 @@
-# n8n × CraftCV — complete integration blueprint
+# n8n × ResumeMakery — complete integration blueprint
 
 Aapke paas n8n hai aur ChatGPT / Gemini free-tier key hai — dono kaam karenge.
 Website se koi bhi API key browser me nahi rakhte; saari keys n8n workflow me rehti hain.
@@ -6,7 +6,7 @@ Website se koi bhi API key browser me nahi rakhte; saari keys n8n workflow me re
 ## Architecture
 
 ```
-Browser (CraftCV)
+Browser (ResumeMakery)
    │  POST { task, section, field, role, text }   header: x-api-key
    ▼
 n8n Webhook  ──► Auth check ──► Build prompt (Code)
@@ -24,7 +24,7 @@ Clean output (Code) ──► Respond to Webhook { ok, text }
 - Method: **POST**, Path: `resume-ai`
 - Respond: **Using "Respond to Webhook" node**
 - Authentication: **Header Auth** credential → name `x-api-key`, value = koi bhi
-  strong random string (e.g. 32+ chars). Same value CraftCV → Settings me daalna hai.
+  strong random string (e.g. 32+ chars). Same value ResumeMakery → Settings me daalna hai.
 - Response Headers: `Access-Control-Allow-Origin: *` (browser CORS ke liye).
 
 ### Node 2 — Code ("Build prompt")
@@ -57,7 +57,7 @@ Full script: app ke andar **n8n + AI setup** page par copy-paste ready hai.
 
 ### Node 4 — Code ("Clean output")
 Strips markdown/chat preamble/em-dashes, removes banned buzzwords, collapses
-whitespace. Script in-app guide me hai. (CraftCV client par bhi same filter chalta
+whitespace. Script in-app guide me hai. (ResumeMakery client par bhi same filter chalta
 hai — double safety.)
 
 ### Node 5 — Respond to Webhook
@@ -102,7 +102,7 @@ Ye rules + n8n cleanup + client humanizer = teen filters, output human lagta hai
 
 1. n8n me workflow banao, **Activate** karo.
 2. **Production URL** copy karo (`/webhook/resume-ai`), test URL nahi (`/webhook-test/...`).
-3. CraftCV → Settings: URL + x-api-key paste → **Test connection** (pong aana chahiye).
+3. ResumeMakery → Settings: URL + x-api-key paste → **Test connection** (pong aana chahiye).
 4. Editor me "Improve with AI" buttons test karo.
 5. Hosting: n8n ka domain public hona chahiye (n8n Cloud default me hota hai;
    self-hosted par reverse proxy + HTTPS).

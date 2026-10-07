@@ -1,5 +1,5 @@
 /**
- * CraftCV Advanced Resume Parser — v2
+ * ResumeMakery Advanced Resume Parser — v2
  * Parses PDF, DOCX, TXT, JSON resumes and extracts structured data.
  *
  * v2 upgrades:

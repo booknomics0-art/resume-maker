@@ -7,7 +7,7 @@ export default function N8nGuide() {
         <div>
           <div className="page-title">n8n + AI setup guide</div>
           <div className="page-sub">
-            Connect CraftCV to your own n8n workflow. Works with the Gemini free tier or your ChatGPT (OpenAI) key.
+            Connect ResumeMakery to your own n8n workflow. Works with the Gemini free tier or your ChatGPT (OpenAI) key.
           </div>
         </div>
       </div>
@@ -15,13 +15,13 @@ export default function N8nGuide() {
       <div className="card pad">
         <h3 className="mt0">How it fits together</h3>
         <p>
-          CraftCV never talks to OpenAI or Google directly. When a user presses
+          ResumeMakery never talks to OpenAI or Google directly. When a user presses
           <b> “✦ Improve with AI”</b>, the app POSTs a small JSON payload to <b>your n8n webhook</b>.
           Your workflow calls the model with a strict human-writing prompt, cleans the output,
           and replies with plain text. Keys stay inside n8n; the website needs no backend.
         </p>
         <div className="node-flow">
-          <div className="node-box">CraftCV (browser)</div><span className="node-arrow">→</span>
+          <div className="node-box">ResumeMakery (browser)</div><span className="node-arrow">→</span>
           <div className="node-box">Webhook</div><span className="node-arrow">→</span>
           <div className="node-box">Auth check</div><span className="node-arrow">→</span>
           <div className="node-box">Build prompt</div><span className="node-arrow">→</span>
@@ -34,13 +34,13 @@ export default function N8nGuide() {
       <div className="card pad">
         <h3 className="mt0">Step 1 — Create the workflow</h3>
         <ol>
-          <li>In n8n: <b>+ Add workflow</b> → name it <span className="kbd">CraftCV Resume AI</span>.</li>
+          <li>In n8n: <b>+ Add workflow</b> → name it <span className="kbd">ResumeMakery Resume AI</span>.</li>
           <li>Add a <b>Webhook</b> node:
             <ul>
               <li>HTTP Method: <b>POST</b></li>
               <li>Path: <span className="kbd">resume-ai</span> (URL becomes <span className="kbd">https://YOUR-N8N/webhook/resume-ai</span>)</li>
               <li>Respond: <b>Using “Respond to Webhook” node</b></li>
-              <li>Authentication: <b>Header Auth</b> — create a credential with name <span className="kbd">x-api-key</span> and a long random value. Use the same value in CraftCV Settings.</li>
+              <li>Authentication: <b>Header Auth</b> — create a credential with name <span className="kbd">x-api-key</span> and a long random value. Use the same value in ResumeMakery Settings.</li>
               <li>Response Headers (CORS): add <span className="kbd">Access-Control-Allow-Origin: *</span> so the browser is allowed to call it.</li>
             </ul>
           </li>
@@ -53,7 +53,7 @@ export default function N8nGuide() {
   "text": "{{ $json.cleaned }}"
 }`}</pre>
           </li>
-          <li><b>Activate</b> the workflow and copy the <b>production</b> URL (not the /webhook-test/ one) into CraftCV → Settings.</li>
+          <li><b>Activate</b> the workflow and copy the <b>production</b> URL (not the /webhook-test/ one) into ResumeMakery → Settings.</li>
         </ol>
       </div>
 
@@ -136,7 +136,7 @@ for (const w of banned) {
 t = t.replace(/\\s{2,}/g, ' ').replace(/\\n{3,}/g, '\\n\\n').trim();
 
 return [{ json: { cleaned: t } }];`}</pre>
-        <p className="hint">CraftCV runs the same cleaning again on the browser side, so output stays human even if a phrase slips through.</p>
+        <p className="hint">ResumeMakery runs the same cleaning again on the browser side, so output stays human even if a phrase slips through.</p>
       </div>
 
       <div className="card pad">
@@ -145,7 +145,7 @@ return [{ json: { cleaned: t } }];`}</pre>
           <li>On every node after the webhook, set the error output to an <b>Error Trigger → Respond to Webhook</b> branch returning
             <pre className="code">{`{ "ok": false, "error": "AI service unavailable" }`}</pre>
             so the site shows a friendly message instead of hanging.</li>
-          <li>In CraftCV → Settings paste the production URL + your x-api-key value → <b>Test connection</b>. You should see “pong”.</li>
+          <li>In ResumeMakery → Settings paste the production URL + your x-api-key value → <b>Test connection</b>. You should see “pong”.</li>
           <li>Open a resume, write a rough bullet like <i>“worked on website and fixed bugs”</i>, press <b>✦ Improve with AI</b> and check the rewrite keeps your facts.</li>
         </ol>
       </div>
@@ -170,7 +170,7 @@ Response:
 
       <div className="notice">
         <b>Keeping it human:</b> the system prompt above bans buzzwords, keeps every number the user typed,
-        and forbids inventing facts. Between the prompt, your n8n cleanup node, and CraftCV's built-in
+        and forbids inventing facts. Between the prompt, your n8n cleanup node, and ResumeMakery's built-in
         humanizer, AI-generated phrasing gets filtered three times before it reaches the resume.
       </div>
     </div>

@@ -2,7 +2,7 @@ let installed = false;
 let timers: number[] = [];
 
 function isMobileImport() {
-  return window.location.hash.startsWith('#/import') && window.matchMedia('(max-width: 900px)').matches;
+  return (window.location.pathname === '/import' || window.location.hash.startsWith('#/import')) && window.matchMedia('(max-width: 900px)').matches;
 }
 
 function surfaceImportError() {

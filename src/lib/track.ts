@@ -1,6 +1,6 @@
 // Private, on-device usage events.
 //
-// CraftCV has no third-party analytics (the strict CSP deliberately blocks
+// ResumeMakery has no third-party analytics (the strict CSP deliberately blocks
 // them). These counts power the "Usage on this device" card in Settings and
 // stay in this browser's localStorage — they are never uploaded anywhere.
 

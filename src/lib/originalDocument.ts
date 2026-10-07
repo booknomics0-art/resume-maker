@@ -161,7 +161,7 @@ export function installOriginalUploadCapture() {
   document.addEventListener('change', (event) => {
     const input = event.target;
     if (!(input instanceof HTMLInputElement) || input.type !== 'file') return;
-    if (!window.location.hash.startsWith('#/import')) return;
+    if (window.location.pathname !== '/import' && !window.location.hash.startsWith('#/import')) return;
     const accept = (input.accept || '').toLowerCase();
     const looksLikeResumeInput = accept.includes('.pdf') && accept.includes('.docx') && accept.includes('.txt');
     if (!looksLikeResumeInput) return;
@@ -174,7 +174,7 @@ export function installOriginalUploadCapture() {
   // resume upload input is mounted; once the import review/form is open that
   // input is gone, so dragging a profile photo cannot replace the source file.
   document.addEventListener('drop', (event) => {
-    if (!window.location.hash.startsWith('#/import')) return;
+    if (window.location.pathname !== '/import' && !window.location.hash.startsWith('#/import')) return;
     if (!resumeUploadInputPresent()) return;
     const drag = event as DragEvent;
     const file = drag.dataTransfer?.files?.[0];

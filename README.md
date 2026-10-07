@@ -1,4 +1,4 @@
-# CraftCV — Professional Resume Studio
+# ResumeMakery — Professional Resume Studio
 
 A resume builder for India with a navy-blue & silver theme. Login, fill your
 details in 7 short steps (~10 minutes), pick from **50 professional templates across
@@ -94,7 +94,7 @@ Resumes are stored in your own **Supabase** database (see `docs/SUPABASE.md`).
 
 ## Pricing
 
-None. CraftCV is completely free — there is no billing code in the app.
+None. ResumeMakery is completely free — there is no billing code in the app.
 
 ## Database (Supabase)
 
@@ -137,7 +137,7 @@ node tests/test-image-ocr.mjs path/to/your-scan.jpg   # try any file
 `npm run test:templates` renders every template with `react-dom/server` in each career
 field, and fails if the catalogue and `supabase/seed/template_catalog.sql` drift, or if a
 template row ever claims to be a copy of someone else's product — every design in
-`src/lib/templates.ts` is written for CraftCV.
+`src/lib/templates.ts` is written for ResumeMakery.
 
 `@napi-rs/canvas` is a dev-only dependency for these tests
 (`npm i -D @napi-rs/canvas`); the app itself never imports it.
@@ -151,7 +151,7 @@ Scanned pages and photos are read on the device. The engine's three files —
 `npm run build`. They are fetched only when a user actually imports a scan, and
 the English model is cached in the browser afterwards.
 
-This is deliberate: tesseract.js defaults to jsDelivr, but CraftCV ships a strict
+This is deliberate: tesseract.js defaults to jsDelivr, but ResumeMakery ships a strict
 CSP (`script-src 'self'`, `connect-src 'self'`) plus
 `Cross-Origin-Embedder-Policy: require-corp`, so CDN downloads are blocked — the
 old build failed every scanned upload with *"OCR could not recover it"* for that
@@ -162,7 +162,7 @@ origin instead.
 
 ## Docs (internal)
 
-- [Competitor analysis & how CraftCV answers it](docs/COMPETITORS.md)
+- [Competitor analysis & how ResumeMakery answers it](docs/COMPETITORS.md)
 - [Google login — setup & troubleshooting](docs/GOOGLE-LOGIN.md)
 - [Frontend & UI/UX plan](docs/FRONTEND-PLAN.md)
 - [n8n integration blueprint](docs/N8N-INTEGRATION.md)

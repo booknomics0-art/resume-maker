@@ -1,7 +1,7 @@
 /**
  * Clean export test — the user-visible promise:
  *
- *   "Every PDF you download is exactly your resume — no watermark, no CraftCV
+ *   "Every PDF you download is exactly your resume — no watermark, no ResumeMakery
  *    credit line, no app link, no placeholder boxes."
  *
  * A resume-maker watermark is the single most common reason users leave a

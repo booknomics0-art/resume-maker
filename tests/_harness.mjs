@@ -1,5 +1,5 @@
 /**
- * Test harness for the CraftCV import pipeline.
+ * Test harness for the ResumeMakery import pipeline.
  *
  * The library code is written for the browser (canvas, DOM, workers), so the
  * tests:

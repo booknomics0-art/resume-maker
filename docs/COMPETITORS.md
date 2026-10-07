@@ -2,7 +2,7 @@
 
 Researched June–September 2026 (pricing verified on the vendors' own sites).
 The file is the working record for "notice competitors and solve for them" —
-each gap below has a CraftCV answer, and the answers are all **free, in the
+each gap below has a ResumeMakery answer, and the answers are all **free, in the
 basic flow, on-device**.
 
 ## Who we compared
@@ -21,16 +21,16 @@ or the free file arrives watermarked. Every paid feature we care about is one
 of four: (1) a clean PDF, (2) watermark removal, (3) ATS scoring vs a JD,
 (4) upload-and-edit an existing resume.
 
-## The four traps — and CraftCV's answer
+## The four traps — and ResumeMakery's answer
 
-1. **Watermark / branded free files** (Novoresume): CraftCV's free PDF is the
+1. **Watermark / branded free files** (Novoresume): ResumeMakery's free PDF is the
    final file — `tests/test-clean-export.mjs` SSR-renders **all 50 templates**
    plus the sample and fails if any app branding string, `<a>`/`href`, or the
    photo-placeholder box survives into the print output. The print root is
    exactly `<Preview r={r} />` (asserted in the same test), and `.ph`
    placeholders are `display: none` on paper.
 2. **Formatted-export paywall** (Zety, Resume.io): no export exists in
-   CraftCV that is not a clean A4 PDF. **Unlimited** downloads.
+   ResumeMakery that is not a clean A4 PDF. **Unlimited** downloads.
 3. **ATS scoring behind a plan** (Rezi's core): `src/lib/ats.ts` +
    `AtsCheck.tsx` — paste a JD and get a live score with covered/missing
    keyword chips, re-computed on every keystroke of the JD *or the resume*,

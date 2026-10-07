@@ -1,4 +1,4 @@
-// Core data model for CraftCV
+// Core data model for ResumeMakery
 
 export interface PersonalInfo {
   fullName: string;

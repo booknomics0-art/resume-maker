@@ -10,7 +10,7 @@
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
-// Public defaults for the CraftCV production project. These are the *anon* (public)
+// Public defaults for the ResumeMakery production project. These are the *anon* (public)
 // credentials — they ship to every browser anyway; row-level security protects data.
 // Env vars override them (e.g. for a staging project). Never put a service-role key here.
 const DEFAULT_URL = 'https://icomxfiqurrgqksbcnin.supabase.co';

@@ -1,5 +1,5 @@
 /**
- * CraftCV OCR engine — Tesseract, running 100% in the browser, with the engine
+ * ResumeMakery OCR engine — Tesseract, running 100% in the browser, with the engine
  * itself served from our own origin.
  *
  * The important change vs. the previous build: tesseract.js used to fetch its

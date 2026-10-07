@@ -29,7 +29,7 @@ Read from the public Supabase Auth endpoints:
 | `GET /auth/v1/authorize?provider=google` | **redirects to Google's sign-in page** ✅ |
 | Google client currently configured in Supabase | `130784773041-jfk6ilb2h80djsberev63bppm5tt6nir.apps.googleusercontent.com` |
 | Callback Supabase sends to Google | `https://voyvalrnxmdogsllarnz.supabase.co/auth/v1/callback` |
-| App redirect used for the check | `https://resume-maker-ivory-ten.vercel.app/` was accepted |
+| App redirect used for the check | `https://www.resumemakery.com/` was accepted |
 
 The previous browser-side Google button used a different Client ID
 (`854985942115-ns0npfc14kimq2nno8n10qkgagr85cfg.apps.googleusercontent.com`) from
@@ -116,7 +116,7 @@ fixed in code:
    https://<your-project-ref>.supabase.co/auth/v1/callback
    ```
 
-   (For CraftCV: `https://icomxfiqurrgqksbcnin.supabase.co/auth/v1/callback`.)
+   (For ResumeMakery: `https://icomxfiqurrgqksbcnin.supabase.co/auth/v1/callback`.)
    Copy the **Client ID** and **Client secret**.
 
 2. **Supabase → Authentication → Providers → Google** → enable it, paste the

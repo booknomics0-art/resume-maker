@@ -1,4 +1,4 @@
-// CraftCV service worker — installable PWA + basic offline resilience.
+// ResumeMakery service worker — installable PWA + basic offline resilience.
 //
 // Strategy (deliberately conservative):
 //  · Precache the app shell on install.
@@ -9,8 +9,8 @@
 // Registered only in production builds (see src/main.tsx) so `npm run dev`
 // never serves stale modules. Bump CACHE when the shell changes shape.
 
-const CACHE = 'craftcv-v1';
-const PRECACHE = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
+const CACHE = 'resumemakery-v2';
+const PRECACHE = ['./', './index.html', './manifest.webmanifest', './icon.svg'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(

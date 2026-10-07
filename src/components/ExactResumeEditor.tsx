@@ -594,7 +594,7 @@ export default function ExactResumeEditor({ id, onOpenGuided }: { id: string; on
 
       {mode === 'original' && (
         <div className="exact2-note no-print">
-          <b>Untouched view.</b> This is the uploaded document itself — not a CraftCV template recreation. Switch to Quick edit only when you need to change text.
+          <b>Untouched view.</b> This is the uploaded document itself — not a ResumeMakery template recreation. Switch to Quick edit only when you need to change text.
         </div>
       )}
 

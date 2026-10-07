@@ -1,5 +1,5 @@
 /**
- * CraftCV cloud layer (Supabase).
+ * ResumeMakery cloud layer (Supabase).
  *
  * Responsibilities
  *  - Auth: email/password + Google (OAuth redirect/PKCE) through Supabase Auth
