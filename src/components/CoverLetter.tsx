@@ -120,7 +120,7 @@ export default function CoverLetter() {
       {!hasResumes && (
         <div className="notice no-print" style={{ marginBottom: 14 }}>
           You are seeing the <b>sample resume</b> — create your own resume first and the letter will draft from it.{' '}
-          <a href="#/editor/new" onClick={(e) => { e.preventDefault(); navigate('/editor/new'); }}>Create a resume →</a>
+          <a href="/editor/new" onClick={(e) => { e.preventDefault(); navigate('/editor/new'); }}>Create a resume →</a>
         </div>
       )}
 

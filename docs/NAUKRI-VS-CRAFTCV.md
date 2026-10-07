@@ -1,7 +1,7 @@
-# Naukri Resume Maker vs CraftCV — A to Z Analysis & Action Plan
+# Naukri Resume Maker vs ResumeMakery — A to Z Analysis & Action Plan
 
 Research date: 27 September 2026. Naukri ka live landing page, FAQ, pricing
-(press release Nov 2025 + vendor comparisons) aur poora CraftCV codebase
+(press release Nov 2025 + vendor comparisons) aur poora ResumeMakery codebase
 analyze kiya gaya hai. Har gap ke saath **exact file-level fix** bhi likha hai
 taaki implementation seedha shuru ho sake.
 
@@ -14,16 +14,16 @@ taaki implementation seedha shuru ho sake.
 - Baaki sab (20 templates, 100 AI attempts/day) **Naukri Pro** me: ₹999/1mo, ₹1,999/3mo, ₹2,999/6mo
 - Real moat: Naukri profile integration (recruiter discoverability) + 20 saal ka brand + expert writing service
 
-**CraftCV abhi kya hai:**
+**ResumeMakery abhi kya hai:**
 - 100% free, no watermark, unlimited resumes + unlimited downloads (Naukri me sirf 1 resume!)
 - 50 templates / 20 families / 10 categories (Naukri: 20 templates, 3 free)
 - Upload & edit (PDF/DOCX/TXT/photo OCR) — Naukri me ye feature **hai hi nahi**
 - Free ATS JD keyword match — Naukri isko AI Pro me bechta hai
 - On-device privacy, cloud sync, multi-page, JSON export
 
-**Sabse badi problem:** CraftCV ka pehla screen **login wall** hai. Naukri pehle
+**Sabse badi problem:** ResumeMakery ka pehla screen **login wall** hai. Naukri pehle
 poori sales pitch dikhata hai (hero, templates, reviews, FAQ), phir signup maangta hai.
-CraftCV visitor ko bina bataye product ke andar bhej deta hai → conversion zero
+ResumeMakery visitor ko bina bataye product ke andar bhej deta hai → conversion zero
 aur Google bhi content index nahi kar pata (sab kuch login ke baad render hota hai).
 
 **Bottom line:** Product Naukri se **feature-wise stronger hai** (upload/edit + ATS
@@ -34,32 +34,32 @@ social proof, SEO, AI ki visibility, cover letter, aur trust signals. Neeche A t
 
 ## 2. Head-to-Head Comparison Table
 
-| # | Area | Naukri Resume Maker | CraftCV | Winner | CraftCV fix |
+| # | Area | Naukri Resume Maker | ResumeMakery | Winner | ResumeMakery fix |
 |---|------|--------------------|---------|--------|-------------|
 | 1 | Landing/marketing page | Full sales page: hero, AI pitch, template gallery, benefits, 3-step how-to, 12+ testimonials, FAQ (SEO), expert-service banner | **Pehla screen login form hai** — koi marketing page nahi | Naukri | Gap 1 — public landing route |
-| 2 | Free tier honesty | "Free" lekin 1 resume, 3 templates, 3 AI attempts; PDF hi milta hai | Poora product free — unlimited resumes, 50 templates, unlimited PDF, no watermark | **CraftCV** | Bas isko dikhana hai (landing pe) |
-| 3 | Pricing | ₹999 / ₹1,999 / ₹2,999 (Naukri Pro bundle) | ₹0 — no billing code | **CraftCV** | "Forever free" badge |
-| 4 | Templates count | 20 total (3 free, 17 Pro-locked) | 50 / 20 families / 10 categories, sab unlocked | **CraftCV** | Public gallery chahiye |
+| 2 | Free tier honesty | "Free" lekin 1 resume, 3 templates, 3 AI attempts; PDF hi milta hai | Poora product free — unlimited resumes, 50 templates, unlimited PDF, no watermark | **ResumeMakery** | Bas isko dikhana hai (landing pe) |
+| 3 | Pricing | ₹999 / ₹1,999 / ₹2,999 (Naukri Pro bundle) | ₹0 — no billing code | **ResumeMakery** | "Forever free" badge |
+| 4 | Templates count | 20 total (3 free, 17 Pro-locked) | 50 / 20 families / 10 categories, sab unlocked | **ResumeMakery** | Public gallery chahiye |
 | 5 | Template visibility on landing | Template thumbnails landing pe hi dikh jate hain | Thumbnails sirf logged-in gallery me | Naukri | Gap 4 |
 | 6 | AI | Headline feature: profile→resume auto-generate, 3 free / 100-per-day Pro attempts, bullet rewriter | n8n ke peeche chhupa hai; configure na ho to AI **kahin dikhta hi nahi** | Naukri | Gap 3 |
-| 7 | ATS | "ATS-friendly templates" claim; actual JD-vs-resume scoring Pro AI ke saath | **Real** live ATS keyword match vs pasted JD, free, on-device | **CraftCV** | Landing pe headline banao |
-| 8 | Upload & edit existing resume | ❌ Not available (sirf Naukri profile import) | PDF/DOCX/TXT/JSON/photo + offline OCR + paste-to-import | **CraftCV** | Landing ka #1 hook banao |
+| 7 | ATS | "ATS-friendly templates" claim; actual JD-vs-resume scoring Pro AI ke saath | **Real** live ATS keyword match vs pasted JD, free, on-device | **ResumeMakery** | Landing pe headline banao |
+| 8 | Upload & edit existing resume | ❌ Not available (sirf Naukri profile import) | PDF/DOCX/TXT/JSON/photo + offline OCR + paste-to-import | **ResumeMakery** | Landing ka #1 hook banao |
 | 9 | Cover letter | Samples section + expert-written (paid) | ❌ None | Naukri | Gap 5 |
 | 10 | Resume score/review | Expert review service (paid, 20% off banner) | Completeness % hai, lekin koi overall "score card" nahi | Naukri | Gap 6 |
-| 11 | Multi-resume | **Sirf 1 resume** (free aur Pro dono) | Unlimited + duplicate | **CraftCV** | Landing pe bolna zaroori |
-| 12 | Download format | PDF only | PDF + JSON; multi-page 1–3, clean pagination | **CraftCV** | DOCX add karo (Gap 9) |
-| 13 | Watermark/traps | Free PDF me limits + upsell maze | Zero branding in PDF (test-enforced) | **CraftCV** | Highlight karo |
+| 11 | Multi-resume | **Sirf 1 resume** (free aur Pro dono) | Unlimited + duplicate | **ResumeMakery** | Landing pe bolna zaroori |
+| 12 | Download format | PDF only | PDF + JSON; multi-page 1–3, clean pagination | **ResumeMakery** | DOCX add karo (Gap 9) |
+| 13 | Watermark/traps | Free PDF me limits + upsell maze | Zero branding in PDF (test-enforced) | **ResumeMakery** | Highlight karo |
 | 14 | Social proof | 12+ named testimonials, industries, star ratings, "4K+ professionals" | **Zero** public reviews/ratings | Naukri | Gap 2 |
 | 15 | SEO | FAQ content, career-advice internal links, template pages, indexable Next.js SSR | Hash routing (`#/`), SPA, single title, no sitemap/robots/JSON-LD/OG image | Naukri | Gap 7 |
 | 16 | Onboarding friction | Sign-in required, lekin landing pehle convince karti hai | Sign-in required, bina convince kiye | Naukri | Gap 1 + guest mode |
 | 17 | Mobile | Responsive claims, "edit on the go" | Bottom-nav, responsive, mobile topbar | Tie | PWA add karo (Gap 10) |
 | 18 | Support | Toll-free 1800-102-5557 + email | Contact page | Naukri | Gap 8 |
-| 19 | Privacy story | Resume Naukri DB me, recruiters ko visible | On-device parsing/OCR/ATS; sirf user ka apna Supabase | **CraftCV** | Selling point banao |
+| 19 | Privacy story | Resume Naukri DB me, recruiters ko visible | On-device parsing/OCR/ATS; sirf user ka apna Supabase | **ResumeMakery** | Selling point banao |
 | 20 | Trust/security | Brand trust, 20+ saal | Strict CSP, security headers, RLS | Tie | Badges banao |
 | 21 | Language | English (Hinglish audience implicit) | English | Tie | Hindi toggle (Gap 10) |
 | 22 | Extras ecosystem | Resume writing service, expert banner, Naukri Pro bundle (mock interviews etc.) | Sample resume, JSON backup, n8n blueprint | Naukri | Roadmap Phase 3 |
 
-**Score: CraftCV product features me 9 jeet raha hai, Naukri storefront/trust me 8.
+**Score: ResumeMakery product features me 9 jeet raha hai, Naukri storefront/trust me 8.
 Ab storefront ko fix karna hai — wahi jahan paisa aur users dono hain.**
 
 ---
@@ -84,11 +84,11 @@ Ab storefront ko fix karna hai — wahi jahan paisa aur users dono hain.**
    Google is page ko "resume maker" ke har long-tail query pe rank karata hai.
 8. **Footer Breadcrumb:** Home › Naukri 360 › Resume Maker — site authority flow.
 9. **Conversion ke baad:** sirf 1 resume allowed — taaki har naye job application
-   ke liye user Pro le. CraftCV yahan unlimited de deta hai — **ye "freedom" story
+   ke liye user Pro le. ResumeMakery yahan unlimited de deta hai — **ye "freedom" story
    hai jo Naukri user ko bahut achi lagegi.**
 
 **Seekhne wali baat:** Naukri ka product average hai, presentation top-class hai.
-CraftCV ka product top-class hai, presentation missing hai. Presentation copy
+ResumeMakery ka product top-class hai, presentation missing hai. Presentation copy
 karna product se aasan hai.
 
 ---
@@ -108,17 +108,17 @@ Naukri ka visitor 8 screens ka sales dekh chuka hota hai. Result: bounce.
    - **Hero:** "India ka sabse honest resume builder — 100% free, forever."
      Sub: "Upload your old resume (PDF/DOCX/photo) ya 10 minute me naya banao.
      50 templates. Unlimited downloads. No watermark. No credit card."
-     + live mini A4 preview (CraftCV me `Preview.tsx` pehle se hai — ek
+     + live mini A4 preview (ResumeMakery me `Preview.tsx` pehle se hai — ek
      `sampleResume()` ko animate karke type-karne wala demo do).
    - **Free vs "unke free" comparison card:** "Naukri ka free = 1 resume, 3
-     templates. CraftCV ka free = unlimited resumes, 50 templates." (Comparison
+     templates. ResumeMakery ka free = unlimited resumes, 50 templates." (Comparison
      sirf generic rakho — "other builders" bolo, legal-safe.)
    - **3 feature pillars:** Upload & Edit (OCR tak) · Free ATS Score (JD paste
      karo) · 50 recruiter-tested templates.
    - **Template strip:** 8–10 best template thumbnails horizontally scrollable
      (pre-rendered PNG/SVG — `npm run preview:templates` pipeline already hai).
    - **"How it works" 3 steps:** Upload/Fill → Pick template → Download PDF.
-   - **FAQ section (SEO):** kam se kam 10 Q&A — "Is CraftCV really free?",
+   - **FAQ section (SEO):** kam se kam 10 Q&A — "Is ResumeMakery really free?",
      "Kya ye ATS-friendly hai?", "Kya main apna purana resume edit kar sakta
      hoon?", "PDF me watermark aata hai?", "Kitne pages?", "Data kahan store
      hota hai?" — inme `craftcv.com/#/faq` internal links.
@@ -126,14 +126,14 @@ Naukri ka visitor 8 screens ka sales dekh chuka hota hai. Result: bounce.
 3. **Guest mode:** "Start without account" button — `emptyResume()` se seedha
    editor kholo (offline store already bina login chalta hai —
    `lib/store.ts` localStorage-based hai). Download/save par optional "save to
-   cloud" prompt. CraftCV ka demo-account fallback already iska aadha kaam
+   cloud" prompt. ResumeMakery ka demo-account fallback already iska aadha kaam
    karta hai.
 
 ---
 
 ## 5. GAP 2: Social Proof Zero
 
-Naukri ke paas 12+ naam-wale reviews hain; CraftCV ka koi review kahin nahi.
+Naukri ke paas 12+ naam-wale reviews hain; ResumeMakery ka koi review kahin nahi.
 
 **Fix:**
 1. Landing pe testimonials band — 6 cards: naam, role (e.g. "Software Developer,
@@ -151,7 +151,7 @@ Naukri ke paas 12+ naam-wale reviews hain; CraftCV ka koi review kahin nahi.
 ## 6. GAP 3: AI Dikh Nahi Raha (Naukri ka #1 Weapon)
 
 Naukri "AI resume maker" bech raha hai jo free me sirf 3 attempts deta hai.
-CraftCV me AI hai (n8n webhook, `lib/ai.ts`, `AiButton` har step pe) — **lekin
+ResumeMakery me AI hai (n8n webhook, `lib/ai.ts`, `AiButton` har step pe) — **lekin
 configure na ho to UI me ek bhi AI button nahi dikhta.** User ko pata hi nahi
 chalta.
 
@@ -163,7 +163,7 @@ chalta.
    polished text de). Msg: "Instant draft — AI server connect hone par aur
    better." Isse user ko AI experience milta hai bina infrastructure ke.
 2. Landing pe "AI-assisted summaries & bullets" ko headline feature bolo —
-   lekin honest: "AI helps you phrase it — you stay in control" (CraftCV ka
+   lekin honest: "AI helps you phrase it — you stay in control" (ResumeMakery ka
    truthful-branding USP, Naukri ke hallucination-prone AI ka counter).
 3. "Improve with AI" buttons ko wizard steps pe sticky visible karo, sirf
    conditional nahi.
@@ -174,7 +174,7 @@ chalta.
 
 ## 7. GAP 4: Templates Publicly Dikhao
 
-Naukri landing pe hi 20 thumbnails dikhata hai. CraftCV ke paas `public/
+Naukri landing pe hi 20 thumbnails dikhata hai. ResumeMakery ke paas `public/
 template-preview.html` (400 KB, sab 50 templates SSR) hai — par wo sirf internal
 dev preview hai.
 
@@ -194,7 +194,7 @@ dev preview hai.
 ## 8. GAP 5: Cover Letter Builder Nahi Hai
 
 Naukri cover letter samples + expert service bechta hai. Paid builders isko
-paywall karte hain. CraftCV ke paas fields ka poora data hai — cover letter
+paywall karte hain. ResumeMakery ke paas fields ka poora data hai — cover letter
 banane ke liye sirf ek template + preview chahiye.
 
 **Fix:**
@@ -209,7 +209,7 @@ banane ke liye sirf ek template + preview chahiye.
 
 ## 9. GAP 6: Resume Score Card (Naukri ka "expert review" ka free jawab)
 
-CraftCV me 2 alag-alag signals hain — completeness % (editor) aur ATS match
+ResumeMakery me 2 alag-alag signals hain — completeness % (editor) aur ATS match
 (AtsCheck) — par ek convincing "score" kahin nahi.
 
 **Fix:** `ResumeScore.tsx` — ek card jo 0–100 score dikhaye: Completeness (40),
@@ -221,10 +221,10 @@ offline version hai — aur download se pehle motivation deta hai. `lib/ats.ts`
 
 ---
 
-## 10. GAP 7: SEO — CraftCV Google me hai hi nahi
+## 10. GAP 7: SEO — ResumeMakery Google me hai hi nahi
 
 Naukri ka page "resume maker", "ats resume", "ai resume builder free" — sab pe
-rank karta hai kyunki: SSR/Next.js, FAQ content, internal links, schema. CraftCV:
+rank karta hai kyunki: SSR/Next.js, FAQ content, internal links, schema. ResumeMakery:
 SPA + hash routing + login wall + no sitemap. Google ke liye site almost invisible.
 
 **Fix (high priority, technical):**
@@ -238,7 +238,7 @@ SPA + hash routing + login wall + no sitemap. Google ke liye site almost invisib
 3. **JSON-LD schema** index.html me: `SoftwareApplication` (offers ₹0) +
    `FAQPage` (landing FAQ se) + `Organization`. Naukri FAQ schema hi use karta
    hai rich results ke liye.
-4. **OG image (1200×630)** banao — navy/silver CraftCV brand, "Free Resume
+4. **OG image (1200×630)** banao — navy/silver ResumeMakery brand, "Free Resume
    Builder · 50 Templates · ATS Score Free" — `og:image`, `twitter:card`
    (abhi index.html me og:image hai hi nahi).
 5. **Canonical + title keyword tune:** title already theek hai;
@@ -256,7 +256,7 @@ SPA + hash routing + login wall + no sitemap. Google ke liye site almost invisib
 
 ## 11. GAP 8: Support Channels
 
-Naukri: toll-free number + email. CraftCV: sirf contact page.
+Naukri: toll-free number + email. ResumeMakery: sirf contact page.
 
 **Fix:** Contact page pe email + (agar possible ho) WhatsApp business link +
 "response within 24h" promise + FAQ deep-link. Support ki visibility = trust.
@@ -276,7 +276,7 @@ headings/colors ke saath. Landing pe: "PDF + Word, both free."
 ## 13. GAP 10: PWA + Hindi/Hinglish Touch
 
 1. **PWA:** `manifest.webmanifest` + service worker (precache index + OCR
-   assets) → "Install CraftCV" mobile pe. Offline-first already architecture me
+   assets) → "Install ResumeMakery" mobile pe. Offline-first already architecture me
    hai (localStorage + on-device OCR) — PWA natural fit hai, Naukri me ye
    possible bhi nahi (server-heavy).
 2. **Hindi/Hinglish:** UI labels ki light Hinglish tone (buttons jaise "Upload
@@ -300,7 +300,7 @@ A/B, template strip order, signup timing (early vs at download).
 
 ## 15. Kya COPY NAHI Karna (Naukri ki weaknesses = hamara weapon)
 
-| Naukri weakness | CraftCV ka counter-positioning |
+| Naukri weakness | ResumeMakery ka counter-positioning |
 |---|---|
 | "Free" me sirf 1 resume | **Unlimited resumes** — har job ke liye tailored version |
 | 3 AI attempts, phir ₹999 | Unlimited edits + free ATS score |
@@ -310,7 +310,7 @@ A/B, template strip order, signup timing (early vs at download).
 | PDF only | PDF + JSON (+ DOCX roadmap) |
 | Expert service ₹ high-ticket | Free Resume Score card (instant, offline) |
 
-In sab ko landing + FAQ me explicitly bolo — ye CraftCV ki "honest builder"
+In sab ko landing + FAQ me explicitly bolo — ye ResumeMakery ki "honest builder"
 brand hai jo `docs/COMPETITORS.md` ka philosophy already kehta hai.
 
 ---
@@ -349,5 +349,5 @@ brand hai jo `docs/COMPETITORS.md` ka philosophy already kehta hai.
   (profile enhancement, hidden jobs, AI mock interviews)
 - 1MillionResume comparison (Jan 2026): Naukri free = 3 templates + 3 AI
   attempts; resume-builder-only Pro ~₹299/3mo variant bhi note kiya gaya
-- CraftCV codebase: `src/App.tsx`, `src/components/*`, `src/lib/*`,
+- ResumeMakery codebase: `src/App.tsx`, `src/components/*`, `src/lib/*`,
   `index.html`, `netlify.toml`, `docs/COMPETITORS.md`, `docs/FRONTEND-PLAN.md`

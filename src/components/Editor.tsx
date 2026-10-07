@@ -30,7 +30,7 @@ function collectPrintableCss(): string {
     try {
       chunks.push(Array.from(sheet.cssRules).map((rule) => rule.cssText).join('\n'));
     } catch {
-      // Ignore cross-origin stylesheets. CraftCV's own Vite CSS is same-origin.
+      // Ignore cross-origin stylesheets. ResumeMakery's own Vite CSS is same-origin.
     }
   }
   return chunks.join('\n');

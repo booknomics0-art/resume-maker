@@ -1,5 +1,5 @@
 /**
- * CraftCV Security Module — High-tech, comprehensive client-side security
+ * ResumeMakery Security Module — High-tech, comprehensive client-side security
  * Implements XSS prevention, input sanitization, secure storage, rate limiting,
  * CSRF protection, and audit logging.
  */
@@ -443,7 +443,7 @@ export function initSecurity(): void {
   if (checkURLForXSS()) {
     console.warn('Potential XSS detected in URL — redirecting to safe route');
     auditLog('XSS_URL_DETECTED', { url: window.location.href });
-    window.location.hash = '#/';
+    window.location.assign('/');
   }
   
   // Generate CSRF token

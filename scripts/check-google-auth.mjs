@@ -103,7 +103,7 @@ const projectRef = /^https:\/\/([a-z0-9-]+)\.supabase\.(co|in)$/.exec(url)?.[1] 
 const callbackUrl = url ? `${url}/auth/v1/callback` : '(set VITE_SUPABASE_URL)';
 
 const line = '─'.repeat(64);
-console.log(`\nCraftCV · Google sign-in check\n${line}`);
+console.log(`\nResumeMakery · Google sign-in check\n${line}`);
 console.log(`Supabase project : ${url || '(not configured)'}${projectRef ? `  (ref ${projectRef})` : ''}`);
 if (appUrl) console.log(`App URL          : ${appUrl}`);
 

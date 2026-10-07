@@ -1,5 +1,5 @@
 /* ============================================================================
-   CraftCV sheet designs — 20 layout families, one design language each.
+   ResumeMakery sheet designs — 20 layout families, one design language each.
    Resume sheet: A4 at 96dpi = 794 x 1123px.
    One row per template in src/lib/templates.ts picks a family + palette +
    structural modifiers; nothing here is shared with another product.

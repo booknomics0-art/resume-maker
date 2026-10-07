@@ -1,12 +1,13 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <meta name="google-site-verification" content="78GZuq0-C7diunBYsZsTux9IqFJv3Vm6YguFM-jOKOQ" />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#0a1630" />
-    <meta name="description" content="CraftCV — Advanced resume maker: upload existing PDF/DOCX, edit with high-tech editor, 100% free, unlimited downloads, no watermark. 50 professional templates, cloud-saved resumes." />
+    <meta name="description" content="ResumeMakery — Advanced resume maker: upload existing PDF/DOCX, edit with high-tech editor, 100% free, unlimited downloads, no watermark. 50 professional templates, cloud-saved resumes." />
     <meta name="keywords" content="resume maker, CV builder, upload resume, edit resume, free resume, ATS resume, India resume builder" />
-    <meta name="author" content="CraftCV" />
+    <meta name="author" content="ResumeMakery" />
     <meta name="robots" content="index, follow" />
 
     <!-- Google Search Console ownership verification. The CONTENT value below
@@ -14,7 +15,7 @@
          this exact tag, Search Console recognises the URL prefix as verified. -->
     <meta name="google-site-verification" content="yPMnBk4bsrRgVBZC6SrNPXsBvnJRL9yhpVUH7KBGteY" />
     <!-- Production URL — used as the canonical home of this build. -->
-    <link rel="canonical" href="https://resume-maker-ivory-ten.vercel.app/" />
+    <link rel="canonical" href="https://www.resumemakery.com/" />
     
     <!-- NOTE: X-Frame-Options, X-Content-Type-Options, X-XSS-Protection,
          Referrer-Policy and Permissions-Policy only take effect as real HTTP
@@ -30,29 +31,29 @@
          is required because WebAssembly compilation is CSP-gated too. Google
          sign-in uses a top-level OAuth redirect through Supabase; the app does
          not load Google's JavaScript SDK or embed Google's sign-in page. -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https:; connect-src 'self' blob: https://*.supabase.co wss://*.supabase.co; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://www.googletagmanager.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https:; connect-src 'self' blob: https://*.supabase.co wss://*.supabase.co https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'" />
     
     <!-- Open Graph for social sharing — uses the live production domain so
          link previews work for the URL actually deployed. -->
-    <meta property="og:title" content="CraftCV — Free Professional Resume Builder | 50 Templates" />
+    <meta property="og:title" content="ResumeMakery — Free Professional Resume Builder | 50 Templates" />
     <meta property="og:description" content="Advanced resume maker: upload PDF/DOCX, edit with high-tech editor, 100% free, unlimited downloads. 50 professional templates." />
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="CraftCV" />
-    <meta property="og:url" content="https://resume-maker-ivory-ten.vercel.app/" />
-    <meta property="og:image" content="https://resume-maker-ivory-ten.vercel.app/og-image.jpg" />
+    <meta property="og:site_name" content="ResumeMakery" />
+    <meta property="og:url" content="https://www.resumemakery.com/" />
+    <meta property="og:image" content="https://www.resumemakery.com/og-image.jpg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="CraftCV — Free Resume Builder | 50 Templates | No Watermark" />
+    <meta name="twitter:title" content="ResumeMakery — Free Resume Builder | 50 Templates | No Watermark" />
     <meta name="twitter:description" content="Upload your old resume or build one in 10 minutes. 50 templates, free ATS score, unlimited PDFs. ₹0 forever." />
-    <meta name="twitter:image" content="https://resume-maker-ivory-ten.vercel.app/og-image.jpg" />
+    <meta name="twitter:image" content="https://www.resumemakery.com/og-image.jpg" />
 
-    <title>CraftCV — Free Resume Builder | 50 Templates | Upload & Edit</title>
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230F2148'/%3E%3Ctext x='16' y='22' font-size='16' font-family='Georgia' fill='%23C9D2DE' text-anchor='middle'%3ECV%3C/text%3E%3C/svg%3E" />
+    <title>ResumeMakery — Free Resume Builder | 50 Templates | Upload & Edit</title>
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
 
     <!-- PWA: installable app (service worker registers in production only) -->
     <link rel="manifest" href="./manifest.webmanifest" />
-    <link rel="apple-touch-icon" href="./icon-192.png" />
+    <link rel="apple-touch-icon" href="/icon.svg" />
     <meta name="mobile-web-app-capable" content="yes" />
 
     <!-- Structured data for rich results. Keep offers/price in sync with the
@@ -62,10 +63,10 @@
     {
       "@context": "https://schema.org",
       "@type": "SoftwareApplication",
-      "name": "CraftCV",
+      "name": "ResumeMakery",
       "applicationCategory": "BusinessApplication",
       "operatingSystem": "Web",
-      "url": "https://resume-maker-ivory-ten.vercel.app/",
+      "url": "https://www.resumemakery.com/",
       "description": "Free online resume builder: upload and edit an existing resume (PDF, DOCX, photo OCR) or build one in 7 guided steps. 50 professional templates, free ATS match score, unlimited clean PDF downloads, no watermark.",
       "offers": { "@type": "Offer", "price": "0", "priceCurrency": "INR" },
       "featureList": [
@@ -82,9 +83,9 @@
       "@context": "https://schema.org",
       "@type": "FAQPage",
       "mainEntity": [
-        { "@type": "Question", "name": "Is CraftCV really 100% free?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Every template, the ATS match score, upload & edit, and unlimited PDF downloads are free. There is no paid plan, no trial, no credit card and no watermark — the product has no billing at all." } },
+        { "@type": "Question", "name": "Is ResumeMakery really 100% free?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Every template, the ATS match score, upload & edit, and unlimited PDF downloads are free. There is no paid plan, no trial, no credit card and no watermark — the product has no billing at all." } },
         { "@type": "Question", "name": "Can I edit my existing resume?", "acceptedAnswer": { "@type": "Answer", "text": "Yes — upload a PDF, DOCX, TXT or JSON file, or even a photo of a printed resume. Text is extracted on your device (scanned pages are read by an offline OCR engine) and lands straight into editable fields with a live preview. Nothing is uploaded to any server." } },
-        { "@type": "Question", "name": "Will my resume pass ATS screening?", "acceptedAnswer": { "@type": "Answer", "text": "CraftCV templates are built on clean structures that applicant tracking systems parse reliably. You also get a free ATS check: paste any job description and see which keywords your resume already covers and which are missing." } },
+        { "@type": "Question", "name": "Will my resume pass ATS screening?", "acceptedAnswer": { "@type": "Answer", "text": "ResumeMakery templates are built on clean structures that applicant tracking systems parse reliably. You also get a free ATS check: paste any job description and see which keywords your resume already covers and which are missing." } },
         { "@type": "Question", "name": "How many resumes can I create?", "acceptedAnswer": { "@type": "Answer", "text": "Unlimited. Duplicate a resume and tailor one version per job application — something most builders restrict to a single resume even on paid plans." } },
         { "@type": "Question", "name": "Do the free downloads have a watermark or branding?", "acceptedAnswer": { "@type": "Answer", "text": "No. The PDF you download is the final file: no watermark, no made-with link, no hidden paywall pages. It is even saved under your resume's own name." } },
         { "@type": "Question", "name": "How many pages can my resume be?", "acceptedAnswer": { "@type": "Answer", "text": "One page to three or more — nothing caps your length. The live preview shows page-break guides, and the printed PDF keeps every entry intact across pages." } },
@@ -93,17 +94,28 @@
       ]
     }
     </script>
-  </head>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-LLFYR4DHWX"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-LLFYR4DHWX');
+      function resumemakeryPageView(){ gtag('event','page_view',{page_title:document.title,page_location:window.location.href,page_path:window.location.pathname + window.location.search}); }
+      window.addEventListener('popstate', resumemakeryPageView);
+      window.addEventListener('craftcv:navigate', resumemakeryPageView);
+    </script>
+</head>
   <body>
     <!-- Static, crawler-readable storefront content. Real visitors get the
          React landing page; this block is removed from the DOM once the app
          mounts (see src/main.tsx). If JS never runs, this still tells the
          whole story. Keep the FAQ text in sync with Landing.tsx. -->
     <div id="seo-content" style="font-family: 'Segoe UI', system-ui, sans-serif; color: #1c2434; max-width: 880px; margin: 0 auto; padding: 32px 20px;">
-      <p style="font-weight: 700; color: #0f2148; letter-spacing: 0.4px;">CRAFTCV — 100% FREE · NO WATERMARK · MADE FOR INDIA</p>
-      <h1>Free Online Resume Builder — 50 Templates, ATS Score, Upload & Edit</h1>
+      <p style="font-weight: 700; color: #0f2148; letter-spacing: 0.4px;">RESUMEMAKERY — 100% FREE · NO WATERMARK · MADE FOR INDIA</p>
+      <h1>Free ATS Resume Builder — Create, Edit & Download Your Resume</h1>
       <p>
-        CraftCV is a free professional resume builder. Build a recruiter-ready resume in about
+        ResumeMakery is a free professional resume builder. Build a recruiter-ready resume in about
         10 minutes, or upload your existing resume — PDF, DOCX, TXT or even a photo of a printed
         page — and edit it with a live A4 preview. Unlimited resumes, unlimited watermark-free PDF
         downloads, no credit card, no paid plan.
@@ -117,12 +129,12 @@
         <li><b>Clean PDF export</b> — 1 to 3+ A4 pages, no watermark, no branding, saved under your own resume's name.</li>
       </ul>
       <h2>Frequently asked questions</h2>
-      <h3>Is CraftCV really 100% free?</h3>
+      <h3>Is ResumeMakery really 100% free?</h3>
       <p>Yes. Every template, the ATS match score, upload &amp; edit, and unlimited PDF downloads are free. There is no paid plan, no trial, no credit card and no watermark — the product has no billing at all.</p>
       <h3>Can I edit my existing resume?</h3>
       <p>Yes — upload a PDF, DOCX, TXT or JSON file, or even a photo of a printed resume. Text is extracted on your device and lands straight into editable fields with a live preview. Nothing is uploaded to any server.</p>
       <h3>Will my resume pass ATS screening?</h3>
-      <p>CraftCV templates are built on clean structures that applicant tracking systems parse reliably, and the free ATS check shows which keywords from a job description are covered or missing.</p>
+      <p>ResumeMakery templates are built on clean structures that applicant tracking systems parse reliably, and the free ATS check shows which keywords from a job description are covered or missing.</p>
       <h3>How many resumes can I create?</h3>
       <p>Unlimited. Duplicate a resume and tailor one version per job application.</p>
       <h3>Do the free downloads have a watermark or branding?</h3>
@@ -132,7 +144,7 @@
 
       <h2>Privacy at a glance (full policy inside the app)</h2>
       <p>
-        <b>CraftCV is a free resume builder.</b> We collect only what is needed to run the service:
+        <b>ResumeMakery is a free resume builder.</b> We collect only what is needed to run the service:
         account data (name, email, optional avatar — from email sign-up or Google Sign-In),
         resume content you type or import (parsed on your device), and minimal request
         metadata (browser, country). We never sell or rent your data, never train AI models
@@ -146,30 +158,30 @@
         <li><b>Storage:</b> in your browser (localStorage) and in our Supabase-hosted PostgreSQL database (encrypted at rest, row-level security). Static hosting by Vercel.</li>
         <li><b>Sharing:</b> only with sub-processors required to run the service (Supabase, Google for OAuth, Vercel for hosting, Cloudflare for the OCR engine assets, your own AI endpoint if you enable AI rewrite). Never with recruiters, advertisers, or data brokers.</li>
         <li><b>Retention:</b> until you delete your data. Account deletion removes everything within 30 days; backups roll off within 30 days; security logs kept for 90 days.</li>
-        <li><b>Your rights:</b> access, correction, deletion, export (JSON download from Settings), withdraw consent, nominate, grievance redressal — email privacy@craftcv.app.</li>
+        <li><b>Your rights:</b> access, correction, deletion, export (JSON download from Settings), withdraw consent, nominate, grievance redressal — email privacy@resumemakery.com.</li>
         <li><b>Children:</b> service is intended for users aged 16+.</li>
         <li><b>Compliance:</b> IT Act 2000, SPDI Rules 2011, Digital Personal Data Protection Act 2023 (India). International users: GDPR / UK-GDPR / CCPA rights honoured.</li>
         <li><b>Security:</b> TLS 1.2+ everywhere, AES-256 at rest, per-user password salts, login rate limiting, CSP headers, RLS on every database table.</li>
       </ul>
       <p>
-        <b>Google Sign-In specifics.</b> CraftCV uses Google OAuth 2.0 with PKCE through Supabase.
+        <b>Google Sign-In specifics.</b> ResumeMakery uses Google OAuth 2.0 with PKCE through Supabase.
         The only scopes requested are <code>openid email profile</code>. We receive from Google:
         your email, full name, profile picture URL (optional), and an opaque Google account ID.
         We do <b>not</b> request or receive contacts, calendar, Gmail, Drive, location, or any
         other Google data. We do <b>not</b> send any data to Google from your account, and we
         do <b>not</b> use Google user data for advertising. Google's handling of the data it
-        shares with CraftCV is governed by the
+        shares with ResumeMakery is governed by the
         <a href="https://policies.google.com/privacy" target="_blank" rel="noreferrer">Google Privacy Policy</a>
         and the <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noreferrer">Google API Services User Data Policy</a>
         (including Limited Use requirements). The OAuth callback URL is your-project.supabase.co/auth/v1/callback and is set in Google Cloud Console exactly.
       </p>
       <p>
-        Full policy (longer, legally complete version): <a href="https://resume-maker-ivory-ten.vercel.app/#/privacy">resume-maker-ivory-ten.vercel.app/#/privacy</a>.
+        Full policy (longer, legally complete version): <a href="https://www.resumemakery.com/privacy">www.resumemakery.com/#/privacy</a>.
         Read it inside the app at <b>Settings → Privacy Policy</b> or <b>Footer → Privacy</b>.
-        Questions: <a href="mailto:privacy@craftcv.app">privacy@craftcv.app</a>.
+        Questions: <a href="mailto:privacy@resumemakery.com">privacy@resumemakery.com</a>.
       </p>
 
-      <p><i>CraftCV needs JavaScript for the editor — enable it to start building.</i></p>
+      <p><i>ResumeMakery needs JavaScript for the editor — enable it to start building.</i></p>
     </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
@@ -178,7 +190,7 @@
     <noscript>
       <div style="padding: 20px; text-align: center; font-family: system-ui; background: #0a1630; color: #fff; min-height: 100vh; display: grid; place-items: center;">
         <div>
-          <h1>CraftCV requires JavaScript</h1>
+          <h1>ResumeMakery requires JavaScript</h1>
           <p>Please enable JavaScript to use the advanced resume builder.</p>
         </div>
       </div>

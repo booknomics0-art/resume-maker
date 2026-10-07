@@ -1,5 +1,5 @@
 /**
- * CraftCV Resume Importer — upload → auto-fill → edit → live preview → save.
+ * ResumeMakery Resume Importer — upload → auto-fill → edit → live preview → save.
  *
  * What happens when a file is dropped in:
  *   1. the file is read in the browser (pdf.js text layer, or the built-in OCR

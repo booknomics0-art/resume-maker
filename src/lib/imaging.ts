@@ -1,5 +1,5 @@
 /**
- * CraftCV imaging — pure pixel helpers used to make scanned/photographed
+ * ResumeMakery imaging — pure pixel helpers used to make scanned/photographed
  * resumes readable by OCR.
  *
  * Everything here works on a plain grayscale buffer ({ data, width, height })

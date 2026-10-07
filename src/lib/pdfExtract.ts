@@ -1,5 +1,5 @@
 /**
- * CraftCV PDF Extraction Engine
+ * ResumeMakery PDF Extraction Engine
  * ─────────────────────────────
  * Replaces the old "read raw bytes and grep parentheses" hack that produced
  * garbage for any real-world (compressed) PDF.

@@ -6,7 +6,7 @@ export default function Footer() {
           <div className="brand" style={{ padding: 0 }}>
             <div className="brand-badge">CV</div>
             <div>
-              <div className="brand-name">CraftCV</div>
+              <div className="brand-name">ResumeMakery</div>
               <div className="brand-sub">Resume Studio</div>
             </div>
           </div>
@@ -20,37 +20,37 @@ export default function Footer() {
 
         <div className="footer-col">
           <h4>Product</h4>
-          <a href="#/">Dashboard</a>
-          <a href="#/editor/new">Create a resume</a>
-          <a href="#/import">📤 Upload & Edit Resume</a>
-          <a href="#/cover-letter">✉ Cover Letter Builder</a>
-          <a href="#/faq">FAQ</a>
+          <a href="/">Dashboard</a>
+          <a href="/editor/new">Create a resume</a>
+          <a href="/import">📤 Upload & Edit Resume</a>
+          <a href="/cover-letter">✉ Cover Letter Builder</a>
+          <a href="/faq">FAQ</a>
         </div>
 
         <div className="footer-col">
           <h4>Company</h4>
-          <a href="#/about">About us</a>
-          <a href="#/contact">Contact</a>
+          <a href="/about">About us</a>
+          <a href="/contact">Contact</a>
         </div>
 
         <div className="footer-col">
           <h4>Legal — Detailed</h4>
-          <a href="#/privacy">Privacy Policy</a>
-          <a href="#/terms">Terms of Service</a>
-          <a href="#/disclaimer">Disclaimer</a>
-          <a href="#/cookies">Cookie Policy</a>
-          <a href="#/eula">EULA</a>
+          <a href="/privacy">Privacy Policy</a>
+          <a href="/terms">Terms of Service</a>
+          <a href="/disclaimer">Disclaimer</a>
+          <a href="/cookies">Cookie Policy</a>
+          <a href="/eula">EULA</a>
         </div>
       </div>
 
       <div className="footer-bottom">
-        <span>© 2026 CraftCV. All rights reserved.</span>
+        <span>© 2026 ResumeMakery. All rights reserved.</span>
         <span className="footer-dot">·</span>
-        <a href="#/contact">support@craftcv.app</a>
+        <a href="/contact">support@resumemakery.com</a>
         <span className="footer-dot">·</span>
-        <a href="#/privacy">Privacy</a>
+        <a href="/privacy">Privacy</a>
         <span className="footer-dot">·</span>
-        <a href="#/terms">Terms</a>
+        <a href="/terms">Terms</a>
       </div>
     </footer>
   );

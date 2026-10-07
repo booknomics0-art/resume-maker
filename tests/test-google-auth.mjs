@@ -389,7 +389,7 @@ const plainResult = await plainRun.mod.cloudCompleteRedirectSignIn();
 // ── 4b. the remaining real-world failures, each with its own fix ─────────────
 // (all of these used to collapse into “Google sign-in was cancelled”, which sent
 // people looking for a mistake they had not made.)
-const consentBlocked = C('access_denied Access blocked: CraftCV has not completed the Google verification process');
+const consentBlocked = C('access_denied Access blocked: ResumeMakery has not completed the Google verification process');
 const consentOrg = C('{"error":"access_denied","error_description":"org_internal"}');
 const consentPolicy = C('admin_policy_enforced');
 const consentRedirect = google.issueFromRedirect(redirect.parseRedirectParams(

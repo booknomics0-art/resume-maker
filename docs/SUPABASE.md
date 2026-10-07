@@ -1,4 +1,4 @@
-# Supabase setup — CraftCV database
+# Supabase setup — ResumeMakery database
 
 Every user's resumes live in **your** Supabase project (PostgreSQL). The browser keeps an
 offline copy, but the database is the source of truth, and you (as admin) can see everything.

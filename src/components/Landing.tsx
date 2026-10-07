@@ -1,4 +1,4 @@
-// CraftCV public landing page — the storefront.
+// ResumeMakery public landing page — the storefront.
 //
 // Why this exists: previously the first screen every visitor saw was the login
 // form. Competitors (Naukri Resume Maker, Zety, Resume.io…) show a full sales
@@ -35,7 +35,7 @@ const stripTemplates: Template[] = STRIP_INDICES
 /** Keep these in sync with the FAQPage JSON-LD in index.html (same 8 Q&As). */
 const FAQS: { q: string; a: string }[] = [
   {
-    q: 'Is CraftCV really 100% free?',
+    q: 'Is ResumeMakery really 100% free?',
     a: 'Yes. Every template, the ATS match score, upload & edit, and unlimited PDF downloads are free. There is no paid plan, no trial, no credit card and no watermark — the product has no billing at all.',
   },
   {
@@ -44,7 +44,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: 'Will my resume pass ATS screening?',
-    a: 'CraftCV templates are built on clean structures that applicant tracking systems parse reliably. You also get a free ATS check: paste any job description and see which keywords your resume already covers and which are missing.',
+    a: 'ResumeMakery templates are built on clean structures that applicant tracking systems parse reliably. You also get a free ATS check: paste any job description and see which keywords your resume already covers and which are missing.',
   },
   {
     q: 'How many resumes can I create?',
@@ -88,9 +88,9 @@ export default function Landing({
       <header className="land-top">
         <div className="land-top-inner">
           <div className="brand" style={{ padding: 0 }}>
-            <div className="brand-badge">CV</div>
+            <div className="brand-badge">RM</div>
             <div>
-              <div className="brand-name">CraftCV</div>
+              <div className="brand-name">ResumeMakery</div>
               <div className="brand-sub">Resume Studio · Free forever</div>
             </div>
           </div>
@@ -100,7 +100,7 @@ export default function Landing({
             <a href="#faq">FAQ</a>
           </nav>
           <div className="land-top-actions">
-            <a className="btn small" href="#/login">Sign in</a>
+            <a className="btn small" href="/login">Sign in</a>
             <button type="button" className="btn small primary" onClick={() => onStart('/editor/new')}>
               Start free
             </button>
@@ -111,7 +111,7 @@ export default function Landing({
       {notice && (
         <div className="land-notice" role="alert">
           <span>⚠️ {notice.title || 'Sign-in could not finish'}</span>
-          <a className="btn small" href="#/login">See details & sign in</a>
+          <a className="btn small" href="/login">See details & sign in</a>
         </div>
       )}
 
@@ -120,7 +120,7 @@ export default function Landing({
         <div className="land-hero-inner">
           <div className="land-hero-copy">
             <div className="land-eyebrow">100% free · no watermark · made for India 🇮🇳</div>
-            <h1>The honest resume builder.<br />Everything free. Everything unlocked.</h1>
+            <h1>Free ATS resume builder.<br />Everything free. Everything unlocked.</h1>
             <p className="land-lede">
               Build a recruiter-ready resume in about 10 minutes — or upload your old one and edit it.
               {` ${TEMPLATE_COUNT}`} professional templates, a free ATS match score, unlimited resumes and
@@ -153,7 +153,7 @@ export default function Landing({
       </section>
 
       {/* ---------- numbers strip ---------- */}
-      <section className="land-stats" aria-label="CraftCV in numbers">
+      <section className="land-stats" aria-label="ResumeMakery in numbers">
         <div className="land-stat"><b>{TEMPLATE_COUNT}</b><span>templates, all unlocked</span></div>
         <div className="land-stat"><b>{FIELDS.length}</b><span>career fields tuned</span></div>
         <div className="land-stat"><b>₹0</b><span>forever — no plans</span></div>
@@ -162,7 +162,7 @@ export default function Landing({
 
       {/* ---------- comparison ---------- */}
       <section className="land-section" id="why">
-        <h2>Why jobseekers switch to CraftCV</h2>
+        <h2>Why jobseekers switch to ResumeMakery</h2>
         <p className="land-section-sub">
           Most “free” resume builders paywall the download, watermark the file or lock every good
           template. Here is the honest comparison.
@@ -170,7 +170,7 @@ export default function Landing({
         <div className="land-table-wrap">
           <table className="land-table">
             <thead>
-              <tr><th>What you get</th><th>Typical “free” builders</th><th className="land-col-us">CraftCV</th></tr>
+              <tr><th>What you get</th><th>Typical “free” builders</th><th className="land-col-us">ResumeMakery</th></tr>
             </thead>
             <tbody>
               <tr><td>Resumes you can create</td><td>Usually 1</td><td className="land-col-us"><b>Unlimited</b></td></tr>
@@ -264,15 +264,15 @@ export default function Landing({
           </p>
           <p style={{ marginTop: 10, fontSize: 14 }}>
             Read the full policy:{' '}
-            <a href="#/privacy" style={{ color: 'inherit', textDecoration: 'underline', fontWeight: 600 }}>
+            <a href="/privacy" style={{ color: 'inherit', textDecoration: 'underline', fontWeight: 600 }}>
               Privacy Policy
             </a>
             {' · '}
-            <a href="#/terms" style={{ color: 'inherit', textDecoration: 'underline', fontWeight: 600 }}>
+            <a href="/terms" style={{ color: 'inherit', textDecoration: 'underline', fontWeight: 600 }}>
               Terms of Service
             </a>
             {' · '}
-            <a href="#/cookies" style={{ color: 'inherit', textDecoration: 'underline', fontWeight: 600 }}>
+            <a href="/cookies" style={{ color: 'inherit', textDecoration: 'underline', fontWeight: 600 }}>
               Cookie Policy
             </a>
           </p>
@@ -316,7 +316,7 @@ export default function Landing({
           <button type="button" className="btn primary land-cta" onClick={() => onStart('/editor/new')}>
             Build my resume — free
           </button>
-          <a className="btn land-cta" href="#/login">Sign in / Create account</a>
+          <a className="btn land-cta" href="/login">Sign in / Create account</a>
         </div>
       </section>
 

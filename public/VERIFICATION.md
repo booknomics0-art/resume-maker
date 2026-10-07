@@ -8,14 +8,14 @@ after you swap the token.
 ## Verify ownership via the file method
 
 1. Open https://search.google.com/search-console and add this site as a
-   **URL prefix** property: `https://resume-maker-ivory-ten.vercel.app/`.
+   **URL prefix** property: `https://www.resumemakery.com/`.
 2. Pick the verification method **“File upload”** (not HTML tag, not DNS).
 3. Download the file Google gives you. It is called
    `google<token>.html` and its content is a single token string.
 4. Drop that exact file here:
    `public/google<token>.html`
 5. Commit + push. Vercel will publish it at
-   `https://resume-maker-ivory-ten.vercel.app/google<token>.html`.
+   `https://www.resumemakery.com/google<token>.html`.
 6. Press **Verify** in the Search Console. The token must remain on the URL
    permanently — do not delete the file after verification.
 

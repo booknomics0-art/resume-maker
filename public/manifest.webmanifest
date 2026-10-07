@@ -1,17 +1,24 @@
 {
-  "name": "CraftCV — Free Resume Builder",
-  "short_name": "CraftCV",
-  "description": "Build, upload and edit professional resumes. 50 templates, free ATS score, unlimited clean PDF downloads. 100% free.",
-  "start_url": ".",
-  "scope": ".",
+  "name": "ResumeMakery \u2014 Free Resume Builder",
+  "short_name": "ResumeMakery",
+  "description": "Free ATS resume builder with 50 templates, resume import/edit and clean PDF downloads.",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#0f2148",
   "theme_color": "#0a1630",
-  "categories": ["business", "education", "productivity"],
+  "categories": [
+    "business",
+    "education",
+    "productivity"
+  ],
   "icons": [
-    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
   ]
 }

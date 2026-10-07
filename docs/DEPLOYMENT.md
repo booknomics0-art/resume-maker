@@ -1,6 +1,6 @@
-# Deployment guide — CraftCV
+# Deployment guide — ResumeMakery
 
-CraftCV is a fully static site. `npm run build` runs the `prebuild` step first
+ResumeMakery is a fully static site. `npm run build` runs the `prebuild` step first
 (it vendors the offline OCR engine into `public/ocr/`, ~11 MB, see README) and
 then produces a `dist/` folder that
 runs on any static host. No backend, no database, no environment variables needed

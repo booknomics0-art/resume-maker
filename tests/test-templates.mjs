@@ -8,7 +8,7 @@
  * fields.
  *
  * It also guards the provenance rule of this library: every row in
- * src/lib/templates.ts is an original design written for CraftCV. A name or
+ * src/lib/templates.ts is an original design written for ResumeMakery. A name or
  * tagline that mentions a third-party template product is a copy risk, so the
  * test fails if one ever appears.
  *

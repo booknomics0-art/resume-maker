@@ -4,6 +4,8 @@ const Editor = lazy(() => import('./components/EnhancedEditor'));
 const Settings = lazy(() => import('./components/Settings'));
 const AuthPage = lazy(() => import('./components/AuthPage'));
 const Landing = lazy(() => import('./components/Landing'));
+const SeoLanding = lazy(() => import('./components/SeoLanding'));
+const PublicShell = lazy(() => import('./components/PublicShell'));
 import Footer from './components/Footer';
 const ResumeImporter = lazy(() => import('./components/ResumeImporter'));
 const CoverLetter = lazy(() => import('./components/CoverLetter'));
@@ -22,16 +24,24 @@ import { cloudBootAuth, cloudCurrentUser, cloudResumeGoogleStart, touchProfile }
 import { hasAuthCallback } from './lib/authRedirect';
 import type { GoogleAuthIssue } from './lib/googleAuth';
 import { syncWithCloud } from './lib/store';
-import { navigate } from './lib/navigation';
+import { migrateLegacyHashRoute, NAVIGATION_EVENT, navigate, normalizePath } from './lib/navigation';
+import { applySeo } from './lib/seo';
 
-function useHashRoute() {
-  const [hash, setHash] = useState(window.location.hash || '#/');
+function usePathRoute() {
+  const [path, setPath] = useState(() => {
+    migrateLegacyHashRoute();
+    return normalizePath(window.location.pathname || '/');
+  });
   useEffect(() => {
-    const fn = () => setHash(window.location.hash || '#/');
-    window.addEventListener('hashchange', fn);
-    return () => window.removeEventListener('hashchange', fn);
+    const sync = () => setPath(normalizePath(window.location.pathname || '/'));
+    window.addEventListener('popstate', sync);
+    window.addEventListener(NAVIGATION_EVENT, sync as EventListener);
+    return () => {
+      window.removeEventListener('popstate', sync);
+      window.removeEventListener(NAVIGATION_EVENT, sync as EventListener);
+    };
   }, []);
-  return hash.replace(/^#/, '') || '/';
+  return path;
 }
 
 export default function App() {
@@ -41,7 +51,9 @@ export default function App() {
   // sees "signing you in" instead of the login form and then a jump.
   const [booting, setBooting] = useState(() => cloudEnabled() && hasAuthCallback());
   const [authNotice, setAuthNotice] = useState<GoogleAuthIssue | null>(null);
-  const tab = useHashRoute();
+  const tab = usePathRoute();
+
+  useEffect(() => { applySeo(tab); }, [tab]);
 
   // Initialize application protections on mount
   useEffect(() => {
@@ -59,8 +71,8 @@ export default function App() {
     void pending.then((res) => {
       if (cancelled || res.ok) return;
       if (res.issue) setAuthNotice(res.issue);
-      const hash = window.location.hash || '#/';
-      if (hash === '#' || hash === '#/') window.location.hash = '/login';
+      const path = normalizePath(window.location.pathname || '/');
+      if (path === '/') navigate('/login');
     });
     return () => { cancelled = true; };
   }, []);
@@ -106,7 +118,7 @@ export default function App() {
       } else if (currentUser() && !isOfflineSession()) {
         // A local session without its cloud session must sign in again —
         // unless it was an intentional offline fallback (cloud unreachable at
-        // signup/login). Those stay so the user is never locked out of CraftCV.
+        // signup/login). Those stay so the user is never locked out of ResumeMakery.
         logout();
         setUser(null);
       }
@@ -145,20 +157,45 @@ export default function App() {
   }
 
   if (!user) {
-    // Logged-out visitors get the public storefront on the home route — the
-    // product pitch (hero, templates, FAQ) comes BEFORE any login wall.
     if (tab === '/' || tab === '') {
       return (
-        <Suspense fallback={<div className="card pad">Loading CraftCV…</div>}>
-          <Landing
-            notice={authNotice}
-            onStart={(target) => navigate(target || '/editor/new')}
-          />
+        <Suspense fallback={<div className="card pad">Loading ResumeMakery…</div>}>
+          <Landing notice={authNotice} onStart={(target) => navigate(target || '/editor/new')} />
         </Suspense>
       );
     }
-    // Any other deep link (e.g. a bookmarked #/editor/…) keeps the old
-    // behaviour: show the login page first.
+
+    const seoRoutes = new Set(['/resume-builder', '/ats-resume-checker', '/resume-editor', '/resume-templates', '/resume-for-freshers']);
+    if (seoRoutes.has(tab)) {
+      return (
+        <Suspense fallback={<div className="card pad">Loading ResumeMakery…</div>}>
+          <PublicShell onStart={(target) => navigate(target || '/editor/new')}>
+            <SeoLanding route={tab} onStart={(target) => navigate(target || '/editor/new')} />
+          </PublicShell>
+        </Suspense>
+      );
+    }
+
+    const publicInfo: Record<string, React.ReactNode> = {
+      '/about': <AboutPage />,
+      '/contact': <ContactPage />,
+      '/faq': <FaqPage />,
+      '/privacy': <PrivacyPage />,
+      '/terms': <TermsPage />,
+      '/disclaimer': <DisclaimerPage />,
+      '/cookies': <CookiePage />,
+      '/eula': <EulaPage />,
+    };
+    if (publicInfo[tab]) {
+      return (
+        <Suspense fallback={<div className="card pad">Loading ResumeMakery…</div>}>
+          <PublicShell onStart={(target) => navigate(target || '/editor/new')}>
+            {publicInfo[tab]}
+          </PublicShell>
+        </Suspense>
+      );
+    }
+
     return (
       <Suspense fallback={<div className="card pad">Loading sign-in…</div>}>
         <AuthPage onAuth={() => setUser(currentUser())} notice={authNotice} />
@@ -211,7 +248,7 @@ export default function App() {
   const NavLink = ({ to, id, children }: { to: string; id: string; children: React.ReactNode }) => (
     <a
       className={`nav-item ${active === id ? 'active' : ''}`}
-      href={`#${to}`}
+      href={to}
       onClick={(e) => { e.preventDefault(); navigate(to); }}
     >
       {children}
@@ -232,9 +269,9 @@ export default function App() {
             <span></span><span></span><span></span>
           </span>
         </button>
-        <a href="#/" onClick={(e)=>{e.preventDefault(); navigate('/');}} className="mobile-brand">
-          <div className="brand-badge">CV</div>
-          <span className="mobile-brand-name">CraftCV</span>
+        <a href="/" onClick={(e)=>{e.preventDefault(); navigate('/');}} className="mobile-brand">
+          <div className="brand-badge">RM</div>
+          <span className="mobile-brand-name">ResumeMakery</span>
         </a>
         <div className="mobile-top-actions">
           <button className="btn small primary" onClick={() => navigate('/editor/new')} style={{ padding: '7px 12px', fontSize: 13 }}>+ New</button>
@@ -244,9 +281,9 @@ export default function App() {
       {/* Sidebar / Drawer */}
       <aside className={`sidebar no-print ${menuOpen ? 'open' : ''}`}>
         <div className="brand">
-          <div className="brand-badge">CV</div>
+          <div className="brand-badge">RM</div>
           <div>
-            <div className="brand-name">CraftCV</div>
+            <div className="brand-name">ResumeMakery</div>
             <div className="brand-sub">Resume Studio · Free</div>
           </div>
         </div>
@@ -262,10 +299,10 @@ export default function App() {
         {/* Mobile-only quick links section inside drawer */}
         <div className="drawer-extra">
           <div className="drawer-label">Help & Legal</div>
-          <a className="drawer-link" href="#/about" onClick={(e)=>{e.preventDefault();navigate('/about');}}>About us</a>
-          <a className="drawer-link" href="#/faq" onClick={(e)=>{e.preventDefault();navigate('/faq');}}>FAQ</a>
-          <a className="drawer-link" href="#/contact" onClick={(e)=>{e.preventDefault();navigate('/contact');}}>Contact</a>
-          <a className="drawer-link" href="#/privacy" onClick={(e)=>{e.preventDefault();navigate('/privacy');}}>Privacy</a>
+          <a className="drawer-link" href="/about" onClick={(e)=>{e.preventDefault();navigate('/about');}}>About us</a>
+          <a className="drawer-link" href="/faq" onClick={(e)=>{e.preventDefault();navigate('/faq');}}>FAQ</a>
+          <a className="drawer-link" href="/contact" onClick={(e)=>{e.preventDefault();navigate('/contact');}}>Contact</a>
+          <a className="drawer-link" href="/privacy" onClick={(e)=>{e.preventDefault();navigate('/privacy');}}>Privacy</a>
         </div>
 
         <div className="sidebar-foot">
@@ -306,16 +343,16 @@ export default function App() {
 
       {/* Mobile bottom nav — quick access on very small screens */}
       <nav className="bottom-nav no-print" aria-label="Primary">
-        <a className={`bottom-nav-item ${active==='/'?'active':''}`} href="#/" onClick={(e)=>{e.preventDefault();navigate('/');}}>
+        <a className={`bottom-nav-item ${active==='/'?'active':''}`} href="/" onClick={(e)=>{e.preventDefault();navigate('/');}}>
           <span className="bn-icon">▦</span><span>Home</span>
         </a>
-        <a className={`bottom-nav-item ${active==='/import'?'active':''}`} href="#/import" onClick={(e)=>{e.preventDefault();navigate('/import');}}>
+        <a className={`bottom-nav-item ${active==='/import'?'active':''}`} href="/import" onClick={(e)=>{e.preventDefault();navigate('/import');}}>
           <span className="bn-icon">📤</span><span>Upload</span>
         </a>
-        <a className={`bottom-nav-item ${active==='/editor'?'active':''}`} href="#/editor/new" onClick={(e)=>{e.preventDefault();navigate('/editor/new');}}>
+        <a className={`bottom-nav-item ${active==='/editor'?'active':''}`} href="/editor/new" onClick={(e)=>{e.preventDefault();navigate('/editor/new');}}>
           <span className="bn-icon">✎</span><span>Create</span>
         </a>
-        <a className={`bottom-nav-item ${active==='/settings'?'active':''}`} href="#/settings" onClick={(e)=>{e.preventDefault();navigate('/settings');}}>
+        <a className={`bottom-nav-item ${active==='/settings'?'active':''}`} href="/settings" onClick={(e)=>{e.preventDefault();navigate('/settings');}}>
           <span className="bn-icon">⚙</span><span>Settings</span>
         </a>
       </nav>

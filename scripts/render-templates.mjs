@@ -152,7 +152,7 @@ for (const t of TEMPLATES) byFamily[t.layout] = (byFamily[t.layout] ?? 0) + 1;
 const html = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>CraftCV — ${COLLECTION_NAME} collection, all ${TEMPLATES.length} templates</title>
+<title>ResumeMakery — ${COLLECTION_NAME} collection, all ${TEMPLATES.length} templates</title>
 <style>${css}</style>
 <style>
   /* preview chrome only — the sheets below use the app's own styles */
@@ -187,10 +187,10 @@ const html = `<!doctype html>
 </style></head>
 <body>
   <div class="pv-top">
-    <h1>CraftCV — ${COLLECTION_NAME} collection</h1>
+    <h1>ResumeMakery — ${COLLECTION_NAME} collection</h1>
     <p>${TEMPLATES.length} original designs across ${Object.keys(byFamily).length} layout families and ${CATEGORY_ORDER.length} categories.
        Rendered by the app's own <code>Preview.tsx</code> with the real stylesheets inlined — this is what the
-       design step prints, and what the PDF prints. Every design is written for CraftCV; none of them copies another product.</p>
+       design step prints, and what the PDF prints. Every design is written for ResumeMakery; none of them copies another product.</p>
     <div class="pv-meta">
       ${CATEGORY_ORDER.map((c) => `<a href="#${c}">${CATEGORY_META[c].label} ${TEMPLATES.filter((t) => t.category === c).length}</a>`).join('')}
       <span>${Object.keys(byFamily).length} families: ${Object.entries(byFamily).map(([l, n]) => `${LAYOUT_META[l].label} ${n}`).join(' · ')}</span>
@@ -200,7 +200,7 @@ const html = `<!doctype html>
   <script>
     // A card is a review aid, not a button: the builder is where designs get applied.
     document.querySelectorAll('.cell').forEach(function (el) { el.title = 'Open the builder → Design step to apply this design'; });
-    console.log('CraftCV preview: ${TEMPLATES.length} sheets, default design = ' + ${JSON.stringify(templateById('').id)});
+    console.log('ResumeMakery preview: ${TEMPLATES.length} sheets, default design = ' + ${JSON.stringify(templateById('').id)});
   </script>
 </body></html>
 `;

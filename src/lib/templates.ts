@@ -1,5 +1,5 @@
 // ============================================================================
-// CraftCV template library — the Professional collection (50 designs).
+// ResumeMakery template library — the Professional collection (50 designs).
 //
 // Every row is an original design written for this app: nothing here is a copy
 // of a third-party product. A row never forks layout code — it picks one of the

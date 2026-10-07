@@ -3,32 +3,37 @@ export interface NavigationEventDetail {
   sameRoute: boolean;
 }
 
-/**
- * Single navigation entrypoint for the hash app. Besides changing the hash it
- * emits an app-level event, so same-route taps (for example Upload while
- * already on Upload) can still replay the page transition and scroll reset.
- *
- * On phones, blur the active control before a route change so the software
- * keyboard does not resize the next editor screen halfway through mounting.
- */
-export function navigate(to: string): void {
-  const normalized = to.startsWith('/') ? to : `/${to}`;
-  const nextHash = `#${normalized}`;
-  const sameRoute = window.location.hash === nextHash;
+// Keep the internal event name stable so existing UI motion/listener code keeps
+// working across the public brand migration.
+export const NAVIGATION_EVENT = 'craftcv:navigate';
 
+export function normalizePath(path: string): string {
+  if (!path) return '/';
+  const withSlash = path.startsWith('/') ? path : `/${path}`;
+  const clean = withSlash.replace(/\/{2,}/g, '/');
+  return clean.length > 1 ? clean.replace(/\/$/, '') : clean;
+}
+
+/** Convert legacy hash routes (/#/privacy) to clean URLs (/privacy) once. */
+export function migrateLegacyHashRoute(): void {
+  const hash = window.location.hash;
+  if (!hash.startsWith('#/')) return;
+  const target = normalizePath(hash.slice(1));
+  window.history.replaceState({}, '', `${target}${window.location.search || ''}`);
+}
+
+/** Single navigation entrypoint: clean, shareable, crawlable URLs. */
+export function navigate(to: string): void {
+  const normalized = normalizePath(to);
+  const sameRoute = normalizePath(window.location.pathname) === normalized;
   const active = document.activeElement;
   if (active instanceof HTMLElement) active.blur();
   document.body.style.overflow = '';
   document.documentElement.style.scrollBehavior = 'auto';
+  if (!sameRoute) window.history.pushState({}, '', normalized);
   window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-
-  window.dispatchEvent(new CustomEvent<NavigationEventDetail>('craftcv:navigate', {
+  window.dispatchEvent(new CustomEvent<NavigationEventDetail>(NAVIGATION_EVENT, {
     detail: { to: normalized, sameRoute },
   }));
-
-  if (!sameRoute) window.location.hash = normalized;
-
-  window.requestAnimationFrame(() => {
-    document.documentElement.style.scrollBehavior = '';
-  });
+  window.requestAnimationFrame(() => { document.documentElement.style.scrollBehavior = ''; });
 }

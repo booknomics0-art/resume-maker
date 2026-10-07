@@ -55,7 +55,7 @@ export default function Settings() {
         for (const r of list) { if (r && r.personal) { upsertResume(r); n++; } }
         setMsg(`Imported ${n} resume${n === 1 ? '' : 's'}.`);
       } catch {
-        setMsg('Could not read that file — is it a CraftCV backup?');
+        setMsg('Could not read that file — is it a ResumeMakery backup?');
       }
     };
     input.click();
@@ -80,7 +80,7 @@ export default function Settings() {
           <button className="btn" style={{ flex: '0 0 auto' }} onClick={() => { logout(); location.hash = '#/'; location.reload(); }}>Logout</button>
         </div>
         <div className="notice" style={{ marginTop: 12, fontSize: 12.5 }}>
-          🎁 <b>CraftCV is 100% free</b> — unlimited resumes, unlimited PDF downloads, all {TEMPLATE_COUNT} templates. No plans, nothing to unlock.
+          🎁 <b>ResumeMakery is 100% free</b> — unlimited resumes, unlimited PDF downloads, all {TEMPLATE_COUNT} templates. No plans, nothing to unlock.
         </div>
       </div>
 
@@ -89,7 +89,7 @@ export default function Settings() {
         {cloudEnabled() ? (
           <>
             <p className="hint">
-              Your resumes are saved to your CraftCV account (Supabase, row-level security) and mirrored in this browser for offline use.
+              Your resumes are saved to your ResumeMakery account (Supabase, row-level security) and mirrored in this browser for offline use.
               Sign in on any device to continue where you left off.
             </p>
             <div className="row">
@@ -155,8 +155,7 @@ export default function Settings() {
             if (confirm('Delete ALL resumes from this browser? (Cloud copies are kept — use Sync to restore.)')) {
               localStorage.removeItem('craftcv.resumes.v1');
               localStorage.removeItem('craftcv.resumes.v2');
-              location.hash = '#/';
-              location.reload();
+              location.assign('/');
             }
           }}>Clear local copies</button>
         </div>
@@ -177,8 +176,7 @@ export default function Settings() {
             }
             localStorage.clear();
             sessionStorage.clear();
-            location.hash = '#/';
-            location.reload();
+            location.assign('/');
           }}>{busy === 'del' ? 'Deleting…' : 'Delete account & all data'}</button>
         </div>
       </div>
