@@ -267,7 +267,7 @@ export function StepSummary({ r, set }: StepProps) {
   );
 }
 
-/* ---------- step 3: experience ---------- */
+/* ---------- step 4: experience ---------- */
 
 export function StepExperience({ r, set }: StepProps) {
   const f = fieldById(r.fieldId);
@@ -385,7 +385,7 @@ export function StepExperience({ r, set }: StepProps) {
   );
 }
 
-/* ---------- step 4: education ---------- */
+/* ---------- step 3: education ---------- */
 
 export function StepEducation({ r, set }: StepProps) {
   const updItem = (id: string, patch: Partial<EducationItem>) =>
@@ -522,10 +522,10 @@ export function StepExtras({ r, set }: StepProps) {
       </div>
 
       <div style={{ marginBottom: 16 }}>
-        <F label="Key highlight (a moment you are proud of)"
-          hint="One short story: what happened, what you did, what it taught you. 1–2 lines is perfect.">
+        <F label="Others"
+          hint="Add anything else you want to include on your resume.">
           <textarea className="textarea" rows={3} value={r.bestExperience}
-            placeholder="e.g. Led a 6-member team at Smart India Hackathon 2020 — built a working prototype in 36 hours and won our track."
+            placeholder="Add any other details you want to show on your resume…"
             onChange={(e) => set({ bestExperience: e.target.value })} />
         </F>
       </div>

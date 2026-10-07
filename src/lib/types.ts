@@ -62,7 +62,7 @@ export interface Resume {
   fresher: boolean; // no work experience yet
   personal: PersonalInfo;
   summary: string;
-  bestExperience: string; // one short story the candidate is proud of
+  bestExperience: string; // free-form "Others" section; legacy key kept for saved-resume compatibility
   experience: ExperienceItem[];
   education: EducationItem[];
   skills: string[];
@@ -76,8 +76,8 @@ export interface Resume {
 export type StepId =
   | 'basics'
   | 'summary'
-  | 'experience'
   | 'education'
+  | 'experience'
   | 'skills'
   | 'extras'
   | 'design';
@@ -92,8 +92,8 @@ export interface StepDef {
 export const STEPS: StepDef[] = [
   { id: 'basics', title: 'Basics', short: 'Basics', minutes: 1.5 },
   { id: 'summary', title: 'Professional summary', short: 'Summary', minutes: 1.5 },
-  { id: 'experience', title: 'Work experience', short: 'Experience', minutes: 2.5 },
   { id: 'education', title: 'Education', short: 'Education', minutes: 1 },
+  { id: 'experience', title: 'Work experience', short: 'Experience', minutes: 2.5 },
   { id: 'skills', title: 'Skills', short: 'Skills', minutes: 1 },
   { id: 'extras', title: 'Projects, hobbies & extras', short: 'Extras', minutes: 1.5 },
   { id: 'design', title: 'Template & finish', short: 'Design', minutes: 1 },

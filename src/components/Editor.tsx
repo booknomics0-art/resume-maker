@@ -236,8 +236,8 @@ export default function Editor({ id }: { id: string }) {
   const stepBody = [
     <StepBasics key="b" r={r} set={set} />,
     <StepSummary key="s" r={r} set={set} />,
-    <StepExperience key="e" r={r} set={set} />,
     <StepEducation key="ed" r={r} set={set} />,
+    <StepExperience key="e" r={r} set={set} />,
     <StepSkills key="sk" r={r} set={set} />,
     <StepExtras key="x" r={r} set={set} />,
     <StepDesign key="d" r={r} set={set} />,

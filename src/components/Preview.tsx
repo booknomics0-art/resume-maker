@@ -210,7 +210,7 @@ function Section({
   return (
     <section className={cls} style={{ marginBottom: 13 }}>
       {index !== undefined && <span className="sec-no" aria-hidden="true">{String(index).padStart(2, '0')}</span>}
-      <h3 className="s-sec-title">{SECTION_LABELS[id]}</h3>
+      <h3 className="s-sec-title">{id === 'highlight' ? 'Others' : SECTION_LABELS[id]}</h3>
       <SectionBody r={r} id={id} />
     </section>
   );
@@ -260,7 +260,7 @@ function TimelineExperience({ r }: { r: Resume }) {
  *  ("Hobbies & Interests") would make the strip taller than the page. */
 const SPINE_LABELS: Record<SectionId, string> = {
   summary: 'Profile',
-  highlight: 'Highlights',
+  highlight: 'Others',
   experience: 'Experience',
   education: 'Education',
   skills: 'Skills',
@@ -664,7 +664,7 @@ export default function Preview({ r, tpl }: { r: Resume; tpl?: Template }) {
         </div>
         {mainSections.filter((id) => hasSection(r, id)).map((id) => (
           <div className={`crow sec sec-${id}`} key={id}>
-            <div className="label"><h3 className="s-sec-title">{SECTION_LABELS[id]}</h3></div>
+            <div className="label"><h3 className="s-sec-title">{id === 'highlight' ? 'Others' : SECTION_LABELS[id]}</h3></div>
             <div className="content"><SectionBody r={r} id={id} /></div>
           </div>
         ))}
