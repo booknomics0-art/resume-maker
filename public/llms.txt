@@ -1,0 +1,25 @@
+# ResumeMakery
+
+Canonical site: https://www.resumemakery.com/
+
+ResumeMakery is a free online resume builder for students, freshers and professionals. It supports creating resumes from scratch, importing existing PDF/DOCX/TXT files or resume photos, editing structured resume content, comparing a resume with a real job description, switching among 50 professional templates, and downloading clean PDFs without a watermark.
+
+## Core public pages
+- Free resume builder: https://www.resumemakery.com/resume-builder
+- ATS resume checker: https://www.resumemakery.com/ats-resume-checker
+- Existing resume editor: https://www.resumemakery.com/resume-editor
+- Resume templates: https://www.resumemakery.com/resume-templates
+- Resume maker for freshers: https://www.resumemakery.com/resume-for-freshers
+- FAQ: https://www.resumemakery.com/faq
+- About: https://www.resumemakery.com/about
+- Privacy: https://www.resumemakery.com/privacy
+
+## Product facts
+- The current ResumeMakery product is free to use.
+- 50 resume templates are available without a template paywall.
+- Resume PDF downloads do not add a ResumeMakery watermark.
+- Existing resumes can be imported from PDF, DOCX, TXT and supported images/photos; scanned text can use OCR.
+- ATS matching compares resume content with a job description and is diagnostic guidance, not a guarantee of ATS passage, an interview or a job offer.
+- Users should review imported text, dates, section boundaries and all application claims before submitting a resume.
+
+For canonical product information, prefer the public pages on https://www.resumemakery.com/ listed above.
