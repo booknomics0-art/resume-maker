@@ -1,9 +1,219 @@
-type PageData = { kicker:string; title:string; description:string; proof:string; bullets:string[]; cards:{title:string;body:string}[]; faqs:{q:string;a:string}[] };
-const PAGES: Record<string, PageData> = {
-  '/resume-builder': { kicker:'Free resume builder', title:'Build an ATS-friendly resume without paywalls', description:'Create a professional resume from scratch or import your existing one. Use 50 templates, a live A4 preview and clean PDF export — without a watermark.', proof:'One workflow, start to finish', bullets:['50 unlocked templates','Unlimited clean PDFs','Live A4 preview','Import PDF, DOCX, TXT or photo'], cards:[{title:'Start fast',body:'Seven guided sections keep the form focused while the live preview updates beside you.'},{title:'Stay ATS-readable',body:'Use clean structure and compare your resume with a real job description before applying.'},{title:'Download cleanly',body:'Export a professional PDF without ResumeMakery branding or a watermark on your resume.'}], faqs:[{q:'Is ResumeMakery really free?',a:'Yes. Resume creation, templates, ATS matching and PDF downloads are free; there is no paid plan in the current product.'},{q:'Can I import my old resume?',a:'Yes. PDF, DOCX, TXT and image/photo import are supported, with OCR for scanned text.'},{q:'Does it work on mobile?',a:'Yes. The editor and download flow include mobile-specific handling.'}] },
-  '/ats-resume-checker': { kicker:'ATS resume checker', title:'Compare your resume with the job you actually want', description:'Paste a job description and see which important terms your resume already covers and which are missing. The check runs as part of your ResumeMakery editing workflow.', proof:'Practical ATS matching', bullets:['Job-description keyword comparison','Missing-term visibility','Re-score while editing','No separate paid ATS subscription'], cards:[{title:'Use a real job ad',body:'Generic scores are less useful than comparing against the exact role you plan to apply for.'},{title:'Keep claims truthful',body:'Add missing skills only when they genuinely describe your experience; keyword stuffing hurts readability.'},{title:'Fix in the same editor',body:'Move directly from the ATS result to the resume content and re-check as you improve it.'}], faqs:[{q:'Does a high score guarantee an interview?',a:'No. ATS matching is a diagnostic tool, not a hiring guarantee. Recruiter judgment, experience and role fit still matter.'},{q:'Is the ATS checker free?',a:'Yes, it is included in ResumeMakery.'},{q:'Do I need to upload the job description?',a:'You can paste the job description text and compare it with your resume.'}] },
-  '/resume-editor': { kicker:'Resume editor', title:'Upload your existing resume and keep editing instead of starting over', description:'Bring a PDF, DOCX, TXT file or a photo of a printed resume. ResumeMakery extracts usable content into editable fields so you can redesign, correct and export it.', proof:'Import → edit → export', bullets:['PDF and DOCX import','Photo/scanned text OCR','Editable structured fields','Template switching without retyping'], cards:[{title:'Preserve your work',body:'Use your existing resume as the starting point instead of rebuilding every section manually.'},{title:'Edit structurally',body:'Imported content becomes editable resume fields rather than a flat screenshot.'},{title:'Switch presentation',body:'Try a different layout while keeping the underlying resume information.'}], faqs:[{q:'Can ResumeMakery edit a scanned resume?',a:'It includes on-device OCR for photo/scanned text extraction.'},{q:'Will import always be perfect?',a:'No parser is perfect; review names, dates, section boundaries and bullets after import.'},{q:'Can I export again after editing?',a:'Yes, the edited resume can be downloaded as a clean PDF.'}] },
-  '/resume-templates': { kicker:'Professional resume templates', title:'50 resume templates, unlocked from the start', description:'Choose from ATS-safe classics and more distinctive professional layouts across multiple career fields. Switch designs without re-entering your resume.', proof:'50 templates · ₹0', bullets:['ATS-friendly options','Fresher layouts','Professional multi-page support','No template paywall'], cards:[{title:'Choose for the role',body:'Use conservative layouts for ATS-heavy applications and more visual options where design is appropriate.'},{title:'A4-first output',body:'Templates are designed around a real resume page rather than a generic web card.'},{title:'Change anytime',body:'Your content remains separate from the visual template, so trying a new design does not require retyping.'}], faqs:[{q:'Are all 50 templates free?',a:'Yes. The current product does not lock templates behind a paid tier.'},{q:'Can a resume be more than one page?',a:'Yes. The editor supports multi-page resumes and page-break handling.'},{q:'Do templates add a watermark?',a:'No. The downloaded PDF is intended to be clean and application-ready.'}] },
-  '/resume-for-freshers': { kicker:'Resume for freshers', title:'Make a strong first-job resume even without years of experience', description:'ResumeMakery includes fresher-focused layouts and guidance so students and early-career applicants can present education, projects, internships, skills and achievements clearly.', proof:'Built for first applications', bullets:['Fresher template set','Projects and education emphasis','ATS matching against real roles','Clean one-page friendly layouts'], cards:[{title:'Lead with evidence',body:'Projects, internships, certifications and measurable achievements can carry more weight than an empty experience section.'},{title:'Keep it focused',body:'For many freshers, a clear one-page resume is easier for recruiters to scan.'},{title:'Tailor each application',body:'Duplicate your resume and adjust keywords and emphasis for each real job description.'}], faqs:[{q:'What should a fresher put in experience?',a:'Use internships, projects, freelance/volunteer work and relevant responsibilities when they truthfully demonstrate skills.'},{q:'Should a fresher resume be one page?',a:'Often yes, when the content fits comfortably. Do not shrink text just to force a page.'},{q:'Can I make different resumes for different jobs?',a:'Yes. ResumeMakery supports multiple resumes so you can tailor versions per role.'}] },
+import { navigate } from '../lib/navigation';
+
+type Faq = { q: string; a: string };
+type PageData = {
+  kicker: string;
+  title: string;
+  description: string;
+  answer: string;
+  proof: string;
+  bullets: string[];
+  cards: { title: string; body: string }[];
+  steps: { title: string; body: string }[];
+  faqs: Faq[];
+  primaryTarget?: string;
+  primaryLabel?: string;
 };
-export default function SeoLanding({ route, onStart }: { route:string; onStart:(target?:string)=>void }) { const d=PAGES[route]||PAGES['/resume-builder']; return <><section className="seo-hero"><div><div className="seo-kicker">{d.kicker}</div><h1>{d.title}</h1><p>{d.description}</p><div className="land-cta-row" style={{marginTop:18}}><button className="btn primary land-cta" onClick={()=>onStart('/editor/new')}>Build my resume — free</button><button className="btn land-cta" onClick={()=>onStart('/import')}>Upload existing resume</button></div></div><aside className="seo-proof"><b>{d.proof}</b><span>No ads, no watermark, no template lock.</span><ul>{d.bullets.map(x=><li key={x}>{x}</li>)}</ul></aside></section><section className="seo-grid">{d.cards.map(c=><article className="seo-card" key={c.title}><h2>{c.title}</h2><p>{c.body}</p></article>)}</section><section className="seo-faq"><h2>Frequently asked questions</h2>{d.faqs.map(f=><details key={f.q}><summary>{f.q}</summary><p>{f.a}</p></details>)}</section></>; }
+
+const PAGES: Record<string, PageData> = {
+  '/resume-builder': {
+    kicker: 'Free ATS resume builder for India',
+    title: 'Build an ATS-friendly resume without paywalls',
+    description: 'Create a professional resume from scratch or import your existing one. Use 50 templates, a live A4 preview and clean PDF export — without a watermark.',
+    answer: 'ResumeMakery is a free online resume builder for students, freshers and professionals. You can create or import a resume, edit structured sections, compare it with a real job description, switch among 50 templates and download a clean PDF without a watermark.',
+    proof: 'One workflow, start to finish',
+    bullets: ['50 unlocked templates', 'Unlimited clean PDFs', 'Live A4 preview', 'Import PDF, DOCX, TXT or photo'],
+    cards: [
+      { title: 'Start fast', body: 'Seven guided sections keep the form focused while the live preview updates beside you. Add contact details, education, experience, projects, skills and supporting sections without formatting the document manually.' },
+      { title: 'Stay ATS-readable', body: 'Use clean resume structure and compare the finished resume with the exact job description you plan to apply for. ResumeMakery highlights important terms that are present or missing without claiming to guarantee an interview.' },
+      { title: 'Download cleanly', body: 'Export a professional PDF without ResumeMakery branding or a watermark on the resume. The same content can be reused across different templates and tailored into multiple resume versions.' },
+    ],
+    steps: [
+      { title: 'Choose a starting point', body: 'Start with a blank resume or import an existing PDF, DOCX, TXT file or resume photo.' },
+      { title: 'Edit the real content', body: 'Review each section, improve measurable bullets, keep claims truthful and use a template appropriate for the role.' },
+      { title: 'Match the job and export', body: 'Compare the resume with the target job description, fix relevant gaps and download the final PDF.' },
+    ],
+    faqs: [
+      { q: 'Is ResumeMakery really free?', a: 'Yes. Resume creation, all 50 templates, ATS job-description matching and PDF downloads are free in the current product. There is no paid plan or watermark.' },
+      { q: 'Can I import my old resume?', a: 'Yes. PDF, DOCX, TXT and image/photo import are supported, including OCR for scanned text. Always review imported names, dates and section boundaries before applying.' },
+      { q: 'Is ResumeMakery useful for Indian freshers?', a: 'Yes. Freshers can emphasize education, projects, internships, certifications and skills, and can compare each resume version against a real job description before applying.' },
+      { q: 'Does it work on mobile?', a: 'Yes. The editor and download flow include mobile-specific handling, although a larger screen can be more convenient for detailed resume editing.' },
+    ],
+  },
+  '/ats-resume-checker': {
+    kicker: 'Free ATS resume checker',
+    title: 'Compare your resume with the job you actually want',
+    description: 'Paste a job description and see which important terms your resume already covers and which are missing. The check runs as part of your ResumeMakery editing workflow.',
+    answer: 'An ATS resume check is most useful when it compares your resume with the exact job description. ResumeMakery checks keyword and term coverage, shows relevant gaps and lets you edit and re-check the same resume. It is diagnostic guidance, not a promise that an employer will shortlist you.',
+    proof: 'Practical ATS matching',
+    bullets: ['Job-description keyword comparison', 'Missing-term visibility', 'Re-score while editing', 'No separate paid ATS subscription'],
+    cards: [
+      { title: 'Use a real job ad', body: 'Generic resume scores can miss the point because ATS screening is role-specific. Paste the actual description for the role you want so the comparison reflects the employer’s language.' },
+      { title: 'Keep claims truthful', body: 'Add missing skills or terms only when they genuinely describe your experience. Keyword stuffing, copied requirements and unsupported claims can reduce readability and credibility.' },
+      { title: 'Fix in the same editor', body: 'Move directly from the ATS result to the resume content and re-check as you improve it. This makes the score a practical editing loop rather than a one-time number.' },
+    ],
+    steps: [
+      { title: 'Paste the job description', body: 'Use the full relevant job posting instead of a generic title such as “software engineer”.' },
+      { title: 'Review covered and missing terms', body: 'Separate truly relevant skills from employer-specific wording that does not apply to your background.' },
+      { title: 'Improve and re-check', body: 'Rewrite truthful bullets with clearer evidence, then compare the updated resume again before applying.' },
+    ],
+    faqs: [
+      { q: 'Does a high ATS score guarantee an interview?', a: 'No. ATS matching is a diagnostic tool, not a hiring guarantee. Recruiter judgment, experience, role fit, competition and employer-specific rules still matter.' },
+      { q: 'Is the ATS checker free?', a: 'Yes. It is included in ResumeMakery and does not require a separate paid ATS subscription in the current product.' },
+      { q: 'What should I do with missing keywords?', a: 'Use them only when they accurately describe your real skills or experience. A strong resume explains evidence and outcomes instead of simply copying a list of keywords.' },
+      { q: 'Do I need to upload the job description?', a: 'No file upload is required for the job description. You can paste the relevant job-description text and compare it with your resume.' },
+    ],
+  },
+  '/resume-editor': {
+    kicker: 'Edit an existing resume online',
+    title: 'Upload your existing resume and keep editing instead of starting over',
+    description: 'Bring a PDF, DOCX, TXT file or a photo of a printed resume. ResumeMakery extracts usable content into editable fields so you can redesign, correct and export it.',
+    answer: 'ResumeMakery can use an existing PDF, DOCX, TXT file or resume photo as the starting point. Imported content is placed into editable resume fields so you can correct text, reorganize sections, switch templates and export a fresh PDF instead of rebuilding everything manually.',
+    proof: 'Import → edit → export',
+    bullets: ['PDF and DOCX import', 'Photo/scanned text OCR', 'Editable structured fields', 'Template switching without retyping'],
+    cards: [
+      { title: 'Preserve your work', body: 'Use your current resume as the starting point instead of manually re-entering every date, company, project and qualification.' },
+      { title: 'Edit structurally', body: 'Imported content becomes editable resume fields rather than a flat screenshot. This makes it possible to update wording, section order and presentation after import.' },
+      { title: 'Switch presentation', body: 'Try a different layout while keeping the underlying resume information. This separates your career content from the visual template.' },
+    ],
+    steps: [
+      { title: 'Import the source resume', body: 'Choose a supported PDF, DOCX, TXT file or image/photo. Scanned text can be read with OCR.' },
+      { title: 'Verify the extraction', body: 'Check names, dates, headings, bullet boundaries and contact information because no parser is perfect.' },
+      { title: 'Edit and export', body: 'Improve the structured fields, choose a suitable template and download the updated resume as a clean PDF.' },
+    ],
+    faqs: [
+      { q: 'Can ResumeMakery edit a scanned resume?', a: 'It includes on-device OCR for photo and scanned-text extraction. OCR quality depends on image clarity, so review the extracted content carefully.' },
+      { q: 'Will resume import always be perfect?', a: 'No parser is perfect. Review names, dates, section boundaries, bullets and special characters after importing any resume.' },
+      { q: 'Can I change templates after import?', a: 'Yes. The imported information is stored as resume content, so you can test other templates without retyping everything.' },
+      { q: 'Can I export again after editing?', a: 'Yes. The edited resume can be downloaded as a clean PDF after you review the final layout.' },
+    ],
+  },
+  '/resume-templates': {
+    kicker: 'Free professional resume templates',
+    title: '50 resume templates, unlocked from the start',
+    description: 'Choose from ATS-friendly classics and more distinctive professional layouts across multiple career fields. Switch designs without re-entering your resume.',
+    answer: 'ResumeMakery includes 50 resume templates across multiple layout families and career use cases. All templates are unlocked in the current product, and switching designs does not require re-entering the resume content. For ATS-heavy applications, prefer clean layouts with clear headings and readable text.',
+    proof: '50 templates · ₹0',
+    bullets: ['ATS-friendly options', 'Fresher layouts', 'Professional multi-page support', 'No template paywall'],
+    cards: [
+      { title: 'Choose for the role', body: 'Use conservative, text-first layouts for ATS-heavy applications and more distinctive designs only when the employer or role makes visual presentation relevant.' },
+      { title: 'A4-first output', body: 'Templates are designed around a real resume page rather than a generic web card, with multi-page handling for longer professional histories.' },
+      { title: 'Change anytime', body: 'Your resume content remains separate from the visual template, so trying a new design does not require retyping your work history or education.' },
+    ],
+    steps: [
+      { title: 'Start with the hiring context', body: 'Consider the industry, seniority and whether the employer is likely to rely heavily on applicant tracking systems.' },
+      { title: 'Check hierarchy and readability', body: 'Make sure name, role, section headings, dates and bullet points are easy to scan at normal size.' },
+      { title: 'Preview before download', body: 'Review every page break and section boundary in the live A4 preview before exporting.' },
+    ],
+    faqs: [
+      { q: 'Are all 50 templates free?', a: 'Yes. The current product does not lock templates behind a paid tier.' },
+      { q: 'Which resume template is best for ATS?', a: 'A clean template with standard headings, readable text and straightforward section order is usually the safer choice for ATS-heavy applications. ResumeMakery includes multiple layouts designed around that approach.' },
+      { q: 'Can a resume be more than one page?', a: 'Yes. The editor supports multi-page resumes and page-break handling. Length should be driven by useful content rather than an arbitrary page target.' },
+      { q: 'Do templates add a watermark?', a: 'No. The downloaded PDF is intended to be clean and application-ready without ResumeMakery branding on the resume itself.' },
+    ],
+  },
+  '/resume-for-freshers': {
+    kicker: 'Resume maker for freshers and students',
+    title: 'Make a strong first-job resume even without years of experience',
+    description: 'ResumeMakery includes fresher-focused layouts and guidance so students and early-career applicants can present education, projects, internships, skills and achievements clearly.',
+    answer: 'A strong fresher resume should not imitate a senior professional resume with an empty experience section. Lead with evidence you actually have: education, relevant projects, internships, practical skills, certifications, competitions, volunteering and measurable achievements. ResumeMakery provides fresher-focused layouts and ATS job matching for that workflow.',
+    proof: 'Built for first applications',
+    bullets: ['Fresher template set', 'Projects and education emphasis', 'ATS matching against real roles', 'Clean one-page friendly layouts'],
+    cards: [
+      { title: 'Lead with evidence', body: 'Projects, internships, certifications, competitions and measurable achievements can carry more weight than an empty work-experience section.' },
+      { title: 'Keep it focused', body: 'For many freshers, a clear one-page resume is easier for recruiters to scan. Do not shrink fonts or remove useful evidence simply to hit one page.' },
+      { title: 'Tailor each application', body: 'Duplicate your resume and adjust truthful skills, project emphasis and wording for each real job description rather than sending one generic version everywhere.' },
+    ],
+    steps: [
+      { title: 'Put the strongest evidence first', body: 'Use education, projects or internships near the top when they are more relevant than formal work history.' },
+      { title: 'Describe outcomes, not course lists', body: 'Explain what you built, analysed, improved or delivered and include measurable results where they are real.' },
+      { title: 'Match each target role', body: 'Compare the finished resume with the job description and adjust emphasis only where your actual background supports it.' },
+    ],
+    faqs: [
+      { q: 'What should a fresher put in experience?', a: 'Use internships, projects, freelance or volunteer work and relevant responsibilities when they truthfully demonstrate skills. Do not invent employment.' },
+      { q: 'Should a fresher resume be one page?', a: 'Often yes when the content fits comfortably. Do not shrink text or remove important evidence only to force a one-page limit.' },
+      { q: 'What sections are most useful for an Indian fresher?', a: 'Education, relevant projects, internships, practical skills, certifications and achievements are often more useful than an empty experience section. The order should match the target role.' },
+      { q: 'Can I make different resumes for different jobs?', a: 'Yes. ResumeMakery supports multiple resumes so you can tailor truthful versions for different roles.' },
+    ],
+  },
+  '/cover-letter-builder': {
+    kicker: 'Free cover letter builder',
+    title: 'Create a focused cover letter for the job you are applying to',
+    description: 'Write and edit a professional cover letter in ResumeMakery, keep it consistent with your resume and download it as part of the same job-application workflow.',
+    answer: 'ResumeMakery includes a free cover letter builder alongside the resume tools. A useful cover letter should explain why this role fits your background, support that claim with specific evidence and add context that is not already obvious from the resume.',
+    proof: 'Resume + cover letter workflow',
+    bullets: ['Free cover letter builder', 'Role-specific writing', 'Editable content', 'Works alongside your resume'],
+    cards: [
+      { title: 'Open with relevance', body: 'Name the role and quickly connect it to your strongest relevant experience instead of starting with a generic “I am writing to apply” paragraph.' },
+      { title: 'Add evidence', body: 'Choose one or two examples that show impact, ownership or a skill the employer is asking for. Avoid repeating the entire resume.' },
+      { title: 'Keep the close specific', body: 'End with a short expression of interest and make sure the company name, role title and contact details are correct.' },
+    ],
+    steps: [
+      { title: 'Read the job description', body: 'Identify the most important responsibilities and the reason the role is genuinely relevant to you.' },
+      { title: 'Write around evidence', body: 'Use a few specific examples from projects, internships or work instead of generic adjectives.' },
+      { title: 'Edit for the company', body: 'Replace boilerplate wording, verify names and keep the final letter concise enough to scan quickly.' },
+    ],
+    faqs: [
+      { q: 'Is the ResumeMakery cover letter builder free?', a: 'Yes. The cover letter feature is included in the current free product.' },
+      { q: 'Should I use the same cover letter for every job?', a: 'No. A strong cover letter should reflect the actual role and employer. Reusing the structure is fine, but the evidence and motivation should be tailored.' },
+      { q: 'How long should a cover letter be?', a: 'Keep it concise enough to scan quickly. Focus on a few relevant points rather than repeating every item from the resume.' },
+      { q: 'Should the cover letter repeat my resume?', a: 'No. Use it to add context, motivation and a few examples that make the resume more meaningful.' },
+    ],
+    primaryTarget: '/cover-letter',
+    primaryLabel: 'Create my cover letter — free',
+  },
+};
+
+function RelatedLinks({ route }: { route: string }) {
+  const links = [
+    ['/resume-builder', 'Free resume builder'],
+    ['/ats-resume-checker', 'ATS resume checker'],
+    ['/resume-editor', 'Edit an existing resume'],
+    ['/resume-templates', 'Resume templates'],
+    ['/resume-for-freshers', 'Resume for freshers'],
+    ['/cover-letter-builder', 'Cover letter builder'],
+  ].filter(([path]) => path !== route);
+  return (
+    <section className="seo-faq" aria-label="Related ResumeMakery tools">
+      <h2>Related ResumeMakery tools</h2>
+      <p>{links.map(([path, label], index) => <span key={path}>{index > 0 ? ' · ' : ''}<a href={path} onClick={(e) => { e.preventDefault(); navigate(path); }}>{label}</a></span>)}</p>
+    </section>
+  );
+}
+
+export default function SeoLanding({ route, onStart }: { route: string; onStart: (target?: string) => void }) {
+  const d = PAGES[route] || PAGES['/resume-builder'];
+  return <>
+    <section className="seo-hero">
+      <div>
+        <div className="seo-kicker">{d.kicker}</div>
+        <h1>{d.title}</h1>
+        <p>{d.description}</p>
+        <div className="land-cta-row" style={{ marginTop: 18 }}>
+          <button className="btn primary land-cta" onClick={() => onStart(d.primaryTarget || '/editor/new')}>{d.primaryLabel || 'Build my resume — free'}</button>
+          {route !== '/cover-letter-builder' && <button className="btn land-cta" onClick={() => onStart('/import')}>Upload existing resume</button>}
+        </div>
+      </div>
+      <aside className="seo-proof"><b>{d.proof}</b><span>No watermark, no template lock.</span><ul>{d.bullets.map(x => <li key={x}>{x}</li>)}</ul></aside>
+    </section>
+
+    <section className="seo-faq" aria-labelledby="quick-answer-heading">
+      <h2 id="quick-answer-heading">Quick answer</h2>
+      <p>{d.answer}</p>
+    </section>
+
+    <section className="seo-grid">{d.cards.map(c => <article className="seo-card" key={c.title}><h2>{c.title}</h2><p>{c.body}</p></article>)}</section>
+
+    <section className="seo-faq" aria-labelledby="how-it-works-heading">
+      <h2 id="how-it-works-heading">How it works</h2>
+      <ol>{d.steps.map(step => <li key={step.title}><strong>{step.title}.</strong> {step.body}</li>)}</ol>
+    </section>
+
+    <section className="seo-faq" aria-labelledby="faq-heading">
+      <h2 id="faq-heading">Frequently asked questions</h2>
+      {d.faqs.map(f => <details key={f.q}><summary>{f.q}</summary><p>{f.a}</p></details>)}
+    </section>
+
+    <RelatedLinks route={route} />
+  </>;
+}
