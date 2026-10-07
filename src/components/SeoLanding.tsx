@@ -11,8 +11,6 @@ type PageData = {
   cards: { title: string; body: string }[];
   steps: { title: string; body: string }[];
   faqs: Faq[];
-  primaryTarget?: string;
-  primaryLabel?: string;
 };
 
 const PAGES: Record<string, PageData> = {
@@ -136,32 +134,6 @@ const PAGES: Record<string, PageData> = {
       { q: 'Can I make different resumes for different jobs?', a: 'Yes. ResumeMakery supports multiple resumes so you can tailor truthful versions for different roles.' },
     ],
   },
-  '/cover-letter-builder': {
-    kicker: 'Free cover letter builder',
-    title: 'Create a focused cover letter for the job you are applying to',
-    description: 'Write and edit a professional cover letter in ResumeMakery, keep it consistent with your resume and download it as part of the same job-application workflow.',
-    answer: 'ResumeMakery includes a free cover letter builder alongside the resume tools. A useful cover letter should explain why this role fits your background, support that claim with specific evidence and add context that is not already obvious from the resume.',
-    proof: 'Resume + cover letter workflow',
-    bullets: ['Free cover letter builder', 'Role-specific writing', 'Editable content', 'Works alongside your resume'],
-    cards: [
-      { title: 'Open with relevance', body: 'Name the role and quickly connect it to your strongest relevant experience instead of starting with a generic “I am writing to apply” paragraph.' },
-      { title: 'Add evidence', body: 'Choose one or two examples that show impact, ownership or a skill the employer is asking for. Avoid repeating the entire resume.' },
-      { title: 'Keep the close specific', body: 'End with a short expression of interest and make sure the company name, role title and contact details are correct.' },
-    ],
-    steps: [
-      { title: 'Read the job description', body: 'Identify the most important responsibilities and the reason the role is genuinely relevant to you.' },
-      { title: 'Write around evidence', body: 'Use a few specific examples from projects, internships or work instead of generic adjectives.' },
-      { title: 'Edit for the company', body: 'Replace boilerplate wording, verify names and keep the final letter concise enough to scan quickly.' },
-    ],
-    faqs: [
-      { q: 'Is the ResumeMakery cover letter builder free?', a: 'Yes. The cover letter feature is included in the current free product.' },
-      { q: 'Should I use the same cover letter for every job?', a: 'No. A strong cover letter should reflect the actual role and employer. Reusing the structure is fine, but the evidence and motivation should be tailored.' },
-      { q: 'How long should a cover letter be?', a: 'Keep it concise enough to scan quickly. Focus on a few relevant points rather than repeating every item from the resume.' },
-      { q: 'Should the cover letter repeat my resume?', a: 'No. Use it to add context, motivation and a few examples that make the resume more meaningful.' },
-    ],
-    primaryTarget: '/cover-letter',
-    primaryLabel: 'Create my cover letter — free',
-  },
 };
 
 function RelatedLinks({ route }: { route: string }) {
@@ -171,7 +143,6 @@ function RelatedLinks({ route }: { route: string }) {
     ['/resume-editor', 'Edit an existing resume'],
     ['/resume-templates', 'Resume templates'],
     ['/resume-for-freshers', 'Resume for freshers'],
-    ['/cover-letter-builder', 'Cover letter builder'],
   ].filter(([path]) => path !== route);
   return (
     <section className="seo-faq" aria-label="Related ResumeMakery tools">
@@ -184,18 +155,7 @@ function RelatedLinks({ route }: { route: string }) {
 export default function SeoLanding({ route, onStart }: { route: string; onStart: (target?: string) => void }) {
   const d = PAGES[route] || PAGES['/resume-builder'];
   return <>
-    <section className="seo-hero">
-      <div>
-        <div className="seo-kicker">{d.kicker}</div>
-        <h1>{d.title}</h1>
-        <p>{d.description}</p>
-        <div className="land-cta-row" style={{ marginTop: 18 }}>
-          <button className="btn primary land-cta" onClick={() => onStart(d.primaryTarget || '/editor/new')}>{d.primaryLabel || 'Build my resume — free'}</button>
-          {route !== '/cover-letter-builder' && <button className="btn land-cta" onClick={() => onStart('/import')}>Upload existing resume</button>}
-        </div>
-      </div>
-      <aside className="seo-proof"><b>{d.proof}</b><span>No watermark, no template lock.</span><ul>{d.bullets.map(x => <li key={x}>{x}</li>)}</ul></aside>
-    </section>
+    <section className="seo-hero"><div><div className="seo-kicker">{d.kicker}</div><h1>{d.title}</h1><p>{d.description}</p><div className="land-cta-row" style={{ marginTop: 18 }}><button className="btn primary land-cta" onClick={() => onStart('/editor/new')}>Build my resume — free</button><button className="btn land-cta" onClick={() => onStart('/import')}>Upload existing resume</button></div></div><aside className="seo-proof"><b>{d.proof}</b><span>No watermark, no template lock.</span><ul>{d.bullets.map(x => <li key={x}>{x}</li>)}</ul></aside></section>
     <section className="seo-faq" aria-labelledby="quick-answer-heading"><h2 id="quick-answer-heading">Quick answer</h2><p>{d.answer}</p></section>
     <section className="seo-grid">{d.cards.map(c => <article className="seo-card" key={c.title}><h2>{c.title}</h2><p>{c.body}</p></article>)}</section>
     <section className="seo-faq" aria-labelledby="how-it-works-heading"><h2 id="how-it-works-heading">How it works</h2><ol>{d.steps.map(step => <li key={step.title}><strong>{step.title}.</strong> {step.body}</li>)}</ol></section>
