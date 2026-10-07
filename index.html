@@ -27,11 +27,11 @@
     <!-- Content Security Policy — strict.
          The OCR engine (worker + wasm core + English model) is served from our
          own origin under /ocr/, precisely so it keeps working under this policy.
-         script-src/connect-src must not be widened to a CDN. 'wasm-unsafe-eval'
-         is required because WebAssembly compilation is CSP-gated too. Google
-         sign-in uses a top-level OAuth redirect through Supabase; the app does
-         not load Google's JavaScript SDK or embed Google's sign-in page. -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://www.googletagmanager.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https:; connect-src 'self' blob: https://*.supabase.co wss://*.supabase.co https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'" />
+         'wasm-unsafe-eval' is required because WebAssembly compilation is
+         CSP-gated too. Google Analytics and Microsoft Clarity are explicitly
+         allow-listed; Google sign-in uses a top-level OAuth redirect through
+         Supabase and does not load Google's JavaScript SDK. -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://www.googletagmanager.com https://*.clarity.ms https://c.bing.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https:; connect-src 'self' blob: https://*.supabase.co wss://*.supabase.co https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com https://*.clarity.ms https://c.bing.com; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'" />
     
     <!-- Open Graph for social sharing — uses the live production domain so
          link previews work for the URL actually deployed. -->
@@ -105,6 +105,15 @@
       window.addEventListener('popstate', resumemakeryPageView);
       window.addEventListener('craftcv:navigate', resumemakeryPageView);
     </script>
+
+    <!-- Microsoft Clarity analytics -->
+    <script type="text/javascript">
+      (function(c,l,a,r,i,t,y){
+          c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+          t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+          y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+      })(window, document, "clarity", "script", "ytz52g5i30");
+    </script>
 </head>
   <body>
     <!-- Static, crawler-readable storefront content. Real visitors get the
@@ -154,9 +163,9 @@
         <li><b>Account data:</b> name, email, salted password hash (email sign-up) or Google profile (name, email, avatar, opaque account ID).</li>
         <li><b>Resume content:</b> everything you type, optional photo, template choice, layout settings, cover-letter content.</li>
         <li><b>Files you upload for import:</b> PDF / DOCX / image — processed entirely in your browser; the file itself is not uploaded.</li>
-        <li><b>Usage data:</b> sign-in timestamps, security events, aggregate counts of features used. No third-party analytics cookies, no advertising trackers, no fingerprinting.</li>
+        <li><b>Usage data:</b> sign-in timestamps, security events, aggregate feature usage, and privacy-focused session analytics through Microsoft Clarity.</li>
         <li><b>Storage:</b> in your browser (localStorage) and in our Supabase-hosted PostgreSQL database (encrypted at rest, row-level security). Static hosting by Vercel.</li>
-        <li><b>Sharing:</b> only with sub-processors required to run the service (Supabase, Google for OAuth, Vercel for hosting, Cloudflare for the OCR engine assets, your own AI endpoint if you enable AI rewrite). Never with recruiters, advertisers, or data brokers.</li>
+        <li><b>Sharing:</b> only with sub-processors required to run the service (Supabase, Google for OAuth, Vercel for hosting, Cloudflare for the OCR engine assets, Microsoft Clarity for usage analytics, your own AI endpoint if you enable AI rewrite). Never with recruiters, advertisers, or data brokers.</li>
         <li><b>Retention:</b> until you delete your data. Account deletion removes everything within 30 days; backups roll off within 30 days; security logs kept for 90 days.</li>
         <li><b>Your rights:</b> access, correction, deletion, export (JSON download from Settings), withdraw consent, nominate, grievance redressal — email privacy@resumemakery.com.</li>
         <li><b>Children:</b> service is intended for users aged 16+.</li>
