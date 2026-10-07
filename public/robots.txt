@@ -3,6 +3,5 @@ User-agent: *
 Allow: /
 Disallow: /.well-known/
 
-# Sitemap of the live production deployment. Update this when you switch the
-# primary domain.
-Sitemap: https://resume-maker-ivory-ten.vercel.app/sitemap.xml
+# Sitemap of the live production deployment.
+Sitemap: https://www.resumemakery.com/sitemap.xml
