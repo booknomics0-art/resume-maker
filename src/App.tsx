@@ -47,22 +47,13 @@ function usePathRoute() {
 export default function App() {
   const [user, setUser] = useState<User | null>(() => currentUser());
   const [menuOpen, setMenuOpen] = useState(false);
-  // True while an OAuth callback (`?code=…`) is being exchanged, so the visitor
-  // sees "signing you in" instead of the login form and then a jump.
   const [booting, setBooting] = useState(() => cloudEnabled() && hasAuthCallback());
   const [authNotice, setAuthNotice] = useState<GoogleAuthIssue | null>(null);
   const tab = usePathRoute();
 
   useEffect(() => { applySeo(tab); }, [tab]);
+  useEffect(() => { initSecurity(); }, []);
 
-  // Initialize application protections on mount
-  useEffect(() => {
-    initSecurity();
-  }, []);
-
-  // A preview iframe cannot finish Google sign-in itself (Google refuses to be
-  // framed, and its storage is partitioned). The button opens a top-level tab
-  // with ?google=start; that tab starts the handshake here, once.
   useEffect(() => {
     if (!cloudEnabled()) return;
     const pending = cloudResumeGoogleStart();
@@ -77,17 +68,10 @@ export default function App() {
     return () => { cancelled = true; };
   }, []);
 
-  // Cloud: finish a Google/email redirect round-trip, restore the Supabase session
-  // (e.g. new device / after email confirm) and merge cloud resumes into the copy
-  // stored in this browser.
   useEffect(() => {
     if (!cloudEnabled()) return;
     let cancelled = false;
     (async () => {
-      // Was this page opened as an OAuth callback? Finish it before anything
-      // else. `cloudBootAuth()` resolves one shared promise per page load, so a
-      // React StrictMode double-mount cannot burn the single-use code twice and
-      // failures keep their explanation.
       const redirect = await cloudBootAuth();
       if (cancelled) return;
 
@@ -98,8 +82,6 @@ export default function App() {
           void touchProfile();
           await syncWithCloud();
         } else {
-          // e.g. "Google login is switched off for this project" — shown on the
-          // login card together with the exact fix, never as a silent failure.
           setAuthNotice(redirect.issue ?? null);
         }
         setBooting(false);
@@ -116,9 +98,6 @@ export default function App() {
         void touchProfile();
         await syncWithCloud();
       } else if (currentUser() && !isOfflineSession()) {
-        // A local session without its cloud session must sign in again —
-        // unless it was an intentional offline fallback (cloud unreachable at
-        // signup/login). Those stay so the user is never locked out of ResumeMakery.
         logout();
         setUser(null);
       }
@@ -127,18 +106,9 @@ export default function App() {
     return () => { cancelled = true; };
   }, []);
 
-  // close drawer on route change
+  useEffect(() => { setMenuOpen(false); }, [tab]);
   useEffect(() => {
-    setMenuOpen(false);
-  }, [tab]);
-
-  // lock body scroll when drawer open on mobile
-  useEffect(() => {
-    if (menuOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
+    document.body.style.overflow = menuOpen ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
   }, [menuOpen]);
 
@@ -146,10 +116,10 @@ export default function App() {
     return (
       <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: 'var(--navy-900, #0F2148)', color: '#fff', padding: 24 }}>
         <div style={{ textAlign: 'center', maxWidth: 360 }}>
-          <div className="brand-badge" style={{ margin: '0 auto 14px' }}>CV</div>
+          <div className="brand-badge" style={{ margin: '0 auto 14px' }}>RM</div>
           <div style={{ fontSize: 18, fontWeight: 700 }}>Signing you in…</div>
           <div style={{ opacity: 0.75, fontSize: 13.5, marginTop: 6 }}>
-            Finishing the Google handshake with Supabase. One moment.
+            Finishing the Google handshake with Supabase.
           </div>
         </div>
       </div>
@@ -165,7 +135,7 @@ export default function App() {
       );
     }
 
-    const seoRoutes = new Set(['/resume-builder', '/ats-resume-checker', '/resume-editor', '/resume-templates', '/resume-for-freshers']);
+    const seoRoutes = new Set(['/resume-builder', '/ats-resume-checker', '/resume-editor', '/resume-templates', '/resume-for-freshers', '/cover-letter-builder']);
     if (seoRoutes.has(tab)) {
       return (
         <Suspense fallback={<div className="card pad">Loading ResumeMakery…</div>}>
@@ -246,116 +216,39 @@ export default function App() {
   }
 
   const NavLink = ({ to, id, children }: { to: string; id: string; children: React.ReactNode }) => (
-    <a
-      className={`nav-item ${active === id ? 'active' : ''}`}
-      href={to}
-      onClick={(e) => { e.preventDefault(); navigate(to); }}
-    >
+    <a className={`nav-item ${active === id ? 'active' : ''}`} href={to} onClick={(e) => { e.preventDefault(); navigate(to); }}>
       {children}
     </a>
   );
 
   return (
     <div className="shell">
-      {/* Mobile top bar — visible only on small screens */}
       <header className="mobile-topbar no-print">
-        <button
-          className="menu-btn"
-          aria-label={menuOpen ? 'Close menu' : 'Open menu'}
-          aria-expanded={menuOpen}
-          onClick={() => setMenuOpen(o => !o)}
-        >
-          <span className="hamburger" aria-hidden>
-            <span></span><span></span><span></span>
-          </span>
+        <button className="menu-btn" aria-label={menuOpen ? 'Close menu' : 'Open menu'} aria-expanded={menuOpen} onClick={() => setMenuOpen(o => !o)}>
+          <span className="hamburger" aria-hidden><span></span><span></span><span></span></span>
         </button>
-        <a href="/" onClick={(e)=>{e.preventDefault(); navigate('/');}} className="mobile-brand">
-          <div className="brand-badge">RM</div>
-          <span className="mobile-brand-name">ResumeMakery</span>
+        <a href="/" onClick={(e) => { e.preventDefault(); navigate('/'); }} className="mobile-brand">
+          <div className="brand-badge">RM</div><span className="mobile-brand-name">ResumeMakery</span>
         </a>
-        <div className="mobile-top-actions">
-          <button className="btn small primary" onClick={() => navigate('/editor/new')} style={{ padding: '7px 12px', fontSize: 13 }}>+ New</button>
-        </div>
+        <div className="mobile-top-actions"><button className="btn small primary" onClick={() => navigate('/editor/new')} style={{ padding: '7px 12px', fontSize: 13 }}>+ New</button></div>
       </header>
 
-      {/* Sidebar / Drawer */}
       <aside className={`sidebar no-print ${menuOpen ? 'open' : ''}`}>
-        <div className="brand">
-          <div className="brand-badge">RM</div>
-          <div>
-            <div className="brand-name">ResumeMakery</div>
-            <div className="brand-sub">Resume Studio · Free</div>
-          </div>
-        </div>
-
-        <nav className="sidebar-nav">
-          <NavLink to="/" id="/"><span className="nav-icon">▦</span> Dashboard</NavLink>
-          <NavLink to="/editor/new" id="/editor"><span className="nav-icon">✎</span> New resume</NavLink>
-          <NavLink to="/import" id="/import"><span className="nav-icon">📤</span> Upload & Edit</NavLink>
-          <NavLink to="/cover-letter" id="/cover-letter"><span className="nav-icon">✉</span> Cover letter</NavLink>
-          <NavLink to="/settings" id="/settings"><span className="nav-icon">⚙</span> Settings</NavLink>
+        <div className="brand"><div className="brand-badge">RM</div><div><div className="brand-name">ResumeMakery</div><div className="brand-sub">Resume Studio</div></div></div>
+        <nav className="nav">
+          <NavLink to="/" id="/">Dashboard</NavLink>
+          <NavLink to="/editor/new" id="/editor">New resume</NavLink>
+          <NavLink to="/import" id="/import">Import resume</NavLink>
+          <NavLink to="/cover-letter" id="/cover-letter">Cover letter</NavLink>
+          <NavLink to="/settings" id="/settings">Settings</NavLink>
         </nav>
-
-        {/* Mobile-only quick links section inside drawer */}
-        <div className="drawer-extra">
-          <div className="drawer-label">Help & Legal</div>
-          <a className="drawer-link" href="/about" onClick={(e)=>{e.preventDefault();navigate('/about');}}>About us</a>
-          <a className="drawer-link" href="/faq" onClick={(e)=>{e.preventDefault();navigate('/faq');}}>FAQ</a>
-          <a className="drawer-link" href="/contact" onClick={(e)=>{e.preventDefault();navigate('/contact');}}>Contact</a>
-          <a className="drawer-link" href="/privacy" onClick={(e)=>{e.preventDefault();navigate('/privacy');}}>Privacy</a>
-        </div>
-
-        <div className="sidebar-foot">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-            <div style={{
-              width: 36, height: 36, borderRadius: '50%', background: 'var(--navy-700)',
-              display: 'grid', placeItems: 'center', color: '#fff', fontWeight: 800, fontSize: 14,
-              border: '1px solid rgba(255,255,255,.15)', flex: '0 0 auto'
-            }}>
-              {user.name.charAt(0).toUpperCase()}
-            </div>
-            <div style={{ minWidth: 0, flex: 1 }}>
-              <div style={{ color: '#fff', fontWeight: 700, fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {user.name}
-              </div>
-              <div style={{ fontSize: 11.5, color: 'var(--silver-400)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.email}</div>
-            </div>
-          </div>
-          <button
-            className="btn small"
-            style={{ width: '100%', justifyContent: 'center', background: 'rgba(255,255,255,.08)', borderColor: 'rgba(255,255,255,.15)', color: 'var(--silver-200)' }}
-            onClick={() => { logout(); setUser(null); navigate('/'); }}
-          >
-            ⎋ &nbsp;Logout
-          </button>
-        </div>
+        <div className="sidebar-footer"><button className="btn small" onClick={() => { logout(); setUser(null); navigate('/'); }}>Sign out</button></div>
       </aside>
-
-      {/* Overlay */}
-      <div className={`sidebar-overlay ${menuOpen ? 'open' : ''}`} onClick={() => setMenuOpen(false)} aria-hidden />
-
-      <main className={`main ${active === '/editor' ? 'wide' : ''}`}>
-        <Suspense fallback={<div className="card pad">Loading workspace…</div>}>
-          {page}
-        </Suspense>
+      {menuOpen && <button className="drawer-backdrop no-print" aria-label="Close menu" onClick={() => setMenuOpen(false)} />}
+      <main className="main">
+        <Suspense fallback={<div className="card pad">Loading…</div>}>{page}</Suspense>
         <Footer />
       </main>
-
-      {/* Mobile bottom nav — quick access on very small screens */}
-      <nav className="bottom-nav no-print" aria-label="Primary">
-        <a className={`bottom-nav-item ${active==='/'?'active':''}`} href="/" onClick={(e)=>{e.preventDefault();navigate('/');}}>
-          <span className="bn-icon">▦</span><span>Home</span>
-        </a>
-        <a className={`bottom-nav-item ${active==='/import'?'active':''}`} href="/import" onClick={(e)=>{e.preventDefault();navigate('/import');}}>
-          <span className="bn-icon">📤</span><span>Upload</span>
-        </a>
-        <a className={`bottom-nav-item ${active==='/editor'?'active':''}`} href="/editor/new" onClick={(e)=>{e.preventDefault();navigate('/editor/new');}}>
-          <span className="bn-icon">✎</span><span>Create</span>
-        </a>
-        <a className={`bottom-nav-item ${active==='/settings'?'active':''}`} href="/settings" onClick={(e)=>{e.preventDefault();navigate('/settings');}}>
-          <span className="bn-icon">⚙</span><span>Settings</span>
-        </a>
-      </nav>
     </div>
   );
 }
