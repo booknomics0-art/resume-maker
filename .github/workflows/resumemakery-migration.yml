@@ -45,6 +45,9 @@ jobs:
       - name: Commit verified migration
         shell: bash
         run: |
+          # The one-time migration intentionally does not change existing GitHub
+          # workflow files; GitHub Actions tokens cannot update workflow files.
+          git checkout -- .github/workflows/qa.yml
           rm -f scripts/migrate-resumemakery.py .github/workflows/resumemakery-migration.yml
           git config user.name "ResumeMakery Migration"
           git config user.email "actions@users.noreply.github.com"
