@@ -54,10 +54,10 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 // the static block stays and still tells the whole story.
 document.getElementById('seo-content')?.remove();
 
-// PWA: installable + offline-resilient. Only in production builds — a service
-// worker in `npm run dev` would serve stale modules and drive everyone mad.
+// PWA: installable + offline-resilient. Keep the worker root-scoped so a direct
+// visit to /resume-builder or another clean route does not request /route/sw.js.
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch(() => { /* installability is a bonus, never a requirement */ });
+    navigator.serviceWorker.register('/sw.js').catch(() => { /* installability is a bonus, never a requirement */ });
   });
 }
