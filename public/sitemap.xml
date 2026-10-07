@@ -4,47 +4,47 @@
      crawl engines discover by following the in-page anchors on the home URL. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://resume-maker-ivory-ten.vercel.app/</loc>
+    <loc>https://www.resumemakery.com/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://resume-maker-ivory-ten.vercel.app/#/privacy</loc>
+    <loc>https://www.resumemakery.com/#/privacy</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://resume-maker-ivory-ten.vercel.app/#/terms</loc>
+    <loc>https://www.resumemakery.com/#/terms</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://resume-maker-ivory-ten.vercel.app/#/about</loc>
+    <loc>https://www.resumemakery.com/#/about</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://resume-maker-ivory-ten.vercel.app/#/faq</loc>
+    <loc>https://www.resumemakery.com/#/faq</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://resume-maker-ivory-ten.vercel.app/#/contact</loc>
+    <loc>https://www.resumemakery.com/#/contact</loc>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
-    <loc>https://resume-maker-ivory-ten.vercel.app/#/cookies</loc>
+    <loc>https://www.resumemakery.com/#/cookies</loc>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
-    <loc>https://resume-maker-ivory-ten.vercel.app/#/disclaimer</loc>
+    <loc>https://www.resumemakery.com/#/disclaimer</loc>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
-    <loc>https://resume-maker-ivory-ten.vercel.app/#/eula</loc>
+    <loc>https://www.resumemakery.com/#/eula</loc>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
