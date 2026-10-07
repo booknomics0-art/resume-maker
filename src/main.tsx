@@ -24,6 +24,22 @@ installRouteMotion();
 installMobileImportSaveGuard();
 installTemplatePolish();
 
+// Landing-page section links such as #templates are useful as in-page targets,
+// but they should not put a hash into the public ResumeMakery URL. Intercept
+// only same-page section anchors; legacy #/ app routes are handled separately.
+document.addEventListener('click', (event) => {
+  const target = event.target;
+  if (!(target instanceof Element)) return;
+  const anchor = target.closest('a[href^="#"]') as HTMLAnchorElement | null;
+  if (!anchor) return;
+  const href = anchor.getAttribute('href') || '';
+  if (!href.startsWith('#') || href.startsWith('#/') || href.length < 2) return;
+  const section = document.getElementById(href.slice(1));
+  if (!section) return;
+  event.preventDefault();
+  section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ErrorBoundary>
