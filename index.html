@@ -28,10 +28,10 @@
          The OCR engine (worker + wasm core + English model) is served from our
          own origin under /ocr/, precisely so it keeps working under this policy.
          'wasm-unsafe-eval' is required because WebAssembly compilation is
-         CSP-gated too. Google Analytics and Microsoft Clarity are explicitly
-         allow-listed; Google sign-in uses a top-level OAuth redirect through
-         Supabase and does not load Google's JavaScript SDK. -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://www.googletagmanager.com https://*.clarity.ms https://c.bing.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https:; connect-src 'self' blob: https://*.supabase.co wss://*.supabase.co https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com https://*.clarity.ms https://c.bing.com; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'" />
+         CSP-gated too. Google Analytics, Microsoft Clarity and Ahrefs Analytics
+         are explicitly allow-listed; Google sign-in uses a top-level OAuth
+         redirect through Supabase and does not load Google's JavaScript SDK. -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://www.googletagmanager.com https://*.clarity.ms https://c.bing.com https://analytics.ahrefs.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https:; connect-src 'self' blob: https://*.supabase.co wss://*.supabase.co https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com https://*.clarity.ms https://c.bing.com https://analytics.ahrefs.com; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'" />
     
     <!-- Open Graph for social sharing — uses the live production domain so
          link previews work for the URL actually deployed. -->
@@ -114,6 +114,9 @@
           y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
       })(window, document, "clarity", "script", "ytz52g5i30");
     </script>
+
+    <!-- Ahrefs Web Analytics -->
+    <script src="https://analytics.ahrefs.com/analytics.js" data-key="eDH6FiF4YuSJxn8QC9TWxA" async></script>
 </head>
   <body>
     <!-- Static, crawler-readable storefront content. Real visitors get the
