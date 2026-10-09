@@ -165,7 +165,16 @@ export default function App() {
       );
     }
 
-    const seoRoutes = new Set(['/resume-builder', '/ats-resume-checker', '/resume-editor', '/resume-templates', '/resume-for-freshers']);
+    const seoRoutes = new Set([
+      '/resume-builder',
+      '/ats-resume-checker',
+      '/job-description-resume-match',
+      '/ats-keyword-checker',
+      '/resume-score-checker',
+      '/resume-editor',
+      '/resume-templates',
+      '/resume-for-freshers',
+    ]);
     if (seoRoutes.has(tab)) {
       return (
         <Suspense fallback={<div className="card pad">Loading ResumeMakery…</div>}>
