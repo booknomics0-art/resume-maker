@@ -1,76 +1,76 @@
-// ResumeMakery public landing page — the storefront.
-//
-// Why this exists: previously the first screen every visitor saw was the login
-// form. Competitors (Naukri Resume Maker, Zety, Resume.io…) show a full sales
-// page first — hero, templates, benefits, social proof, FAQ — and only then ask
-// for an account. The "Start free" CTA asks visitors to sign in before
-// continuing to the editor or import page.
-//
-// Everything here is static + reuses existing pieces (Thumb, sampleResume,
-// Footer) so there is zero impact on the editor, the print pipeline or tests.
-// Never rendered for a signed-in user.
-
 import {
-  CATEGORY_META, LAYOUT_META, TEMPLATES, TEMPLATE_COUNT, templateById, type Template,
+  CATEGORY_META,
+  LAYOUT_META,
+  TEMPLATES,
+  TEMPLATE_COUNT,
+  type Template,
 } from '../lib/templates';
 import { FIELDS } from '../lib/fields';
 import { Thumb } from './Preview';
 import { sampleResume } from '../lib/store';
 import Footer from './Footer';
 import type { GoogleAuthIssue } from '../lib/googleAuth';
+import './LandingV2.css';
 
-/**
- * Real user reviews land here as they come in (beta feedback, Google Form
- * responses…). The section renders ONLY when this array is non-empty — we
- * never ship invented testimonials. Format: { name, role, quote, stars (1–5) }.
- */
-const TESTIMONIALS: { name: string; role: string; quote: string; stars: number }[] = [];
-
-/** Spread of designs across the catalogue for the landing strip. */
-const STRIP_INDICES = [0, 7, 14, 21, 28, 35, 42, 49];
+const STRIP_INDICES = [0, 7, 14, 21, 28, 35];
 const stripTemplates: Template[] = STRIP_INDICES
-  .map((i) => TEMPLATES[i])
-  .filter((t): t is Template => !!t);
+  .map((index) => TEMPLATES[index])
+  .filter((template): template is Template => Boolean(template));
 
-/** Keep these in sync with the FAQPage JSON-LD in index.html (same 8 Q&As). */
-const FAQS: { q: string; a: string }[] = [
+const FAQS = [
   {
-    q: 'Is ResumeMakery really 100% free?',
-    a: 'Yes. Every template, the ATS match score, upload & edit, and unlimited PDF downloads are free. There is no paid plan, no trial, no credit card and no watermark — the product has no billing at all.',
+    q: 'Is ResumeMakery really free?',
+    a: 'Yes. Resume building, templates, ATS matching and clean PDF downloads are free. There is no watermark and no paid plan inside the product.',
   },
   {
-    q: 'Can I edit my existing resume?',
-    a: 'Yes — upload a PDF, DOCX, TXT or JSON file, or even a photo of a printed resume. Text is extracted on your device (scanned pages are read by an offline OCR engine) and lands straight into editable fields with a live preview. Nothing is uploaded to any server.',
+    q: 'Can I tailor my resume for a specific job description?',
+    a: 'Yes. Paste a job description into the ATS checker to see the keywords your resume already covers and the ones it is missing, then edit and re-check before applying.',
   },
   {
-    q: 'Will my resume pass ATS screening?',
-    a: 'ResumeMakery templates are built on clean structures that applicant tracking systems parse reliably. You also get a free ATS check: paste any job description and see which keywords your resume already covers and which are missing.',
+    q: 'Can I upload my existing resume?',
+    a: 'Yes. You can bring a PDF, DOCX, text file or a photo of a printed resume and continue editing it in ResumeMakery.',
   },
   {
-    q: 'How many resumes can I create?',
-    a: 'Unlimited. Duplicate a resume and tailor one version per job application — something most builders restrict to a single resume even on paid plans.',
+    q: 'Is ResumeMakery useful for freshers?',
+    a: 'Yes. The product includes fresher-focused templates and career-field options, and the public fresher guide is designed around projects, skills, education and internships when full-time experience is limited.',
   },
   {
-    q: 'Do the free downloads have a watermark or branding?',
-    a: 'No. The PDF you download is the final file: no watermark, no “made with” link, no hidden paywall pages. It is even saved under your resume’s own name.',
+    q: 'Do downloads have a watermark?',
+    a: 'No. Your downloaded resume is a clean PDF without ResumeMakery branding or a hidden download paywall.',
   },
   {
-    q: 'How many pages can my resume be?',
-    a: 'One page to three or more — nothing caps your length. The live preview shows page-break guides, and the printed PDF keeps every entry intact across pages.',
-  },
-  {
-    q: 'Where is my data stored?',
-    a: 'In your browser by default, and optionally in your own cloud database when you sign in. Parsing, OCR and ATS scoring all run on your device — we never sell or share your data.',
-  },
-  {
-    q: 'Do I need an account to try it?',
-    a: 'Yes. Sign in or create a free account to build or import your resume. Resume building and downloads are completely free.',
+    q: 'Do I need an account to build a resume?',
+    a: 'Yes, at the moment a free account is required to enter the editor or import flow. We keep that requirement explicit so there is no surprise after you click a build button.',
   },
 ];
 
-function Stars({ n }: { n: number }) {
-  return <span aria-label={`${n} out of 5 stars`}>{'★'.repeat(n)}{'☆'.repeat(5 - n)}</span>;
-}
+const PUBLIC_TOOLS = [
+  {
+    href: '/resume-builder',
+    title: 'Resume Builder',
+    desc: 'See the complete free builder workflow.',
+  },
+  {
+    href: '/ats-resume-checker',
+    title: 'ATS Resume Checker',
+    desc: 'Understand job-description keyword matching.',
+  },
+  {
+    href: '/resume-editor',
+    title: 'Resume Editor',
+    desc: 'Upload and edit an existing resume.',
+  },
+  {
+    href: '/resume-templates',
+    title: 'Resume Templates',
+    desc: `Browse ${TEMPLATE_COUNT} professional layouts.`,
+  },
+  {
+    href: '/resume-for-freshers',
+    title: 'Resume for Freshers',
+    desc: 'A fresher-first path for Indian job seekers.',
+  },
+];
 
 export default function Landing({
   onStart,
@@ -79,246 +79,282 @@ export default function Landing({
   onStart: (target?: string) => void;
   notice?: GoogleAuthIssue | null;
 }) {
-  const hero = sampleResume();
-  const heroTpl = templateById('ats-sterling');
+  const heroResume = sampleResume();
 
   return (
-    <div className="landing no-print">
-      {/* ---------- top bar ---------- */}
-      <header className="land-top">
-        <div className="land-top-inner">
-          <div className="brand" style={{ padding: 0 }}>
-            <div className="brand-badge">RM</div>
-            <div>
-              <div className="brand-name">ResumeMakery</div>
-              <div className="brand-sub">Resume Studio · Free forever</div>
-            </div>
-          </div>
-          <nav className="land-top-nav" aria-label="Landing">
+    <div className="landing-v2 no-print">
+      <header className="rm2-top">
+        <div className="rm2-top-inner">
+          <a className="rm2-brand" href="/" aria-label="ResumeMakery home">
+            <span className="rm2-brand-mark" aria-hidden>RM</span>
+            <span className="rm2-brand-copy">
+              <span className="rm2-brand-name">ResumeMakery</span>
+              <span className="rm2-brand-sub">Free ATS resume workspace</span>
+            </span>
+          </a>
+
+          <nav className="rm2-nav" aria-label="Homepage sections">
+            <a href="#workflow">Job Match</a>
+            <a href="#freshers">Freshers</a>
             <a href="#templates">Templates</a>
-            <a href="#features">Features</a>
             <a href="#faq">FAQ</a>
           </nav>
-          <div className="land-top-actions">
-            <a className="btn small" href="/login">Sign in</a>
-            <button type="button" className="btn small primary" onClick={() => onStart('/editor/new')}>
-              Start free
+
+          <div className="rm2-top-actions">
+            <a className="rm2-btn compact rm2-signin" href="/login">Sign in</a>
+            <button className="rm2-btn primary compact" type="button" onClick={() => onStart('/editor/new')}>
+              Build free
             </button>
           </div>
         </div>
       </header>
 
       {notice && (
-        <div className="land-notice" role="alert">
-          <span>⚠️ {notice.title || 'Sign-in could not finish'}</span>
-          <a className="btn small" href="/login">See details & sign in</a>
+        <div className="rm2-notice" role="alert">
+          <div className="rm2-notice-inner">
+            <span>⚠️ {notice.title || 'Sign-in could not finish'}</span>
+            <a className="rm2-btn compact" href="/login">Open sign-in</a>
+          </div>
         </div>
       )}
 
-      {/* ---------- hero ---------- */}
-      <section className="land-hero">
-        <div className="land-hero-inner">
-          <div className="land-hero-copy">
-            <div className="land-eyebrow">100% free · no watermark · made for India 🇮🇳</div>
-            <h1>Free ATS resume builder.<br />Everything free. Everything unlocked.</h1>
-            <p className="land-lede">
-              Build a recruiter-ready resume in about 10 minutes — or upload your old one and edit it.
-              {` ${TEMPLATE_COUNT}`} professional templates, a free ATS match score, unlimited resumes and
-              unlimited PDF downloads. No plans. No card. No watermark.
-            </p>
-            <div className="land-cta-row">
-              <button type="button" className="btn primary land-cta" onClick={() => onStart('/editor/new')}>
-                Start free
-              </button>
-              <button type="button" className="btn land-cta" onClick={() => onStart('/import')}>
-                📤 Upload my old resume
-              </button>
-            </div>
-            <div className="land-chips">
-              <span className="land-chip">✓ All {TEMPLATE_COUNT} templates unlocked</span>
-              <span className="land-chip">✓ Free ATS score</span>
-              <span className="land-chip">✓ Free cover letter builder</span>
-              <span className="land-chip">✓ PDF · DOCX · photo import</span>
-              <span className="land-chip">✓ Works offline</span>
-              <span className="land-chip">✓ Your data stays yours</span>
-            </div>
-          </div>
-          <div className="land-hero-sheet" aria-hidden>
-            <div className="land-sheet-frame">
-              <Thumb r={hero} tpl={heroTpl} />
-            </div>
-            <div className="land-sheet-caption">Live A4 preview — this is the real thing, not a screenshot</div>
-          </div>
-        </div>
-      </section>
+      <main>
+        <section className="rm2-hero">
+          <div className="rm2-hero-inner">
+            <div>
+              <div className="rm2-eyebrow">Made for India · ₹0 forever · No watermark</div>
+              <h1>
+                Build a resume for the <em>job</em> — not just a resume.
+              </h1>
+              <p className="rm2-lede">
+                Create or upload your resume, match it against a real job description, see the keywords you are missing,
+                switch between {TEMPLATE_COUNT} professional templates and download a clean PDF. ResumeMakery keeps the
+                useful parts together instead of hiding them behind separate paid tools.
+              </p>
 
-      {/* ---------- numbers strip ---------- */}
-      <section className="land-stats" aria-label="ResumeMakery in numbers">
-        <div className="land-stat"><b>{TEMPLATE_COUNT}</b><span>templates, all unlocked</span></div>
-        <div className="land-stat"><b>{FIELDS.length}</b><span>career fields tuned</span></div>
-        <div className="land-stat"><b>₹0</b><span>forever — no plans</span></div>
-        <div className="land-stat"><b>~10 min</b><span>to a finished PDF</span></div>
-      </section>
-
-      {/* ---------- comparison ---------- */}
-      <section className="land-section" id="why">
-        <h2>Why jobseekers switch to ResumeMakery</h2>
-        <p className="land-section-sub">
-          Most “free” resume builders paywall the download, watermark the file or lock every good
-          template. Here is the honest comparison.
-        </p>
-        <div className="land-table-wrap">
-          <table className="land-table">
-            <thead>
-              <tr><th>What you get</th><th>Typical “free” builders</th><th className="land-col-us">ResumeMakery</th></tr>
-            </thead>
-            <tbody>
-              <tr><td>Resumes you can create</td><td>Usually 1</td><td className="land-col-us"><b>Unlimited</b></td></tr>
-              <tr><td>Templates</td><td>3–5 free, the rest locked</td><td className="land-col-us"><b>All {TEMPLATE_COUNT} unlocked</b></td></tr>
-              <tr><td>ATS match score vs a job description</td><td>Paid feature</td><td className="land-col-us"><b>Free, on-device</b></td></tr>
-              <tr><td>Upload & edit an existing resume</td><td>Often missing</td><td className="land-col-us"><b>PDF · DOCX · TXT · photo — free</b></td></tr>
-              <tr><td>Downloaded PDF</td><td>Watermarked or paywalled</td><td className="land-col-us"><b>Clean, no watermark, unlimited</b></td></tr>
-              <tr><td>Price</td><td>₹500–₹1,000+ / month after trial</td><td className="land-col-us"><b>₹0 — forever</b></td></tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      {/* ---------- feature pillars ---------- */}
-      <section className="land-section land-alt" id="features">
-        <h2>Three things paid builders charge for — free here</h2>
-        <div className="land-pillars">
-          <article className="land-pillar">
-            <div className="land-pillar-icon">📤</div>
-            <h3>Upload & edit your old resume</h3>
-            <p>
-              Bring a PDF, DOCX, text file — or just a photo of a printed resume. An on-device reader
-              (with a fully offline OCR engine for scans) rebuilds it into editable fields with a live
-              preview beside you. The file never leaves your tab.
-            </p>
-          </article>
-          <article className="land-pillar">
-            <div className="land-pillar-icon">🎯</div>
-            <h3>Free ATS match score</h3>
-            <p>
-              Paste any job description and get a live score: keywords your resume covers, and the ones
-              missing — with an honest nudge to add them only if they are true. Re-scores as you type.
-            </p>
-          </article>
-          <article className="land-pillar">
-            <div className="land-pillar-icon">🖌️</div>
-            <h3>{TEMPLATE_COUNT} templates for {FIELDS.length} career fields</h3>
-            <p>
-              ATS-safe classics and distinctive designs, tuned per field — IT, Data, Sales, Healthcare,
-              Teaching, Design, Leadership and a dedicated Fresher set. Every single one unlocked.
-            </p>
-          </article>
-        </div>
-      </section>
-
-      {/* ---------- template strip ---------- */}
-      <section className="land-section" id="templates">
-        <h2>Templates that look written by a professional</h2>
-        <p className="land-section-sub">
-          A taste of the {TEMPLATE_COUNT}-template collection — every one renders as a real A4 sheet in your
-          browser, and every one downloads as a clean PDF.
-        </p>
-        <div className="land-strip">
-          {stripTemplates.map((t) => (
-            <figure className="land-tpl-card" key={t.id}>
-              <div className="land-tpl-frame">
-                <Thumb r={hero} tpl={t} />
+              <div className="rm2-cta-row">
+                <button className="rm2-btn primary" type="button" onClick={() => onStart('/editor/new')}>
+                  Build my resume — free
+                </button>
+                <a className="rm2-btn secondary" href="/ats-resume-checker">
+                  Check ATS workflow
+                </a>
               </div>
-              <figcaption>
-                <b>{t.name}</b>
-                <span>{LAYOUT_META[t.layout]?.label} · {CATEGORY_META[t.category]?.label}</span>
-              </figcaption>
-            </figure>
-          ))}
-        </div>
-        <div className="land-center">
-          <button type="button" className="btn primary" onClick={() => onStart('/editor/new')}>
-            Browse all {TEMPLATE_COUNT} inside — free
-          </button>
-        </div>
-      </section>
+              <div className="rm2-microcopy">Free account required to enter the editor. No card, no trial and no watermark.</div>
 
-      {/* ---------- how it works ---------- */}
-      <section className="land-section land-alt" id="how">
-        <h2>Three steps to your finished PDF</h2>
-        <div className="land-steps">
-          <div className="land-step"><span className="land-step-num">1</span><div><h3>Fill or upload</h3><p>Type into 7 short steps, or upload your old resume / paste its text — we fill the form for you.</p></div></div>
-          <div className="land-step"><span className="land-step-num">2</span><div><h3>Pick a template</h3><p>Switch designs anytime; your content never moves. Check the ATS score against a real job ad.</p></div></div>
-          <div className="land-step"><span className="land-step-num">3</span><div><h3>Download clean PDF</h3><p>No watermark, no branding, your name on the file. Download as often as you like.</p></div></div>
-        </div>
-      </section>
+              <div className="rm2-trust-row" aria-label="Key product benefits">
+                <span className="rm2-trust-pill">✓ Unlimited clean PDFs</span>
+                <span className="rm2-trust-pill">✓ PDF · DOCX · photo import</span>
+                <span className="rm2-trust-pill">✓ Job-description matching</span>
+                <span className="rm2-trust-pill">✓ Fresher-friendly</span>
+              </div>
+            </div>
 
-      {/* ---------- privacy ---------- */}
-      <section className="land-section land-privacy" id="privacy">
-        <div className="land-privacy-inner">
-          <h2>🔒 Your resume is nobody’s business but yours</h2>
-          <p>
-            Parsing, OCR and ATS scoring run entirely on your device. Your resumes live in your browser —
-            and if you choose to sign in, in <em>your own</em> cloud database, protected by row-level security.
-            We don’t sell data, we don’t share resumes with recruiters, and creating an account is free.
+            <div className="rm2-hero-visual" aria-label="Example ResumeMakery workflow">
+              <div className="rm2-product-card">
+                <div className="rm2-product-card-head">
+                  <b>Example job-match workflow</b>
+                  <span className="rm2-live-pill">Built into ResumeMakery</span>
+                </div>
+                <div className="rm2-score-box">
+                  <div className="rm2-score-top">
+                    <span>Illustrative job match</span>
+                    <strong>74%</strong>
+                  </div>
+                  <div className="rm2-progress" aria-hidden><span /></div>
+                </div>
+                <div className="rm2-check-list">
+                  <div className="rm2-check-item">
+                    <span className="rm2-check-icon">🎯</span>
+                    <span><b>Paste the job description</b><small>Compare your resume against the role you want.</small></span>
+                    <span className="rm2-check-state">1</span>
+                  </div>
+                  <div className="rm2-check-item">
+                    <span className="rm2-check-icon">🔎</span>
+                    <span><b>See covered and missing keywords</b><small>Use the existing ATS match checker before applying.</small></span>
+                    <span className="rm2-check-state">2</span>
+                  </div>
+                  <div className="rm2-check-item">
+                    <span className="rm2-check-icon">✍️</span>
+                    <span><b>Edit what is genuinely true</b><small>Improve relevance without inventing experience.</small></span>
+                    <span className="rm2-check-state">3</span>
+                  </div>
+                  <div className="rm2-check-item">
+                    <span className="rm2-check-icon">📄</span>
+                    <span><b>Download the final PDF</b><small>No watermark or ResumeMakery branding.</small></span>
+                    <span className="rm2-check-state">4</span>
+                  </div>
+                </div>
+                <p className="rm2-visual-note">The percentage above is an example interface value, not a claim about a specific resume.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="rm2-strip" aria-label="ResumeMakery product facts">
+          <div className="rm2-strip-inner">
+            <div className="rm2-stat"><strong>{TEMPLATE_COUNT}</strong><span>professional templates unlocked</span></div>
+            <div className="rm2-stat"><strong>{FIELDS.length}</strong><span>career fields supported</span></div>
+            <div className="rm2-stat"><strong>₹0</strong><span>product price — no paid plan</span></div>
+            <div className="rm2-stat"><strong>0</strong><span>watermarks on downloaded PDFs</span></div>
+          </div>
+        </section>
+
+        <section className="rm2-section" id="why">
+          <div className="rm2-kicker">Why ResumeMakery</div>
+          <h2>Compete on useful workflow, not template count alone.</h2>
+          <p className="rm2-section-lede">
+            The homepage now makes the strongest existing product advantages obvious within the first screen instead of
+            asking visitors to discover them after sign-in.
           </p>
-          <p style={{ marginTop: 10, fontSize: 14 }}>
-            Read the full policy:{' '}
-            <a href="/privacy" style={{ color: 'inherit', textDecoration: 'underline', fontWeight: 600 }}>
-              Privacy Policy
-            </a>
-            {' · '}
-            <a href="/terms" style={{ color: 'inherit', textDecoration: 'underline', fontWeight: 600 }}>
-              Terms of Service
-            </a>
-            {' · '}
-            <a href="/cookies" style={{ color: 'inherit', textDecoration: 'underline', fontWeight: 600 }}>
-              Cookie Policy
-            </a>
-          </p>
-        </div>
-      </section>
+          <div className="rm2-value-grid">
+            <article className="rm2-value-card">
+              <div className="rm2-value-icon">🎯</div>
+              <h3>Job-description matching</h3>
+              <p>Paste a real vacancy and use the ATS matcher to identify covered and missing terms before you apply.</p>
+            </article>
+            <article className="rm2-value-card">
+              <div className="rm2-value-icon">📤</div>
+              <h3>Bring your old resume</h3>
+              <p>ResumeMakery can start from an existing PDF, DOCX, text file or resume photo instead of forcing a rebuild.</p>
+            </article>
+            <article className="rm2-value-card">
+              <div className="rm2-value-icon">🔓</div>
+              <h3>Actually free downloads</h3>
+              <p>Templates, resume creation and clean PDF downloads stay available without a watermark or checkout surprise.</p>
+            </article>
+            <article className="rm2-value-card">
+              <div className="rm2-value-icon">🇮🇳</div>
+              <h3>India-first entry point</h3>
+              <p>The product now speaks directly to freshers and Indian job seekers instead of using generic global-builder copy.</p>
+            </article>
+          </div>
+        </section>
 
-      {/* ---------- testimonials (renders only when real ones exist) ---------- */}
-      {TESTIMONIALS.length > 0 && (
-        <section className="land-section" id="reviews">
-          <h2>What jobseekers say</h2>
-          <div className="land-reviews">
-            {TESTIMONIALS.map((t) => (
-              <blockquote className="land-review" key={t.name}>
-                <Stars n={t.stars} />
-                <p>“{t.quote}”</p>
-                <footer><b>{t.name}</b><span>{t.role}</span></footer>
-              </blockquote>
+        <section className="rm2-workflow-shell" id="workflow">
+          <div className="rm2-workflow">
+            <div className="rm2-kicker">Existing ATS workflow, surfaced properly</div>
+            <h2>From job description to cleaner application in four steps.</h2>
+            <p>
+              This is the differentiator we can own immediately without rewriting the resume editor or risking the PDF pipeline.
+            </p>
+            <div className="rm2-workflow-grid">
+              <article className="rm2-workflow-step"><span className="rm2-workflow-num">01</span><h3>Build or import</h3><p>Create a resume or bring the one you already use.</p></article>
+              <article className="rm2-workflow-step"><span className="rm2-workflow-num">02</span><h3>Paste the vacancy</h3><p>Use the actual job description instead of generic ATS advice.</p></article>
+              <article className="rm2-workflow-step"><span className="rm2-workflow-num">03</span><h3>Check the match</h3><p>Review covered and missing job-description keywords.</p></article>
+              <article className="rm2-workflow-step"><span className="rm2-workflow-num">04</span><h3>Edit and download</h3><p>Make truthful improvements and export the clean PDF.</p></article>
+            </div>
+            <div className="rm2-workflow-actions">
+              <a className="rm2-btn primary" href="/ats-resume-checker">Explore ATS checker</a>
+              <button className="rm2-btn secondary" type="button" onClick={() => onStart('/editor/new')}>Start a resume</button>
+            </div>
+          </div>
+        </section>
+
+        <section className="rm2-section" id="freshers">
+          <div className="rm2-kicker">Fresher-first positioning</div>
+          <h2>No experience? Your resume still needs a clear story.</h2>
+          <p className="rm2-section-lede">
+            Freshers should not be forced into an experienced-professional structure. ResumeMakery already has fresher-focused
+            templates, so the homepage now gives that audience a direct path.
+          </p>
+          <div className="rm2-fresher-grid">
+            <article className="rm2-fresher-card primary">
+              <h3>Lead with proof you already have.</h3>
+              <p>For many freshers, projects, technical skills, internships, education and measurable achievements deserve more attention than an empty work-history section.</p>
+              <div className="rm2-role-chips" aria-label="Example fresher roles">
+                <span className="rm2-role-chip">Software Developer</span>
+                <span className="rm2-role-chip">Data Analyst</span>
+                <span className="rm2-role-chip">Sales</span>
+                <span className="rm2-role-chip">Marketing</span>
+                <span className="rm2-role-chip">Finance</span>
+              </div>
+              <div className="rm2-cta-row">
+                <a className="rm2-btn primary" href="/resume-for-freshers">Open fresher guide</a>
+              </div>
+            </article>
+            <article className="rm2-fresher-card">
+              <h3>What to emphasize</h3>
+              <div className="rm2-fresher-list">
+                <div><span>✓</span><span>Projects that demonstrate relevant skills</span></div>
+                <div><span>✓</span><span>Internships, volunteering and real responsibilities</span></div>
+                <div><span>✓</span><span>Relevant tools, coursework and certifications</span></div>
+                <div><span>✓</span><span>Achievements with evidence instead of empty adjectives</span></div>
+                <div><span>✓</span><span>Keywords that genuinely match the target role</span></div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section className="rm2-section rm2-tight" id="templates">
+          <div className="rm2-kicker">Templates</div>
+          <h2>Professional layouts without turning ResumeMakery into a design contest.</h2>
+          <p className="rm2-section-lede">Templates remain important, but the product story is now about getting application-ready.</p>
+          <div className="rm2-template-grid">
+            {stripTemplates.map((template) => (
+              <figure className="rm2-template-card" key={template.id}>
+                <div className="rm2-template-frame">
+                  <Thumb r={heroResume} tpl={template} />
+                </div>
+                <figcaption>
+                  <b>{template.name}</b>
+                  <span>{LAYOUT_META[template.layout]?.label} · {CATEGORY_META[template.category]?.label}</span>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+          <div className="rm2-center"><a className="rm2-btn" href="/resume-templates">Browse template collection</a></div>
+        </section>
+
+        <section className="rm2-section rm2-tight" id="proof">
+          <div className="rm2-kicker">Proof before hype</div>
+          <h2>Trust should come from verifiable product facts.</h2>
+          <p className="rm2-section-lede">We are deliberately not adding fake testimonials, fake user counts or invented recruiter endorsements.</p>
+          <div className="rm2-proof-grid">
+            <article className="rm2-proof-card"><strong>No hidden PDF paywall</strong><p>The current product is positioned around clean, watermark-free downloads instead of a fake-free funnel.</p></article>
+            <article className="rm2-proof-card"><strong>On-device resume processing</strong><p>Import parsing, OCR and ATS-related processing are designed to run in the browser where possible.</p></article>
+            <article className="rm2-proof-card"><strong>Real reviews only</strong><p>Social proof should be added only when feedback has actually been collected from users.</p></article>
+          </div>
+        </section>
+
+        <section className="rm2-section rm2-tight" aria-labelledby="explore-heading">
+          <div className="rm2-kicker">Explore</div>
+          <h2 id="explore-heading">Useful public entry points for search and users.</h2>
+          <p className="rm2-section-lede">These pages already exist and now receive clearer internal links from the homepage.</p>
+          <div className="rm2-links">
+            {PUBLIC_TOOLS.map((item) => (
+              <a className="rm2-link-card" href={item.href} key={item.href}>
+                <b>{item.title}</b>
+                <span>{item.desc}</span>
+              </a>
             ))}
           </div>
         </section>
-      )}
 
-      {/* ---------- FAQ ---------- */}
-      <section className="land-section land-alt" id="faq">
-        <h2>Frequently asked questions</h2>
-        <div className="land-faqs">
-          {FAQS.map((f) => (
-            <details className="land-faq" key={f.q}>
-              <summary>{f.q}</summary>
-              <p>{f.a}</p>
-            </details>
-          ))}
-        </div>
-      </section>
+        <section className="rm2-section" id="faq">
+          <div className="rm2-kicker">FAQ</div>
+          <h2>Know what happens before you start.</h2>
+          <div className="rm2-faqs">
+            {FAQS.map((item) => (
+              <details className="rm2-faq" key={item.q}>
+                <summary>{item.q}</summary>
+                <p>{item.a}</p>
+              </details>
+            ))}
+          </div>
+        </section>
 
-      {/* ---------- final CTA ---------- */}
-      <section className="land-final">
-        <h2>Your next job starts with one honest page.</h2>
-        <p>No card. No trial. No watermark. Just a resume you can stand behind.</p>
-        <div className="land-cta-row land-center">
-          <button type="button" className="btn primary land-cta" onClick={() => onStart('/editor/new')}>
-            Build my resume — free
-          </button>
-          <a className="btn land-cta" href="/login">Sign in / Create account</a>
+        <div className="rm2-final-wrap">
+          <section className="rm2-final">
+            <h2>Make the resume fit the opportunity.</h2>
+            <p>Build it, compare it with the job, improve what is true and download the final PDF.</p>
+            <div className="rm2-cta-row">
+              <button className="rm2-btn primary" type="button" onClick={() => onStart('/editor/new')}>Build my resume — free</button>
+              <a className="rm2-btn secondary" href="/ats-resume-checker">See ATS checker</a>
+            </div>
+          </section>
         </div>
-      </section>
+      </main>
 
       <Footer />
     </div>
