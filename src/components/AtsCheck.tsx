@@ -1,15 +1,20 @@
 /**
- * ATS keyword check — the editor's job-description matcher.
- *
- * Paste a job description and the component reports, live and on-device:
- * which of the JD's keywords your resume already covers, which are missing,
- * and a coverage score. Competitors gate this behind a paid tier; here it is
- * free and needs no server — nothing leaves the browser.
+ * ATS Job Match 2.0 — keeps the existing honest keyword coverage score and
+ * adds deterministic, on-device guidance: what is weak, why it matters and
+ * what the user can truthfully improve next.
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Resume } from '../lib/types';
 import { loadJd, matchKeywords, resumeToText, saveJd, type AtsReport } from '../lib/ats';
+import { buildAtsDiagnostics } from '../lib/atsDiagnostics';
+import './AtsCheckV2.css';
+
+const PRIORITY_LABEL = {
+  high: 'Fix first',
+  medium: 'Improve',
+  low: 'Polish',
+} as const;
 
 export default function AtsCheck({ r }: { r: Resume }) {
   const [open, setOpen] = useState(false);
@@ -17,16 +22,17 @@ export default function AtsCheck({ r }: { r: Resume }) {
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const resumeText = useMemo(() => resumeToText(r), [r]);
-  // the report is LIVE: typing into the JD or editing any resume field
-  // re-computes the match instantly, so the score never lies about a stale
-  // version of the resume.
   const shown: AtsReport | null = useMemo(() => {
     if (!jd.trim()) return null;
-    const rep = matchKeywords(jd, resumeText);
-    return rep.total > 0 ? rep : null;
+    const report = matchKeywords(jd, resumeText);
+    return report.total > 0 ? report : null;
   }, [jd, resumeText]);
 
-  // persist the JD per resume (debounced) so it survives a reload
+  const diagnostics = useMemo(
+    () => shown ? buildAtsDiagnostics(r, shown) : null,
+    [r, shown],
+  );
+
   useEffect(() => {
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => saveJd(r.id, jd), 600);
@@ -34,104 +40,171 @@ export default function AtsCheck({ r }: { r: Resume }) {
   }, [jd, r.id]);
 
   const clear = () => setJd('');
-
-  const tone =
-    !shown ? null : shown.score >= 75 ? 'good' : shown.score >= 50 ? 'mid' : 'low';
+  const tone = !shown ? null : shown.score >= 75 ? 'good' : shown.score >= 50 ? 'mid' : 'low';
 
   return (
-    <div className="card ats-check" style={{ marginTop: 14, borderLeft: '4px solid var(--navy-600)' }}>
-      <div className="spread" style={{ alignItems: 'center' }}>
+    <div className="card ats-check ats2">
+      <div className="ats2-head-row">
         <button
           type="button"
           className="ats-head"
           aria-expanded={open}
-          onClick={() => setOpen((o) => !o)}
+          onClick={() => setOpen((value) => !value)}
         >
-          <b>🎯 ATS keyword check</b>
+          <b>🎯 ATS Job Match 2.0</b>
           <span className="hint" style={{ fontSize: 12 }}>
-            Paste a job description · see covered &amp; missing keywords
+            Job match · resume readiness · exact priority fixes
           </span>
         </button>
-        <span className="row" style={{ gap: 8 }}>
+
+        <div className="ats2-head-actions">
           {shown && (
-            <span className={`ats-score ats-score-${tone}`}>
+            <span className={`ats-score ats-score-${tone}`} title="Job-description keyword coverage">
               {shown.score}% <small>{shown.covered.length}/{shown.total}</small>
             </span>
           )}
           <button
             type="button"
-            className="btn small"
+            className="btn small ats2-toggle"
+            aria-label={open ? 'Close ATS Job Match' : 'Open ATS Job Match'}
             aria-expanded={open}
-            onClick={() => setOpen((o) => !o)}
-            style={{ minWidth: 30, padding: '6px 10px' }}
+            onClick={() => setOpen((value) => !value)}
           >
             {open ? '▲' : '▼'}
           </button>
-        </span>
+        </div>
       </div>
 
       {open && (
-        <div style={{ marginTop: 12 }}>
+        <div className="ats2-body">
           <label className="f">Job description</label>
           <textarea
-            className="textarea"
-            rows={4}
+            className="textarea ats2-jd"
+            rows={5}
             value={jd}
-            onChange={(e) => setJd(e.target.value)}
-            placeholder="Paste the full job description here — title, responsibilities, requirements. It stays on this device."
-            style={{ fontSize: 12.5 }}
+            onChange={(event) => setJd(event.target.value)}
+            placeholder="Paste the full job description here — title, responsibilities and requirements. It stays on this device."
           />
-          <div className="row" style={{ marginTop: 8, gap: 8, flexWrap: 'wrap' }}>
+
+          <div className="ats2-meta-row">
             <button type="button" className="btn small" disabled={!jd} onClick={clear}>Clear</button>
             <span className="hint" style={{ fontSize: 11.5 }}>
-              Live score · updates as you type here or edit the resume · 100% on-device, your JD is never uploaded
+              Live and on-device · updates when the job description or resume changes
             </span>
           </div>
 
           {jd.trim() && !shown && (
             <div className="hint" style={{ marginTop: 10 }}>
-              No recognisable keywords found in that text yet — paste the full description (responsibilities +
-              requirements), not just the title.
+              No recognisable job keywords found yet. Paste the full description — responsibilities and requirements work better than only a job title.
             </div>
           )}
 
-          {shown && (
-            <div style={{ marginTop: 12 }}>
-              <div className="row" style={{ gap: 10, alignItems: 'baseline', flexWrap: 'wrap' }}>
-                <b style={{ color: 'var(--navy-900)' }}>
-                  {shown.score >= 75 ? 'Strong match' : shown.score >= 50 ? 'Decent match' : 'Weak match'} — {shown.covered.length} of {shown.total} JD keywords are on your resume
-                </b>
-                <span className="hint" style={{ fontSize: 11.5 }}>{shown.jdWords} words read from the description</span>
+          {shown && diagnostics && (
+            <>
+              <div className="ats2-score-grid" aria-label="ATS Job Match scores">
+                <article className="ats2-score-card">
+                  <span className="ats2-score-label">Job match</span>
+                  <div className="ats2-score-value">
+                    <strong>{shown.score}%</strong>
+                    <span>{shown.covered.length}/{shown.total} JD keywords</span>
+                  </div>
+                  <p className="ats2-score-copy">
+                    Exact keyword coverage against this job description. This is not an interview guarantee.
+                  </p>
+                </article>
+
+                <article className="ats2-score-card">
+                  <span className="ats2-score-label">Resume readiness</span>
+                  <div className="ats2-score-value">
+                    <strong>{diagnostics.readinessScore}%</strong>
+                    <span>{diagnostics.passedChecks}/{diagnostics.totalChecks} checks</span>
+                  </div>
+                  <p className="ats2-score-copy">
+                    Contact, summary, evidence and readability checks that apply to this resume. Fresher mode does not require formal work history.
+                  </p>
+                </article>
               </div>
 
-              {shown.covered.length > 0 && (
-                <div style={{ marginTop: 10 }}>
-                  <label className="f" style={{ fontSize: 12 }}>✓ Already covered</label>
-                  <div className="chips">
-                    {shown.covered.map((k) => (
-                      <span key={k} className="chip ats-chip ok">{k}</span>
+              <section className="ats2-section" aria-labelledby="ats-priority-fixes">
+                <div className="ats2-section-head">
+                  <b id="ats-priority-fixes">Priority fixes</b>
+                  <span>{diagnostics.issues.length ? 'Ordered by likely impact' : 'No major issue detected by these checks'}</span>
+                </div>
+
+                {diagnostics.issues.length > 0 ? (
+                  <div className="ats2-issues">
+                    {diagnostics.issues.map((issue) => (
+                      <article className="ats2-issue" key={issue.id}>
+                        <div className="ats2-issue-top">
+                          <span className={`ats2-priority ats2-priority-${issue.priority}`}>
+                            {PRIORITY_LABEL[issue.priority]}
+                          </span>
+                          <h4>{issue.title}</h4>
+                        </div>
+                        <p><b>Why:</b> {issue.why}</p>
+                        <p><b>Fix:</b> {issue.fix}</p>
+                        {issue.terms && issue.terms.length > 0 && (
+                          <div className="ats2-term-row" aria-label="Relevant terms">
+                            {issue.terms.map((term) => (
+                              <span className="chip ats-chip miss" key={`${issue.id}-${term}`}>{term}</span>
+                            ))}
+                          </div>
+                        )}
+                      </article>
                     ))}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <div className="ats2-issue">
+                    <div className="ats2-issue-top">
+                      <span className="ats2-priority ats2-priority-low">Looks good</span>
+                      <h4>No major structural or job-match issue surfaced by the current checks.</h4>
+                    </div>
+                    <p>Keep every claim truthful and do a final spelling, date and PDF scan before applying.</p>
+                  </div>
+                )}
+              </section>
 
-              {shown.missing.length > 0 && (
-                <div style={{ marginTop: 10 }}>
-                  <label className="f" style={{ fontSize: 12 }}>Missing — add them if (and only if) it is true</label>
-                  <div className="chips">
-                    {shown.missing.map((k) => (
-                      <span key={k} className="chip ats-chip miss">{k}</span>
+              {diagnostics.passedSignals.length > 0 && (
+                <section className="ats2-section" aria-label="Checks already passing">
+                  <div className="ats2-section-head"><b>Already working</b><span>Keep these strengths</span></div>
+                  <div className="ats2-pass-row">
+                    {diagnostics.passedSignals.map((signal) => (
+                      <span className="ats2-pass" key={signal}>✓ {signal}</span>
                     ))}
                   </div>
-                  <div className="hint" style={{ marginTop: 6, fontSize: 11.5 }}>
-                    Most land naturally in <b>Skills</b>; a few belong inside an <b>Experience</b> bullet
-                    where you actually used them. Recruiters search for the terms, so matching spelling
-                    ("Power BI" not "Powerbi") matters.
-                  </div>
-                </div>
+                </section>
               )}
 
-            </div>
+              <details className="ats2-keyword-details">
+                <summary>View all covered and missing job keywords</summary>
+
+                {shown.covered.length > 0 && (
+                  <div className="ats2-keyword-block">
+                    <label className="f" style={{ fontSize: 12 }}>✓ Already covered</label>
+                    <div className="chips">
+                      {shown.covered.map((keyword) => (
+                        <span key={keyword} className="chip ats-chip ok">{keyword}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {shown.missing.length > 0 && (
+                  <div className="ats2-keyword-block">
+                    <label className="f" style={{ fontSize: 12 }}>Missing — add only when it is true</label>
+                    <div className="chips">
+                      {shown.missing.map((keyword) => (
+                        <span key={keyword} className="chip ats-chip miss">{keyword}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </details>
+
+              <div className="ats2-disclaimer">
+                ResumeMakery does not know an employer's private ATS rules and cannot promise an interview. These results compare the resume you wrote with the job description you pasted and highlight deterministic content signals. Never add a skill, metric or experience you cannot support.
+              </div>
+            </>
           )}
         </div>
       )}
