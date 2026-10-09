@@ -22,36 +22,36 @@ const stripTemplates: Template[] = STRIP_INDICES
 
 const FAQS = [
   {
-    q: 'Is ResumeMakery really free?',
-    a: 'Yes. Resume building, templates, ATS matching and clean PDF downloads are free. There is no watermark and no paid plan inside the product.',
+    q: 'Is ResumeMakery really 100% free?',
+    a: 'Yes. Every template, the ATS match score, upload & edit, and unlimited PDF downloads are free. There is no paid plan, no trial, no credit card and no watermark — the product has no billing at all.',
   },
   {
-    q: 'Can I tailor my resume for a specific job description?',
-    a: 'Yes. Paste a job description into the ATS checker to see the keywords your resume already covers and the ones it is missing, then edit and re-check before applying.',
+    q: 'Can I edit my existing resume?',
+    a: 'Yes — upload a PDF, DOCX, TXT or JSON file, or even a photo of a printed resume. Text is extracted on your device (scanned pages are read by an offline OCR engine) and lands straight into editable fields with a live preview. Nothing is uploaded to any server.',
   },
   {
-    q: 'Can I upload my existing resume?',
-    a: 'Yes. You can bring a PDF, DOCX, text file or a photo of a printed resume and continue editing it in ResumeMakery.',
+    q: 'Will my resume pass ATS screening?',
+    a: 'ResumeMakery templates are built on clean structures that applicant tracking systems parse reliably. You also get a free ATS check: paste any job description and see which keywords your resume already covers and which are missing.',
   },
   {
-    q: 'Is ResumeMakery useful for freshers?',
-    a: 'Yes. The product includes fresher-focused templates and career-field options, and the public fresher guide is designed around projects, skills, education and internships when full-time experience is limited.',
+    q: 'How many resumes can I create?',
+    a: 'Unlimited. Duplicate a resume and tailor one version per job application — something most builders restrict to a single resume even on paid plans.',
   },
   {
-    q: 'Do downloads have a watermark?',
-    a: 'No. Your downloaded resume is a clean PDF without ResumeMakery branding or a hidden download paywall.',
+    q: 'Do the free downloads have a watermark or branding?',
+    a: 'No. The PDF you download is the final file: no watermark, no “made with” link, no hidden paywall pages. It is even saved under your resume’s own name.',
   },
   {
-    q: 'How long can my resume be?',
-    a: 'ResumeMakery supports multi-page resumes. The best length depends on your experience and the role, so keep every section relevant rather than padding the document.',
+    q: 'How many pages can my resume be?',
+    a: 'One page to three or more — nothing caps your length. The live preview shows page-break guides, and the printed PDF keeps every entry intact across pages.',
   },
   {
-    q: 'Where is my resume data processed?',
-    a: 'Resume import parsing, OCR and ATS-related processing are designed to run in your browser where possible. Signed-in cloud storage is protected separately by the existing account and database controls.',
+    q: 'Where is my data stored?',
+    a: 'In your browser by default, and optionally in your own cloud database when you sign in. Parsing, OCR and ATS scoring all run on your device — we never sell or share your data.',
   },
   {
-    q: 'Do I need an account to build a resume?',
-    a: 'Yes. Sign in or create a free account to enter the editor or import flow. We keep that requirement explicit so there is no surprise after you click a build button.',
+    q: 'Do I need an account to try it?',
+    a: 'Yes. Sign in or create a free account to build or import your resume. Resume building and downloads are completely free.',
   },
 ];
 
