@@ -5,8 +5,22 @@ import path from 'node:path';
 const dist = path.resolve('dist');
 const ORIGIN = 'https://www.resumemakery.com';
 const routes = [
-  'resume-builder', 'ats-resume-checker', 'resume-editor', 'resume-templates', 'resume-for-freshers',
-  'about', 'faq', 'privacy', 'terms', 'contact', 'cookies', 'disclaimer', 'eula',
+  'resume-builder',
+  'ats-resume-checker',
+  'job-description-resume-match',
+  'ats-keyword-checker',
+  'resume-score-checker',
+  'resume-editor',
+  'resume-templates',
+  'resume-for-freshers',
+  'about',
+  'faq',
+  'privacy',
+  'terms',
+  'contact',
+  'cookies',
+  'disclaimer',
+  'eula',
 ];
 
 const entityPrefix = [
