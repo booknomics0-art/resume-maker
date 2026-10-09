@@ -20,6 +20,7 @@ await build({
   target: 'node20',
   outfile,
   logLevel: 'error',
+  define: { 'import.meta.env': '{}' },
 });
 
 const mod = await import(pathToFileURL(outfile).href);
