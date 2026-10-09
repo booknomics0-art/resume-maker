@@ -6,6 +6,7 @@ import {
 import type { Resume } from '../lib/types';
 import { fieldById, type Field } from '../lib/fields';
 import { Thumb } from './Preview';
+import './FresherMode.css';
 
 /**
  * The two legacy `spine` designs used a vertical name/label rail. They remain
@@ -51,7 +52,7 @@ function TplCard({
   onSelect: (id: string) => void;
 }) {
   const { ref, near } = useNearViewport<HTMLElement>();
-  const recommended = t.bestFor.includes(field.id);
+  const recommended = t.bestFor.includes(field.id) || (r.fresher && t.category === 'fresher');
 
   return (
     <article
@@ -68,7 +69,7 @@ function TplCard({
     >
       <div className="tpl-thumb">
         {near ? <Thumb r={{ ...r, templateId: t.id }} tpl={t} /> : <div className="thumb-fit tpl-skel" aria-hidden="true" />}
-        {recommended && <span className="tpl-star" title={`Best fit for ${field.label}`} aria-hidden="true">★</span>}
+        {recommended && <span className="tpl-star" title={r.fresher && t.category === 'fresher' ? 'Designed for fresher and entry-level resumes' : `Best fit for ${field.label}`} aria-hidden="true">★</span>}
         {selected && <span className="tpl-check" aria-hidden="true">✓</span>}
         <span className="tpl-cta" aria-hidden="true">{selected ? 'Applied' : 'Use design'}</span>
       </div>
@@ -104,17 +105,20 @@ export default function TemplateGallery({
     const base = CATALOGUE.filter((t) => {
       if (cat !== 'all' && t.category !== cat) return false;
       if (fam !== 'all' && t.layout !== fam) return false;
-      if (bestOnly && !t.bestFor.includes(r.fieldId)) return false;
+      if (bestOnly && !t.bestFor.includes(r.fieldId) && !(r.fresher && t.category === 'fresher')) return false;
       if (!words.length) return true;
       const hay = `${t.name} ${t.tagline} ${LAYOUT_META[t.layout]?.label || ''} ${t.strengths.join(' ')}`.toLowerCase();
       return words.every((w) => hay.includes(w));
     });
     return [...base].sort((a, b) => {
+      const af = r.fresher && a.category === 'fresher' ? 0 : 1;
+      const bf = r.fresher && b.category === 'fresher' ? 0 : 1;
+      if (af !== bf) return af - bf;
       const ai = a.bestFor.includes(r.fieldId) ? 0 : 1;
       const bi = b.bestFor.includes(r.fieldId) ? 0 : 1;
       return ai - bi;
     });
-  }, [cat, fam, q, bestOnly, r.fieldId]);
+  }, [cat, fam, q, bestOnly, r.fieldId, r.fresher]);
 
   const total = list.length;
   const filtersOn = cat !== 'all' || fam !== 'all' || bestOnly || q.trim().length > 0;
@@ -126,6 +130,13 @@ export default function TemplateGallery({
 
   return (
     <div className="tpl-shell">
+      {r.fresher && (
+        <div className="fresher-template-note">
+          <span aria-hidden="true">🎓</span>
+          <span><b>Fresher Mode:</b> entry-level designs are shown first. They give projects, education and skills room to carry the page without inventing work history.</span>
+        </div>
+      )}
+
       <div className="tpl-bar">
         <div className="chips tpl-chips" role="group" aria-label="Template categories">
           <button type="button" className={`chip tpl-chip tpl-chip-cat ${cat === 'all' ? 'on' : ''}`} aria-pressed={cat === 'all'} onClick={() => setCat('all')}>
@@ -174,10 +185,10 @@ export default function TemplateGallery({
             type="button"
             className={`chip tpl-chip tpl-best ${bestOnly ? 'on' : ''}`}
             aria-pressed={bestOnly}
-            title={`Show designs that fit ${f.label} best`}
+            title={r.fresher ? 'Show fresher-first and career-field best fits' : `Show designs that fit ${f.label} best`}
             onClick={() => setBestOnly((v) => !v)}
           >
-            ★ Best fit
+            {r.fresher ? '🎓 Fresher picks' : '★ Best fit'}
           </button>
         </div>
       </div>
