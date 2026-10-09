@@ -1,0 +1,8 @@
+.fresher-launch{border-color:#9ab8df;background:#f4f8ff;color:#174c8c;font-weight:800}
+.fresher-card{border-color:#c7d9ef}
+.fresher-mode-badge{display:inline-flex;align-items:center;max-width:100%;margin:0 6px 6px 0;padding:4px 8px;border-radius:999px;background:#edf7f3;color:#116b51;font-size:10.5px;font-weight:850;line-height:1.25;overflow-wrap:anywhere}
+.fresher-mode-next{margin:0 0 8px;padding:8px 9px;border:1px solid #dbe7f4;border-radius:9px;background:#f8fbff;color:#4b6078;font-size:11px;line-height:1.4}
+.fresher-template-note{display:flex;align-items:flex-start;gap:8px;margin:0 0 12px;padding:10px 12px;border:1px solid #cfe0f5;border-radius:11px;background:#f7fbff;color:#315b88;font-size:12px;line-height:1.45}
+.fresher-template-note b{color:#174c8c}
+@media(max-width:760px){.fresher-launch{min-height:44px}.fresher-template-note{padding:10px;font-size:11.5px}.fresher-mode-badge{border-radius:9px}.fresher-mode-next{font-size:11px}}
+@media(max-width:390px){.fresher-launch{width:100%}.fresher-template-note{border-radius:9px}}
