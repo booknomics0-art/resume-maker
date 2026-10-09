@@ -41,21 +41,16 @@ export function saveJobDescription(resumeId: string, value: string): void {
   try { localStorage.setItem(JD_KEY, json); } catch { /* ATS can still work without persistence */ }
 }
 
-export function createJobSpecificResume(sourceId: string, input: JobVersionInput): Resume | null {
-  if (!sourceId || !isSafeString(sourceId)) return null;
+export function buildJobSpecificCopy(src: Resume, input: JobVersionInput, now = Date.now(), newId = uid()): Resume | null {
   const company = sanitizeInput(input.company, 120);
   const role = sanitizeInput(input.role, 120);
   if (!company || !role) return null;
 
-  const src = loadResumes().find((resume) => resume.id === sourceId);
-  if (!src) return null;
-
   const copy: Resume = JSON.parse(JSON.stringify(src));
-  const now = Date.now();
   const rootSourceId = src.application?.kind === 'job-specific' ? src.application.sourceResumeId : src.id;
   const rootSourceName = src.application?.kind === 'job-specific' ? src.application.sourceResumeName : src.name;
 
-  copy.id = uid();
+  copy.id = newId;
   copy.name = `${role} — ${company}`;
   copy.createdAt = now;
   copy.updatedAt = now;
@@ -68,14 +63,24 @@ export function createJobSpecificResume(sourceId: string, input: JobVersionInput
     role,
     createdAt: now,
   };
+  return copy;
+}
+
+export function createJobSpecificResume(sourceId: string, input: JobVersionInput): Resume | null {
+  if (!sourceId || !isSafeString(sourceId)) return null;
+  const src = loadResumes().find((resume) => resume.id === sourceId);
+  if (!src) return null;
+
+  const copy = buildJobSpecificCopy(src, input);
+  if (!copy) return null;
 
   const saved = upsertResume(copy);
   saveJobDescription(saved.id, input.jobDescription ?? '');
   auditLog('JOB_SPECIFIC_RESUME_CREATED', {
-    sourceResumeId: rootSourceId,
+    sourceResumeId: saved.application?.sourceResumeId ?? sourceId,
     newResumeId: saved.id,
-    company,
-    role,
+    company: saved.application?.company ?? '',
+    role: saved.application?.role ?? '',
     hasJobDescription: !!input.jobDescription?.trim(),
   });
   return saved;
