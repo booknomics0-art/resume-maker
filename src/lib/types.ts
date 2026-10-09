@@ -51,6 +51,15 @@ export interface LanguageItem {
   level: string;
 }
 
+export interface JobSpecificResumeMeta {
+  kind: 'job-specific';
+  sourceResumeId: string;
+  sourceResumeName: string;
+  company: string;
+  role: string;
+  createdAt: number;
+}
+
 export interface Resume {
   id: string;
   name: string;
@@ -60,6 +69,8 @@ export interface Resume {
   updatedAt: number;
   step: number; // last completed step index
   fresher: boolean; // no work experience yet
+  /** Present only on a job-specific copy. The source/master resume is never modified. */
+  application?: JobSpecificResumeMeta;
   personal: PersonalInfo;
   summary: string;
   bestExperience: string; // free-form "Others" section; legacy key kept for saved-resume compatibility
