@@ -6,6 +6,7 @@ const app = readFileSync(join(root, 'src', 'App.tsx'), 'utf8');
 const landing = readFileSync(join(root, 'src', 'components', 'SeoLanding.tsx'), 'utf8');
 const seo = readFileSync(join(root, 'src', 'lib', 'seo.ts'), 'utf8');
 const prerender = readFileSync(join(root, 'scripts', 'prerender-seo.mjs'), 'utf8');
+const postprocess = readFileSync(join(root, 'scripts', 'seo-postprocess.mjs'), 'utf8');
 const sitemap = readFileSync(join(root, 'public', 'sitemap.xml'), 'utf8');
 
 const routes = [
@@ -23,6 +24,7 @@ for (const route of routes) {
   ok(`${route} has runtime SEO metadata`, seo.includes(`'${route}':`));
   ok(`${route} has static prerender content`, prerender.includes(`'${route}':`));
   ok(`${route} is listed in sitemap`, sitemap.includes(`https://www.resumemakery.com${route}`));
+  ok(`${route} is included in deep-page schema cleanup`, postprocess.includes(`'${route.slice(1)}'`));
 }
 
 ok('ATS page describes two separate scores',
@@ -39,6 +41,8 @@ ok('fresher guidance does not require formal work history',
   landing.includes('does not require formal work history'));
 ok('prerender related-links set includes every ATS growth route',
   routes.every((route) => prerender.includes(route)));
+ok('schema cleanup removes inherited homepage FAQPage scripts',
+  postprocess.includes('script.includes(\'"@type": "FAQPage"\')'));
 ok('sitemap contains no duplicate URLs', (() => {
   const urls = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
   return urls.length === new Set(urls).size;
