@@ -4,12 +4,14 @@ import {
   deleteResume, duplicateResume, loadResumes, sampleResume, upsertResume,
 } from '../lib/store';
 import { createJobSpecificResume } from '../lib/jobVersion';
+import { buildFresherReadiness, createFresherResume } from '../lib/fresherMode';
 import { fieldById } from '../lib/fields';
 import { navigate } from '../lib/navigation';
 import { Thumb } from './Preview';
 import { RESUMES_CHANGED_EVENT } from '../lib/cloud';
 import CloudBadge from './CloudBadge';
 import './JobVersion.css';
+import './FresherMode.css';
 
 export default function Dashboard() {
   const [resumes, setResumes] = useState(loadResumes());
@@ -37,6 +39,12 @@ export default function Dashboard() {
     : 0;
 
   const newResume = () => navigate('/editor/new');
+  const newFresherResume = () => {
+    const s = createFresherResume();
+    upsertResume(s);
+    refresh();
+    navigate(`/editor/${s.id}`);
+  };
   const addSample = () => {
     const s = sampleResume();
     upsertResume(s);
@@ -76,6 +84,7 @@ export default function Dashboard() {
         </div>
         <div className="row">
           <button className="btn" onClick={() => navigate('/import')}>📤 Upload & Edit Resume</button>
+          <button className="btn fresher-launch" onClick={newFresherResume}>🎓 Fresher resume</button>
           <button className="btn" onClick={addSample}>Load sample resume</button>
           <button className="btn primary" onClick={newResume}>+ New resume</button>
         </div>
@@ -93,12 +102,13 @@ export default function Dashboard() {
           <div style={{ textAlign: 'left' }}>
             <h3 style={{ textAlign: 'left' }}>No resumes yet</h3>
             <p style={{ textAlign: 'left' }}>
-              Create your first master resume, or load the finished sample —
+              Create your first master resume, start with <b>Fresher Mode</b>, or load the finished sample —
               <b> Amit Shukla, Senior Software Engineer</b> — and edit any field.
-              <br />After that, use <b>Tailor for job</b> to create a company-specific copy without touching your master.
+              <br />Fresher Mode focuses on education, skills, projects and real proof instead of forcing fake work experience.
             </p>
             <div className="row" style={{ justifyContent: 'flex-start', marginTop: 14 }}>
               <button className="btn primary" onClick={newResume}>+ Create resume</button>
+              <button className="btn fresher-launch" onClick={newFresherResume}>🎓 Start as fresher</button>
               <button className="btn" onClick={() => navigate('/import')}>📤 Upload existing</button>
               <button className="btn" onClick={addSample}>Load the sample →</button>
             </div>
@@ -119,12 +129,16 @@ export default function Dashboard() {
           {resumes.map((r) => {
             const pct = completeness(r);
             const f = fieldById(r.fieldId);
+            const fresher = r.fresher ? buildFresherReadiness(r) : null;
             return (
-              <div className={`card resume-card ${r.application ? 'job-specific-card' : ''}`} key={r.id}>
+              <div className={`card resume-card ${r.application ? 'job-specific-card' : ''} ${r.fresher ? 'fresher-card' : ''}`} key={r.id}>
                 <div className="thumb" onClick={() => navigate(`/editor/${r.id}`)} style={{ cursor: 'pointer' }}>
                   <div className="thumb-wrap"><Thumb r={r} /></div>
                 </div>
                 <div className="body">
+                  {r.fresher && fresher && (
+                    <div className="fresher-mode-badge">🎓 Fresher Mode · {fresher.score}% ready</div>
+                  )}
                   {r.application?.kind === 'job-specific' && (
                     <div className="job-version-badge">🎯 {r.application.company} · {r.application.role}</div>
                   )}
@@ -136,6 +150,9 @@ export default function Dashboard() {
                     <span>{f.icon} {f.label}</span>
                     <span>{new Date(r.updatedAt).toLocaleDateString()}</span>
                   </div>
+                  {fresher && fresher.score < 100 && (
+                    <div className="fresher-mode-next"><b>Next:</b> {fresher.nextAction}</div>
+                  )}
                   <div className="progress"><div style={{ width: `${pct}%` }} /></div>
                   <div className="mini-meta">
                     <span>{pct === 100 ? '✓ Ready to send' : `${pct}% complete`}</span>
