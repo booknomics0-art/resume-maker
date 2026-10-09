@@ -30,23 +30,83 @@ const pages = {
     ],
   },
   '/ats-resume-checker': {
-    title: 'Free ATS Resume Checker & Job Match | ResumeMakery',
-    description: 'Compare your resume with a real job description, find relevant missing terms and improve the same resume in ResumeMakery.',
-    kicker: 'FREE ATS RESUME CHECKER',
-    h1: 'Compare your resume with the job you actually want',
-    intro: 'Paste a real job description and see which important terms your resume already covers and which relevant terms may be missing.',
-    answer: 'An ATS resume check is most useful when it compares your resume with the exact job description. ResumeMakery checks keyword and term coverage, shows relevant gaps and lets you edit and re-check the same resume. It is diagnostic guidance, not a promise that an employer will shortlist you.',
+    title: 'Free ATS Resume Checker 2.0 — Job Match + Resume Score | ResumeMakery',
+    description: 'Check job-description match and resume readiness separately, then get prioritized Issue → Why → Fix guidance while you edit.',
+    kicker: 'FREE ATS RESUME CHECKER 2.0',
+    h1: 'Get a job match score, resume readiness score and priority fixes',
+    intro: 'Paste the job description you want and review two separate signals: how well your resume matches the role and how ready the resume itself is.',
+    answer: 'ResumeMakery ATS 2.0 separates job-description match from resume readiness. Job Match measures covered versus missing terms from the job description. Resume Readiness checks practical resume signals such as contact details, summary quality, evidence bullets, measurable results, action verbs and readability. Problems are turned into prioritized Issue → Why → Fix guidance. The results are deterministic guidance, not an employer-specific ATS simulation or an interview guarantee.',
     sections: [
-      ['Use a real job ad', 'Generic resume scores can miss the point because ATS screening is role-specific. Paste the actual description for the role you want so the comparison reflects the employer’s language.'],
-      ['Keep claims truthful', 'Add missing skills or terms only when they genuinely describe your experience. Keyword stuffing, copied requirements and unsupported claims can reduce readability and credibility.'],
-      ['Fix in the same editor', 'Move directly from the ATS result to the resume content and re-check as you improve it. This makes the score a practical editing loop rather than a one-time number.'],
+      ['Separate match from quality', 'A resume can contain many job keywords and still be weakly written. ResumeMakery keeps job-description coverage separate from structural and content readiness instead of hiding both ideas inside one opaque number.'],
+      ['Show evidence, not keyword stuffing', 'If a matched skill appears only in the Skills list, ATS 2.0 can flag the lack of supporting evidence in your summary, experience or projects. Add proof only when it is true.'],
+      ['Fix the highest-impact issue first', 'Problems are ordered as Fix first, Improve or Polish. The report explains why each issue matters and gives a concrete next action before you re-check the resume.'],
     ],
-    steps: ['Paste the full relevant job description instead of only a generic job title.', 'Review covered and missing terms, separating genuinely relevant skills from employer wording that does not apply to you.', 'Rewrite truthful bullets with clearer evidence and re-check the updated resume before applying.'],
+    steps: ['Build or import the resume you actually plan to send.', 'Paste the full responsibilities and requirements from the target job description.', 'Work through the priority fixes, keep every claim truthful and re-check as the resume changes.'],
     faqs: [
-      ['Does a high ATS score guarantee an interview?', 'No. ATS matching is a diagnostic tool, not a hiring guarantee. Recruiter judgment, experience, role fit, competition and employer-specific rules still matter.'],
-      ['Is the ATS checker free?', 'Yes. It is included in ResumeMakery and does not require a separate paid ATS subscription in the current product.'],
-      ['What should I do with missing keywords?', 'Use them only when they accurately describe your real skills or experience. A strong resume explains evidence and outcomes instead of simply copying a list of keywords.'],
-      ['Do I need to upload the job description?', 'No file upload is required for the job description. You can paste the relevant job-description text and compare it with your resume.'],
+      ['What does ResumeMakery ATS 2.0 check?', 'It checks job-description keyword coverage plus resume-readiness signals such as contact completeness, summary quality, evidence bullets, measurable results, action verbs and readability. It can also identify some matched skills that appear only in the Skills list without supporting evidence elsewhere.'],
+      ['Does a high ATS score guarantee an interview?', 'No. Employers use different systems, rules and human judgment. ResumeMakery reports deterministic signals from the resume and job description you provide; it does not know an employer’s private ATS configuration.'],
+      ['What should I do with a missing keyword?', 'Add it only when it accurately reflects your real background. When possible, show truthful evidence in a project, summary or experience bullet instead of copying a requirement into a keyword list.'],
+      ['Is the readiness score fair for freshers?', 'Fresher mode does not require formal work history when none exists. It focuses on the applicable checks and encourages real projects or achievements as evidence.'],
+    ],
+  },
+  '/job-description-resume-match': {
+    title: 'Resume vs Job Description Match Checker | ResumeMakery',
+    description: 'Compare your resume with a real job description, see covered and missing role terms, identify evidence gaps and re-check while editing.',
+    kicker: 'RESUME VS JOB DESCRIPTION MATCH',
+    h1: 'Compare your resume with a job description before you apply',
+    intro: 'Use the exact job posting to see which role-specific terms are already represented in your resume, which are missing and which matched skills still need evidence.',
+    answer: 'A resume-to-job-description match compares the language of your resume with the actual role you are targeting. ResumeMakery extracts relevant job terms, reports the terms already covered, highlights missing terms and separates simple keyword presence from stronger evidence in summaries, projects and experience. The goal is to tailor truthfully for one application — not to copy the job description.',
+    sections: [
+      ['Match the exact role', 'Two jobs with the same title can emphasize different tools, methods and responsibilities. Matching against the actual posting gives you a more relevant signal than a generic resume grade.'],
+      ['Find what is genuinely missing', 'The report surfaces terms present in the posting but absent from your resume. Review them manually and add only the ones you can honestly support.'],
+      ['Strengthen proof for matched skills', 'A term in a Skills list shows presence; a concise project or achievement shows evidence. ResumeMakery distinguishes these cases so you know where stronger support may help.'],
+    ],
+    steps: ['Open the resume version for the specific job.', 'Paste the full posting, including responsibilities and requirements.', 'Adjust truthful emphasis, improve evidence and re-check before applying.'],
+    faqs: [
+      ['What is a good resume-to-job-description match?', 'There is no universal percentage that guarantees success. Use the score as a directional coverage signal, then inspect the actual missing terms, evidence and resume quality before applying.'],
+      ['Should I copy every keyword from the job description?', 'No. Copying unsupported skills or qualifications creates an inaccurate resume. Use employer wording only where it truthfully describes your background.'],
+      ['Why can two jobs with the same title get different match scores?', 'Because each job description can prioritize different tools, responsibilities, qualifications and terminology. The comparison should reflect the specific posting.'],
+      ['Can I re-check after editing?', 'Yes. In the ResumeMakery editor the match updates as the resume or pasted job description changes.'],
+    ],
+  },
+  '/ats-keyword-checker': {
+    title: 'Free ATS Keyword Checker — Find Missing Resume Keywords | ResumeMakery',
+    description: 'Extract relevant job-description terms, see covered and missing resume keywords, and identify matched skills that still need evidence.',
+    kicker: 'FREE ATS KEYWORD CHECKER',
+    h1: 'Find covered and missing resume keywords from a real job description',
+    intro: 'Paste a job description to identify relevant terms, see which ones are already on your resume and review missing terms without turning the resume into a keyword-stuffed list.',
+    answer: 'An ATS keyword checker looks for important job-description terms and compares them with your resume. ResumeMakery reports covered and missing terms and can also highlight matched skills that appear only in the Skills list without supporting evidence elsewhere. Missing terms are suggestions to review, not instructions to add claims you cannot support.',
+    sections: [
+      ['Extract role-specific terms', 'The checker looks for relevant skills, tools and multi-word terms from the job description rather than treating every common word as an important keyword.'],
+      ['Review missing terms safely', 'A missing term is useful only if it reflects something you actually know or have done. ResumeMakery explicitly tells users not to invent skills, metrics or experience.'],
+      ['Move from keyword to evidence', 'When a skill is present only in the Skills section, add a real example in a project or work bullet if you genuinely used it. Evidence is more credible than repetition.'],
+    ],
+    steps: ['Paste the responsibilities and requirements from the target job.', 'Review covered and missing terms instead of chasing only a percentage.', 'Add truthful context in projects, achievements or experience and re-check.'],
+    faqs: [
+      ['What counts as an ATS keyword?', 'Common examples include tools, technologies, certifications, methods, role-specific skills and some multi-word competencies explicitly present in a job description.'],
+      ['Should I repeat keywords many times?', 'No. Repetition without useful evidence can make a resume harder to read. Use accurate terminology naturally where it belongs.'],
+      ['Why does ResumeMakery flag a skill that is already in my Skills section?', 'It may be flagging an evidence gap, not a missing keyword. The skill can be present while still lacking a project, summary or experience example that shows where you used it.'],
+      ['Does the checker upload my job description?', 'The ATS matching workflow is designed to run on-device in the current product; the pasted job description is used for the local comparison and stored per resume in browser storage for convenience.'],
+    ],
+  },
+  '/resume-score-checker': {
+    title: 'Free Resume Score Checker — Resume Readiness | ResumeMakery',
+    description: 'Check contact completeness, summary quality, evidence bullets, measurable results, action verbs and readability separately from job match.',
+    kicker: 'FREE RESUME SCORE CHECKER',
+    h1: 'Check resume readiness without confusing it with job match',
+    intro: 'Review practical resume-quality signals recruiters can scan quickly: contact completeness, summary quality, evidence bullets, measurable results, action verbs and readability.',
+    answer: 'ResumeMakery’s Resume Readiness score evaluates practical content and structure checks that apply to the resume itself. It is intentionally separate from the Job Match score. A resume can be well written but poorly targeted to one role, or highly keyword-matched but weakly evidenced. Seeing both signals makes the next edit clearer.',
+    sections: [
+      ['Check the basics recruiters need', 'A missing email, phone, city, useful summary or education entry can weaken an otherwise promising resume. Readiness checks surface these practical gaps.'],
+      ['Turn duties into evidence', 'The checker looks for experience bullets, measurable outcomes and stronger action-led phrasing. The goal is clearer evidence, not exaggerated claims.'],
+      ['Keep fresher scoring applicable', 'When fresher mode has no formal work history, ResumeMakery does not require the same work-experience bullet checks. Projects and achievements become more important evidence.'],
+    ],
+    steps: ['Open or import the resume you actually plan to use.', 'Fix failed readiness checks, starting with contact information, summary and evidence.', 'Add the target job description separately to measure Job Match for that role.'],
+    faqs: [
+      ['Is a resume score the same as an ATS match score?', 'No. Resume readiness measures quality and completeness signals of the resume itself. Job Match compares the resume with a specific job description. ResumeMakery shows them separately.'],
+      ['Can a resume score 100 and still be wrong for a job?', 'Yes. A structurally strong resume can still be poorly targeted to a specific role. That is why a separate job-description match is useful.'],
+      ['Does the score judge design taste?', 'The readiness score focuses on deterministic content and structure checks rather than pretending to know a recruiter’s personal design preference.'],
+      ['Do freshers need work experience to get a useful score?', 'No. Fresher mode avoids requiring formal experience when it does not exist and instead rewards applicable evidence such as education, projects and achievements.'],
     ],
   },
   '/resume-editor': {
@@ -132,9 +192,19 @@ function replaceMetaProperty(html, property, value) {
   const tag = `<meta property="${property}" content="${escapeHtml(value)}" />`;
   return re.test(html) ? html.replace(re, tag) : html.replace('</head>', `  ${tag}\n</head>`);
 }
+const relatedToolRoutes = [
+  '/resume-builder',
+  '/ats-resume-checker',
+  '/job-description-resume-match',
+  '/ats-keyword-checker',
+  '/resume-score-checker',
+  '/resume-editor',
+  '/resume-templates',
+  '/resume-for-freshers',
+];
 function relatedLinks(route) {
   return Object.entries(pages)
-    .filter(([path]) => path !== route && ['/resume-builder','/ats-resume-checker','/resume-editor','/resume-templates','/resume-for-freshers'].includes(path))
+    .filter(([path]) => path !== route && relatedToolRoutes.includes(path))
     .map(([path, page]) => `<a href="${path}">${escapeHtml(page.kicker.toLowerCase())}</a>`)
     .join(' · ');
 }
