@@ -12,6 +12,9 @@ import Footer from './Footer';
 import type { GoogleAuthIssue } from '../lib/googleAuth';
 import './LandingV2.css';
 
+type Testimonial = { name: string; role: string; quote: string };
+const TESTIMONIALS: Testimonial[] = [];
+
 const STRIP_INDICES = [0, 7, 14, 21, 28, 35];
 const stripTemplates: Template[] = STRIP_INDICES
   .map((index) => TEMPLATES[index])
@@ -39,8 +42,16 @@ const FAQS = [
     a: 'No. Your downloaded resume is a clean PDF without ResumeMakery branding or a hidden download paywall.',
   },
   {
+    q: 'How long can my resume be?',
+    a: 'ResumeMakery supports multi-page resumes. The best length depends on your experience and the role, so keep every section relevant rather than padding the document.',
+  },
+  {
+    q: 'Where is my resume data processed?',
+    a: 'Resume import parsing, OCR and ATS-related processing are designed to run in your browser where possible. Signed-in cloud storage is protected separately by the existing account and database controls.',
+  },
+  {
     q: 'Do I need an account to build a resume?',
-    a: 'Yes, at the moment a free account is required to enter the editor or import flow. We keep that requirement explicit so there is no surprise after you click a build button.',
+    a: 'Yes. Sign in or create a free account to enter the editor or import flow. We keep that requirement explicit so there is no surprise after you click a build button.',
   },
 ];
 
@@ -316,6 +327,22 @@ export default function Landing({
             <article className="rm2-proof-card"><strong>Real reviews only</strong><p>Social proof should be added only when feedback has actually been collected from users.</p></article>
           </div>
         </section>
+
+        {TESTIMONIALS.length > 0 && (
+          <section className="rm2-section rm2-tight" id="reviews">
+            <div className="rm2-kicker">Real user feedback</div>
+            <h2>What job seekers say.</h2>
+            <div className="rm2-proof-grid">
+              {TESTIMONIALS.map((item) => (
+                <blockquote className="rm2-proof-card" key={`${item.name}-${item.role}`}>
+                  <strong>{item.name}</strong>
+                  <p>{item.role}</p>
+                  <p>“{item.quote}”</p>
+                </blockquote>
+              ))}
+            </div>
+          </section>
+        )}
 
         <section className="rm2-section rm2-tight" aria-labelledby="explore-heading">
           <div className="rm2-kicker">Explore</div>
