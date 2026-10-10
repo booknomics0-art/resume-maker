@@ -17,6 +17,7 @@ import './exact-editor-v2.css';
 import './pagination.css';
 import './navigation-ux.css';
 import './navigation-badges-off.css';
+import './app-theme.css';
 
 // Preserve the exact uploaded source file before the existing parser/OCR reads
 // it, keep route motion consistent, make mobile import validation visible, and
