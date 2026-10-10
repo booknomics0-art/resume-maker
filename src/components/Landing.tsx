@@ -23,7 +23,7 @@ const stripTemplates: Template[] = STRIP_INDICES
 const FAQS = [
   {
     q: 'Is ResumeMakery really 100% free?',
-    a: 'Yes. Every template, the ATS match score, upload & edit, and unlimited PDF downloads are free. There is no paid plan, no trial, no credit card and no watermark — the product has no billing at all.',
+    a: 'Yes. Building, templates, ATS tools and PDF downloads are free. Your first resume and first PDF need no account; a free account is required only to save your work and continue downloading after that. There is no paid plan, trial, credit card or watermark.',
   },
   {
     q: 'Can I edit my existing resume?',
@@ -35,11 +35,11 @@ const FAQS = [
   },
   {
     q: 'How many resumes can I create?',
-    a: 'Unlimited. Duplicate a resume and tailor one version per job application — something most builders restrict to a single resume even on paid plans.',
+    a: 'Unlimited with a free account. You can also build your first resume as a guest before signing up, then save it to your account and create job-specific versions later.',
   },
   {
     q: 'Do the free downloads have a watermark or branding?',
-    a: 'No. The PDF you download is the final file: no watermark, no “made with” link, no hidden paywall pages. It is even saved under your resume’s own name.',
+    a: 'No. The PDF you download is the final file: no watermark, no “made with” link, no hidden payment page. Your first guest PDF is available without an account, and future downloads only require a free account.',
   },
   {
     q: 'How many pages can my resume be?',
@@ -47,11 +47,11 @@ const FAQS = [
   },
   {
     q: 'Where is my data stored?',
-    a: 'In your browser by default, and optionally in your own cloud database when you sign in. Parsing, OCR and ATS scoring all run on your device — we never sell or share your data.',
+    a: 'As a guest, your draft is temporary in the current browser session and is not saved to your ResumeMakery account or cloud. After you sign in, resumes can be saved and synced. Parsing, OCR and ATS scoring still run on your device — we never sell or share your data.',
   },
   {
     q: 'Do I need an account to try it?',
-    a: 'Yes. Sign in or create a free account to build or import your resume. Resume building and downloads are completely free.',
+    a: 'No. You can build your first resume and download the first PDF without signing up. Guest work is temporary; create a free account to save the resume, return to it later and make future downloads.',
   },
 ];
 
@@ -151,10 +151,10 @@ export default function Landing({
                   Check ATS workflow
                 </a>
               </div>
-              <div className="rm2-microcopy">Free account required to enter the editor. No card, no trial and no watermark.</div>
+              <div className="rm2-microcopy">No sign-up for your first resume or first PDF. Guest drafts are temporary; create a free account to save your work and keep downloading.</div>
 
               <div className="rm2-trust-row" aria-label="Key product benefits">
-                <span className="rm2-trust-pill">✓ Unlimited clean PDFs</span>
+                <span className="rm2-trust-pill">✓ First PDF without sign-up</span>
                 <span className="rm2-trust-pill">✓ PDF · DOCX · photo import</span>
                 <span className="rm2-trust-pill">✓ Job-description matching</span>
                 <span className="rm2-trust-pill">✓ Fresher-friendly</span>
@@ -232,7 +232,7 @@ export default function Landing({
             <article className="rm2-value-card">
               <div className="rm2-value-icon">🔓</div>
               <h3>Actually free downloads</h3>
-              <p>Templates, resume creation and clean PDF downloads stay available without a watermark or checkout surprise.</p>
+              <p>Your first guest PDF needs no account, and a free account unlocks future downloads — still with no watermark, checkout or paid plan.</p>
             </article>
             <article className="rm2-value-card">
               <div className="rm2-value-icon">🇮🇳</div>
@@ -322,7 +322,7 @@ export default function Landing({
           <h2>Trust should come from verifiable product facts.</h2>
           <p className="rm2-section-lede">We are deliberately not adding fake testimonials, fake user counts or invented recruiter endorsements.</p>
           <div className="rm2-proof-grid">
-            <article className="rm2-proof-card"><strong>No hidden PDF paywall</strong><p>The current product is positioned around clean, watermark-free downloads instead of a fake-free funnel.</p></article>
+            <article className="rm2-proof-card"><strong>No hidden PDF paywall</strong><p>Downloads stay free: one guest PDF before signup, then unlimited future downloads with a free account — never a payment wall.</p></article>
             <article className="rm2-proof-card"><strong>On-device resume processing</strong><p>Import parsing, OCR and ATS-related processing are designed to run in the browser where possible.</p></article>
             <article className="rm2-proof-card"><strong>Real reviews only</strong><p>Social proof should be added only when feedback has actually been collected from users.</p></article>
           </div>
@@ -374,7 +374,7 @@ export default function Landing({
         <div className="rm2-final-wrap">
           <section className="rm2-final">
             <h2>Make the resume fit the opportunity.</h2>
-            <p>Build it, compare it with the job, improve what is true and download the final PDF.</p>
+            <p>Build the first one without signing up. Create a free account only when you want to save it and keep downloading.</p>
             <div className="rm2-cta-row">
               <button className="rm2-btn primary" type="button" onClick={() => onStart('/editor/new')}>Build my resume — free</button>
               <a className="rm2-btn secondary" href="/ats-resume-checker">See ATS checker</a>

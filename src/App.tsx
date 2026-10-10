@@ -23,9 +23,14 @@ import { cloudEnabled } from './lib/supabase';
 import { cloudBootAuth, cloudCurrentUser, cloudResumeGoogleStart, touchProfile } from './lib/cloud';
 import { hasAuthCallback } from './lib/authRedirect';
 import type { GoogleAuthIssue } from './lib/googleAuth';
-import { syncWithCloud } from './lib/store';
+import { syncWithCloud, upsertResume } from './lib/store';
+import {
+  clearGuestAuthPending, clearGuestDraft, guestAuthPending, guestDownloadUsed,
+  loadGuestDraft, markGuestAuthPending,
+} from './lib/guestAccess';
 import { migrateLegacyHashRoute, NAVIGATION_EVENT, navigate, normalizePath } from './lib/navigation';
 import { applySeo } from './lib/seo';
+import './guest-flow.css';
 
 function usePathRoute() {
   const [path, setPath] = useState(() => {
@@ -44,6 +49,17 @@ function usePathRoute() {
   return path;
 }
 
+function claimGuestDraft(): boolean {
+  if (!guestAuthPending()) return false;
+  const draft = loadGuestDraft();
+  clearGuestAuthPending();
+  if (!draft) return false;
+  const saved = upsertResume(draft);
+  clearGuestDraft();
+  navigate(`/editor/${saved.id}`);
+  return true;
+}
+
 export default function App() {
   const [user, setUser] = useState<User | null>(() => currentUser());
   const [menuOpen, setMenuOpen] = useState(false);
@@ -52,6 +68,25 @@ export default function App() {
   const [booting, setBooting] = useState(() => cloudEnabled() && hasAuthCallback());
   const [authNotice, setAuthNotice] = useState<GoogleAuthIssue | null>(null);
   const tab = usePathRoute();
+
+  const startPublic = (target?: string) => {
+    const destination = target || '/editor/new';
+    if (destination === '/editor/new') {
+      clearGuestAuthPending();
+      // Once the one guest download has been used, clicking Build again starts a
+      // genuinely new temporary resume instead of silently reopening the old one.
+      if (guestDownloadUsed()) clearGuestDraft();
+    }
+    navigate(destination);
+  };
+
+  const finishAuth = async () => {
+    const next = currentUser();
+    setUser(next);
+    if (!next || !guestAuthPending()) return;
+    await syncWithCloud();
+    claimGuestDraft();
+  };
 
   useEffect(() => { applySeo(tab); }, [tab]);
 
@@ -97,6 +132,7 @@ export default function App() {
           setUser(currentUser());
           void touchProfile();
           await syncWithCloud();
+          claimGuestDraft();
         } else {
           // e.g. "Google login is switched off for this project" — shown on the
           // login card together with the exact fix, never as a silent failure.
@@ -115,6 +151,7 @@ export default function App() {
         }
         void touchProfile();
         await syncWithCloud();
+        claimGuestDraft();
       } else if (currentUser() && !isOfflineSession()) {
         // A local session without its cloud session must sign in again —
         // unless it was an intentional offline fallback (cloud unreachable at
@@ -160,8 +197,39 @@ export default function App() {
     if (tab === '/' || tab === '') {
       return (
         <Suspense fallback={<div className="card pad">Loading ResumeMakery…</div>}>
-          <Landing notice={authNotice} onStart={(target) => navigate(target || '/editor/new')} />
+          <Landing notice={authNotice} onStart={startPublic} />
         </Suspense>
+      );
+    }
+
+    // The first resume is deliberately account-free. Guest editing is isolated
+    // from the signed-in dashboard: the draft is session-only and the editor
+    // itself enforces the one free guest PDF entitlement.
+    if (tab === '/editor/new') {
+      return (
+        <div className="guest-workspace">
+          <header className="guest-topbar no-print">
+            <a href="/" className="guest-brand" onClick={(e) => { e.preventDefault(); navigate('/'); }}>
+              <div className="brand-badge">RM</div>
+              <span className="guest-brand-copy">
+                <b>ResumeMakery</b>
+                <span>Guest resume builder</span>
+              </span>
+            </a>
+            <div className="guest-status">
+              <b>No sign-up needed to build.</b> Your draft is temporary and is not saved to your account or cloud.
+            </div>
+            <button className="btn small primary" type="button" onClick={() => { markGuestAuthPending(); navigate('/signup'); }}>
+              Sign up to save
+            </button>
+          </header>
+          <main className="guest-main">
+            <Suspense fallback={<div className="card pad">Loading resume builder…</div>}>
+              <Editor key="guest-new" id="new" />
+            </Suspense>
+          </main>
+          <Footer />
+        </div>
       );
     }
 
@@ -178,8 +246,8 @@ export default function App() {
     if (seoRoutes.has(tab)) {
       return (
         <Suspense fallback={<div className="card pad">Loading ResumeMakery…</div>}>
-          <PublicShell onStart={(target) => navigate(target || '/editor/new')}>
-            <SeoLanding route={tab} onStart={(target) => navigate(target || '/editor/new')} />
+          <PublicShell onStart={startPublic}>
+            <SeoLanding route={tab} onStart={startPublic} />
           </PublicShell>
         </Suspense>
       );
@@ -198,7 +266,7 @@ export default function App() {
     if (publicInfo[tab]) {
       return (
         <Suspense fallback={<div className="card pad">Loading ResumeMakery…</div>}>
-          <PublicShell onStart={(target) => navigate(target || '/editor/new')}>
+          <PublicShell onStart={startPublic}>
             {publicInfo[tab]}
           </PublicShell>
         </Suspense>
@@ -207,7 +275,7 @@ export default function App() {
 
     return (
       <Suspense fallback={<div className="card pad">Loading sign-in…</div>}>
-        <AuthPage onAuth={() => setUser(currentUser())} notice={authNotice} />
+        <AuthPage onAuth={() => { void finishAuth(); }} notice={authNotice} />
       </Suspense>
     );
   }
