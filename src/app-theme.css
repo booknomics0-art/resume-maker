@@ -1,0 +1,261 @@
+/* ResumeMakery UI refresh — modern indigo + cobalt + cyan.
+   Product chrome only: resume template / print CSS stays untouched. */
+
+:root {
+  --navy-950: #0a1020;
+  --navy-900: #111827;
+  --navy-800: #1f2a5a;
+  --navy-700: #3730a3;
+  --navy-600: #4f46e5;
+  --navy-500: #6366f1;
+  --navy-100: #e0e7ff;
+  --navy-50: #eef2ff;
+  --silver-500: #667085;
+  --silver-400: #98a2b3;
+  --silver-300: #d0d5dd;
+  --silver-200: #eaecf0;
+  --silver-100: #f8fafc;
+  --ink: #101828;
+  --paper: #ffffff;
+  --ok: #039855;
+  --warn: #dc6803;
+  --err: #d92d20;
+  --shadow-sm: 0 2px 8px rgba(16, 24, 40, .06);
+  --shadow-md: 0 14px 34px rgba(31, 42, 90, .13);
+}
+
+body {
+  background: linear-gradient(180deg, #fbfcff 0%, #f6f8fc 100%);
+}
+
+/* Navigation */
+.sidebar,
+.mobile-topbar {
+  background:
+    radial-gradient(circle at 18% 0%, rgba(99,102,241,.22), transparent 34%),
+    linear-gradient(180deg, #161b36 0%, #0a1020 100%);
+}
+
+.brand-badge {
+  background: linear-gradient(145deg, #6366f1 0%, #4f46e5 45%, #2563eb 100%) !important;
+  border-color: rgba(255,255,255,.28) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.24), 0 10px 28px rgba(37,99,235,.24) !important;
+}
+
+.nav-item {
+  transition: background .18s ease, color .18s ease, border-color .18s ease, transform .18s ease;
+}
+.nav-item:hover {
+  background: rgba(99,102,241,.13);
+  border-color: rgba(165,180,252,.15);
+}
+.nav-item.active {
+  background: linear-gradient(90deg, rgba(99,102,241,.28), rgba(37,99,235,.14));
+  border-color: rgba(165,180,252,.30);
+  box-shadow: inset 3px 0 0 #818cf8;
+}
+
+/* Buttons and fields */
+.btn {
+  border-color: #d8dee9;
+  box-shadow: 0 1px 2px rgba(16,24,40,.03);
+  transition: transform .16s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
+}
+.btn:hover {
+  border-color: #a5b4fc;
+  box-shadow: 0 8px 20px rgba(79,70,229,.10);
+}
+.btn.primary {
+  background: linear-gradient(135deg, #4f46e5 0%, #2563eb 100%);
+  border-color: #4338ca;
+  box-shadow: 0 8px 22px rgba(79,70,229,.22);
+}
+.btn.primary:hover {
+  filter: none;
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px rgba(79,70,229,.28);
+}
+.input:focus, .textarea:focus, .select:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 4px rgba(99,102,241,.14);
+}
+
+/* Cards and dashboard */
+.card {
+  border-color: #e5e9f2;
+  box-shadow: 0 2px 10px rgba(16,24,40,.045);
+}
+.resume-card {
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.resume-card:hover {
+  transform: translateY(-2px);
+  border-color: #c7d2fe;
+  box-shadow: 0 16px 36px rgba(79,70,229,.10);
+}
+.stat:not(.silver) {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(34,211,238,.18), transparent 34%),
+    linear-gradient(135deg, #312e81 0%, #4f46e5 52%, #2563eb 100%);
+  border-color: rgba(99,102,241,.7);
+  box-shadow: 0 12px 28px rgba(49,46,129,.16);
+}
+.progress > div {
+  background: linear-gradient(90deg, #4f46e5 0%, #2563eb 62%, #06b6d4 100%);
+}
+
+/* Builder progress */
+.step-pill.current {
+  background: linear-gradient(135deg, #4f46e5, #2563eb);
+  border-color: #4338ca;
+  box-shadow: 0 6px 16px rgba(79,70,229,.18);
+}
+.step-pill.done {
+  background: #eef2ff;
+  color: #3730a3;
+  border-color: #c7d2fe;
+}
+.step-pill.done .dot {
+  background: #4f46e5;
+}
+.editor-mobile-tabs {
+  background: #eef2ff;
+  border: 1px solid #e0e7ff;
+}
+
+/* Auth and footer */
+.auth-side {
+  background:
+    radial-gradient(circle at 82% 12%, rgba(34,211,238,.14), transparent 28%),
+    radial-gradient(circle at 20% 12%, rgba(129,140,248,.22), transparent 34%),
+    linear-gradient(155deg, #1e1b4b 0%, #111827 58%, #0a1020 100%);
+}
+.auth-card-wrap {
+  background: linear-gradient(180deg, #fbfcff, #f5f7fb);
+}
+.site-footer {
+  background:
+    radial-gradient(circle at 12% 0%, rgba(99,102,241,.18), transparent 28%),
+    linear-gradient(180deg, #161b36, #0a1020);
+}
+
+/* Landing page: higher-energy but still professional. !important is intentional:
+   LandingV2.css is lazy-loaded and can otherwise win by load order. */
+.landing-v2 {
+  --rm2-ink: #101828 !important;
+  --rm2-muted: #667085 !important;
+  --rm2-border: #e4e7ec !important;
+  --rm2-soft: #f8fafc !important;
+  --rm2-accent: #4f46e5 !important;
+  --rm2-accent-2: #2563eb !important;
+  background: #ffffff !important;
+  color: #101828 !important;
+}
+.rm2-top {
+  border-bottom-color: rgba(224,231,255,.95) !important;
+  background: rgba(255,255,255,.90) !important;
+  box-shadow: 0 1px 0 rgba(79,70,229,.04) !important;
+}
+.rm2-brand-mark {
+  background: linear-gradient(145deg, #6366f1 0%, #4f46e5 48%, #2563eb 100%) !important;
+  box-shadow: 0 10px 28px rgba(79,70,229,.24) !important;
+}
+.rm2-nav a { color: #475467 !important; }
+.rm2-nav a:hover { color: #4338ca !important; }
+.rm2-btn {
+  color: #344054 !important;
+  border-color: #d0d5dd !important;
+  box-shadow: 0 1px 2px rgba(16,24,40,.03) !important;
+}
+.rm2-btn:hover {
+  border-color: #a5b4fc !important;
+  box-shadow: 0 8px 22px rgba(79,70,229,.10) !important;
+}
+.rm2-btn.primary {
+  color: #fff !important;
+  border-color: #4338ca !important;
+  background: linear-gradient(135deg, #4f46e5 0%, #2563eb 100%) !important;
+  box-shadow: 0 12px 30px rgba(79,70,229,.24) !important;
+}
+.rm2-btn.primary:hover {
+  filter: none !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 16px 36px rgba(79,70,229,.30) !important;
+}
+.rm2-btn.secondary { background: #f8fafc !important; }
+.rm2-hero {
+  background:
+    radial-gradient(circle at 84% 12%, rgba(79,70,229,.17), transparent 30%),
+    radial-gradient(circle at 16% 78%, rgba(6,182,212,.10), transparent 28%),
+    linear-gradient(180deg, #ffffff 0%, #f8faff 100%) !important;
+}
+.rm2-eyebrow {
+  border-color: #c7d2fe !important;
+  background: rgba(238,242,255,.88) !important;
+  color: #4338ca !important;
+}
+.rm2-hero h1 { color: #101828 !important; }
+.rm2-hero h1 em { color: #4f46e5 !important; }
+.rm2-lede { color: #596780 !important; }
+.rm2-trust-pill {
+  border-color: #e0e7ff !important;
+  background: #ffffff !important;
+  color: #475467 !important;
+  box-shadow: 0 2px 8px rgba(79,70,229,.04) !important;
+}
+.rm2-product-card {
+  border-color: #e0e7ff !important;
+  box-shadow: 0 28px 72px rgba(49,46,129,.16) !important;
+}
+.rm2-product-card-head b { color: #1f2a5a !important; }
+.rm2-score-box {
+  border-color: #e5e7eb !important;
+  background: #fbfcff !important;
+}
+.rm2-score-top strong { color: #4f46e5 !important; }
+.rm2-progress { background: #e9edff !important; }
+.rm2-progress > span {
+  background: linear-gradient(90deg, #4f46e5 0%, #2563eb 64%, #06b6d4 100%) !important;
+}
+.rm2-check-icon { background: #eef2ff !important; }
+.rm2-check-state { color: #4f46e5 !important; }
+.rm2-strip-inner { background: #e9edff !important; }
+.rm2-stat strong { color: #312e81 !important; }
+.rm2-kicker { color: #4f46e5 !important; }
+.rm2-section h2 { color: #101828 !important; }
+.rm2-value-card {
+  border-color: #e4e7ec !important;
+  box-shadow: 0 8px 24px rgba(16,24,40,.045) !important;
+  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease !important;
+}
+.rm2-value-card:hover {
+  transform: translateY(-3px) !important;
+  border-color: #c7d2fe !important;
+  box-shadow: 0 18px 38px rgba(79,70,229,.10) !important;
+}
+.rm2-value-icon { background: #eef2ff !important; }
+.rm2-workflow-shell {
+  background:
+    radial-gradient(circle at 85% 15%, rgba(37,99,235,.24), transparent 28%),
+    radial-gradient(circle at 12% 10%, rgba(99,102,241,.22), transparent 26%),
+    linear-gradient(145deg, #17143f 0%, #111827 58%, #0a1020 100%) !important;
+}
+.rm2-workflow .rm2-kicker { color: #c7d2fe !important; }
+.rm2-workflow-step {
+  border-color: rgba(199,210,254,.18) !important;
+  background: rgba(255,255,255,.065) !important;
+}
+.rm2-workflow-num { background: rgba(99,102,241,.28) !important; }
+.rm2-fresher-card.primary {
+  background: linear-gradient(145deg, #eef2ff 0%, #ffffff 68%) !important;
+  border-color: #dbe3ff !important;
+}
+.rm2-role-chip {
+  border-color: #dbe3ff !important;
+  color: #4338ca !important;
+  background: #fbfcff !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn, .nav-item, .resume-card, .rm2-btn, .rm2-value-card { transition: none !important; }
+}
