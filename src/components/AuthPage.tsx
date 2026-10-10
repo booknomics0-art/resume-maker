@@ -8,6 +8,7 @@ import {
 } from '../lib/cloud';
 import { hasAuthCallback, withGoogleStart } from '../lib/authRedirect';
 import { providerStateNote, type GoogleAuthIssue, type GoogleProviderState } from '../lib/googleAuth';
+import { guestAuthPending } from '../lib/guestAccess';
 import { syncWithCloud } from '../lib/store';
 import { trackEvent } from '../lib/track';
 import GoogleSetupPanel from './GoogleSetupPanel';
@@ -27,7 +28,10 @@ function GoogleIcon() {
 import { LAYOUT_META, TEMPLATE_COUNT } from '../lib/templates';
 
 export default function AuthPage({ onAuth, notice }: { onAuth: () => void; notice?: GoogleAuthIssue | null }) {
-  const [mode, setMode] = useState<'login' | 'signup'>('login');
+  const guestGate = guestAuthPending();
+  const [mode, setMode] = useState<'login' | 'signup'>(() =>
+    guestGate || (typeof window !== 'undefined' && window.location.pathname === '/signup') ? 'signup' : 'login',
+  );
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [pass, setPass] = useState('');
@@ -152,7 +156,9 @@ export default function AuthPage({ onAuth, notice }: { onAuth: () => void; notic
             return;
           }
           if (res.needsConfirm) {
-            setInfo('Account created! Check your email for a confirmation link, then log in.');
+            setInfo(guestGate
+              ? 'Account created! Confirm your email, then return to this tab and log in — your temporary resume is still waiting here.'
+              : 'Account created! Check your email for a confirmation link, then log in.');
             setMode('login');
             return;
           }
@@ -265,15 +271,25 @@ export default function AuthPage({ onAuth, notice }: { onAuth: () => void; notic
           <span style={{ color: 'var(--silver-300)' }}>Upload, Edit, Download — Simply.</span>
         </h1>
         <ul style={{ color: 'var(--silver-300)', fontSize: 14, lineHeight: 1.9, paddingLeft: 18, margin: 0 }}>
-          <li>📤 Upload existing resume (PDF, DOCX, TXT, JSON) & advanced edit</li>
+          <li>✍️ First resume + first PDF without sign-up</li>
           <li>🎨 {TEMPLATE_COUNT} templates in {Object.keys(LAYOUT_META).length} families (photo, monogram, timeline, editorial…), 10 career fields</li>
-          <li>🎁 100% free — unlimited downloads, no watermark, no payment</li>
-          <li>☁️ Cloud-saved resumes — continue on any device</li>
+          <li>🎁 100% free — future downloads unlock with a free account, no watermark or payment</li>
+          <li>☁️ Sign in to save resumes and continue on any device</li>
         </ul>
       </div>
 
       <div className="auth-card-wrap">
         <form className="card auth-card" onSubmit={submit}>
+          {guestGate && (
+            <div className="notice guest-auth-reason" role="status">
+              <b>Your resume is ready — create a free account to continue.</b>
+              <div style={{ marginTop: 4, fontSize: 12, lineHeight: 1.45 }}>
+                Your first guest PDF has been used. Sign up to save the resume you just built and unlock future downloads.
+                Already have an account? Choose Login below — your current draft will be kept after sign-in.
+              </div>
+            </div>
+          )}
+
           <div className="row" style={{ marginBottom: 16, background: 'var(--silver-100)', borderRadius: 9, padding: 4 }}>
             {(['login', 'signup'] as const).map((m) => (
               <button type="button" key={m}
