@@ -136,6 +136,8 @@ check('removing three things strictly lowers the score', midScore.score > 0 && m
 const indexHtml = readFileSync(join(root, 'index.html'), 'utf8');
 const landingSrc = readFileSync(join(root, 'src', 'components', 'Landing.tsx'), 'utf8');
 const appSrc = readFileSync(join(root, 'src', 'App.tsx'), 'utf8');
+const editorSrc = readFileSync(join(root, 'src', 'components', 'Editor.tsx'), 'utf8');
+const guestAccessSrc = readFileSync(join(root, 'src', 'lib', 'guestAccess.ts'), 'utf8');
 
 check('strict CSP is intact in index.html (script-src stays self)',
   indexHtml.includes("script-src 'self'"));
@@ -150,19 +152,27 @@ check(`FAQ count matches between Landing.tsx (${landingFaqCount}) and JSON-LD ($
 
 const testimonialsEmpty = !/const TESTIMONIALS[^=]*=\s*\[\s*\]/.test(landingSrc) === false;
 check('TESTIMONIALS ships empty (no invented reviews)', testimonialsEmpty);
-check('landing requires an account and offers no guest start',
-  landingSrc.includes('Sign in or create a free account') && !landingSrc.includes('onStartGuest') && !landingSrc.includes('no signup'));
+check('landing clearly offers the first resume + PDF without sign-up',
+  landingSrc.includes('No sign-up for your first resume or first PDF') &&
+  landingSrc.includes('Guest work is temporary'));
 check('logged-out home renders Landing instead of the login wall',
   (appSrc.includes('import Landing') || appSrc.includes("import('./components/Landing')")) &&
   appSrc.includes('<Landing'));
-check('landing actions navigate through the authentication gate',
-  appSrc.includes("onStart={(target) => navigate(target || '/editor/new')}") &&
-  appSrc.includes('if (!user)') && appSrc.includes('<AuthPage') && !appSrc.includes('guest_start'));
+check('logged-out /editor/new renders the guest editor before the auth fallback',
+  appSrc.includes("if (tab === '/editor/new')") &&
+  appSrc.includes('guest-workspace') &&
+  appSrc.includes('<Editor key="guest-new" id="new" />') &&
+  appSrc.includes('<AuthPage'));
+check('guest draft stays session-only and repeat PDF export is auth-gated',
+  guestAccessSrc.includes('sessionStorage.setItem(GUEST_DRAFT_KEY') &&
+  !guestAccessSrc.includes('localStorage.setItem(GUEST_DRAFT_KEY') &&
+  editorSrc.includes('requestGuestSignupForDownload') &&
+  editorSrc.includes("navigate('/signup')"));
 const authSrc = readFileSync(join(root, 'src/lib/auth.ts'), 'utf8');
 check('legacy guest sessions are rejected',
   authSrc.includes("u.provider !== 'email' && u.provider !== 'google'") &&
   authSrc.includes('localStorage.removeItem(SESSION_KEY)'));
-check('SEO no longer advertises guest access', !indexHtml.includes('Start as a guest'));
+check('SEO no longer advertises the deprecated legacy guest-session CTA', !indexHtml.includes('Start as a guest'));
 
 const robots = join(root, 'public', 'robots.txt');
 const sitemap = join(root, 'public', 'sitemap.xml');
