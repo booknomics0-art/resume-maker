@@ -1,0 +1,10 @@
+/* Keep the 7-step navigation clean: section names only, no repeated 1/7, 2/7 badges. */
+.editor-root > .stepper > .step-pill::before {
+  content: none !important;
+  display: none !important;
+}
+
+.editor-root > .stepper > .step-pill {
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 0 !important;
+}
