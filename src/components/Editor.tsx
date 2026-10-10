@@ -7,6 +7,10 @@ import {
 import { fieldById } from '../lib/fields';
 import { navigate } from '../lib/navigation';
 import { recordDownload } from '../lib/cloud';
+import { currentUser } from '../lib/auth';
+import {
+  guestDownloadUsed, loadGuestDraft, markGuestAuthPending, markGuestDownloadUsed, saveGuestDraft,
+} from '../lib/guestAccess';
 import { trackEvent } from '../lib/track';
 import {
   canSharePdfFile, isAppleTouchBrowser, openPdfDownload, preparePdfDownload, releasePdfDownload,
@@ -37,8 +41,12 @@ function collectPrintableCss(): string {
 }
 
 export default function Editor({ id }: { id: string }) {
+  const guest = currentUser() === null;
   const initial = useMemo<Resume>(() => {
-    if (id === 'new') return emptyResume();
+    if (id === 'new') {
+      if (guest) return loadGuestDraft() ?? emptyResume();
+      return emptyResume();
+    }
     if (id === 'sample') return sampleResume();
     // An unsaved import draft always wins: nothing the user typed on the
     // import screen may be lost by opening the editor.
@@ -46,12 +54,13 @@ export default function Editor({ id }: { id: string }) {
     if (draft) return draft;
     const found = loadResumes().find((r) => r.id === id);
     return found ?? emptyResume();
-  }, [id]);
+  }, [id, guest]);
 
   const [r, setR] = useState<Resume>(initial);
   const [step, setStep] = useState(Math.min(initial.step, STEPS.length - 1));
   const [maxVisited, setMaxVisited] = useState(Math.min(initial.step, STEPS.length - 1));
   const [mobileTab, setMobileTab] = useState<'form' | 'preview'>('form');
+  const [guestUsed, setGuestUsed] = useState(() => guest && guestDownloadUsed());
   const dirtyRef = useRef(false);
 
   // ---- preview views: A4 sheet (fit width / whole page) + phone + desktop --
@@ -82,17 +91,24 @@ export default function Editor({ id }: { id: string }) {
 
   useEffect(() => () => releasePdfDownload(pdfDownloadRef.current), []);
 
-  // autosave (debounced) — never persists a brand-new resume the user hasn't touched
+  // Signed-in resumes keep the existing local+cloud autosave. Guest resumes are
+  // session-only: enough to survive a refresh/auth handoff, but never added to
+  // the dashboard or cloud before the user creates/signs into an account.
   useEffect(() => {
     const isNew = id === 'new' || id === 'sample';
     if (isNew && !dirtyRef.current) return;
     const t = setTimeout(() => {
-      upsertResume({ ...r, step: Math.max(r.step, maxVisited) });
+      const next = { ...r, step: Math.max(r.step, maxVisited) };
+      if (guest) {
+        saveGuestDraft(next);
+        return;
+      }
+      upsertResume(next);
       // the draft and the saved copy are identical now — retire the draft
       if (isDraftResume(id)) clearImportDraft();
     }, 350);
     return () => clearTimeout(t);
-  }, [r, maxVisited, id]);
+  }, [r, maxVisited, id, guest]);
 
   // Keep following the import screen if it is still open for this resume:
   // edits made over there appear here immediately (and vice-versa).
@@ -119,6 +135,25 @@ export default function Editor({ id }: { id: string }) {
   const remainingMin = STEPS.slice(step).reduce((a, s) => a + s.minutes, 0);
   const f = fieldById(r.fieldId);
 
+  const currentGuestDraft = (): Resume => ({ ...r, step: Math.max(r.step, maxVisited) });
+
+  const requestGuestSignupForDownload = (): boolean => {
+    if (!guest || !guestUsed) return false;
+    saveGuestDraft(currentGuestDraft());
+    markGuestAuthPending();
+    trackEvent('guest_repeat_download_signup_gate');
+    navigate('/signup');
+    return true;
+  };
+
+  const consumeGuestDownload = () => {
+    if (!guest || guestUsed) return;
+    markGuestDownloadUsed();
+    saveGuestDraft(currentGuestDraft());
+    setGuestUsed(true);
+    trackEvent('guest_first_download');
+  };
+
   const go = (i: number) => {
     setStep(i);
     setMaxVisited((m) => Math.max(m, i));
@@ -127,11 +162,13 @@ export default function Editor({ id }: { id: string }) {
   };
 
   const fallbackPrint = (clean: string) => {
+    if (requestGuestSignupForDownload()) return;
     const prevTitle = document.title;
     const restore = () => { document.title = prevTitle; window.removeEventListener('afterprint', restore); };
     document.title = clean;
     window.addEventListener('afterprint', restore);
     window.setTimeout(restore, 60_000);
+    consumeGuestDownload();
     recordDownload(r);
     trackEvent('download_fallback');
     window.setTimeout(() => window.print(), 120);
@@ -139,6 +176,7 @@ export default function Editor({ id }: { id: string }) {
 
   const handleDownload = async () => {
     if (downloadingPdf) return;
+    if (requestGuestSignupForDownload()) return;
 
     setR((prev) => ({ ...prev, name: prev.name.startsWith('Untitled') && prev.personal.fullName ? `${prev.personal.fullName} — ${prev.personal.headline}` : prev.name }));
 
@@ -176,10 +214,17 @@ export default function Editor({ id }: { id: string }) {
       const prepared = preparePdfDownload(blob, `${clean}.pdf`);
       keepPreparedPdf(prepared);
       const apple = isAppleTouchBrowser();
-      if (!apple) triggerBrowserPdfDownload(prepared);
+      if (!apple) {
+        triggerBrowserPdfDownload(prepared);
+        consumeGuestDownload();
+      }
       setPdfNotice(apple
-        ? 'PDF ready. On iPhone/iPad, tap Save PDF to use the system Save/Share menu, or Open PDF to view it.'
-        : 'PDF ready. Your browser download has started. If it does not appear in Downloads, tap Download again.');
+        ? (guest
+          ? 'PDF ready. Your first guest save is free — tap Save PDF or Open PDF. Future downloads require a free account.'
+          : 'PDF ready. On iPhone/iPad, tap Save PDF to use the system Save/Share menu, or Open PDF to view it.')
+        : (guest
+          ? 'First guest PDF downloaded. Sign up free to save this resume and unlock future downloads.'
+          : 'PDF ready. Your browser download has started. If it does not appear in Downloads, tap Download again.'));
       recordDownload(r);
       trackEvent('download');
     } catch (error: any) {
@@ -198,34 +243,50 @@ export default function Editor({ id }: { id: string }) {
 
   const savePreparedPdf = async () => {
     if (!pdfDownload) return;
+    if (requestGuestSignupForDownload()) return;
     try {
       if (canSharePdfFile(pdfDownload)) {
         await sharePdfFile(pdfDownload);
-        setPdfNotice('Save/Share menu opened. Choose Save to Files, Downloads, Drive, or another destination.');
+        consumeGuestDownload();
+        setPdfNotice(guest
+          ? 'First guest PDF save opened. Sign up free to save this resume and download again later.'
+          : 'Save/Share menu opened. Choose Save to Files, Downloads, Drive, or another destination.');
       } else {
         triggerBrowserPdfDownload(pdfDownload);
-        setPdfNotice('Download requested again. Check your browser Downloads.');
+        consumeGuestDownload();
+        setPdfNotice(guest
+          ? 'First guest PDF downloaded. Sign up free to save this resume and download again later.'
+          : 'Download requested again. Check your browser Downloads.');
       }
     } catch (error: any) {
       if (error?.name === 'AbortError') return;
       openPdfDownload(pdfDownload);
+      consumeGuestDownload();
       setPdfNotice('PDF opened in the browser. Use the browser Share/Download control to save it.');
     }
   };
 
   const openPreparedPdf = () => {
     if (!pdfDownload) return;
+    if (requestGuestSignupForDownload()) return;
     openPdfDownload(pdfDownload);
-    setPdfNotice('PDF opened. Use your browser Share/Download control if you want another copy.');
+    consumeGuestDownload();
+    setPdfNotice(guest
+      ? 'First guest PDF opened. Future PDF exports require a free account.'
+      : 'PDF opened. Use your browser Share/Download control if you want another copy.');
   };
 
   const downloadPreparedAgain = () => {
     if (!pdfDownload) return;
+    if (requestGuestSignupForDownload()) return;
     if (isAppleTouchBrowser()) openPdfDownload(pdfDownload);
     else triggerBrowserPdfDownload(pdfDownload);
-    setPdfNotice(isAppleTouchBrowser()
-      ? 'PDF opened. On iPhone/iPad use Share → Save to Files.'
-      : 'Download requested again. Check your browser Downloads.');
+    consumeGuestDownload();
+    setPdfNotice(guest
+      ? 'First guest PDF exported. Future PDF exports require a free account.'
+      : isAppleTouchBrowser()
+        ? 'PDF opened. On iPhone/iPad use Share → Save to Files.'
+        : 'Download requested again. Check your browser Downloads.');
   };
 
   const dismissPdfStatus = () => {
@@ -245,6 +306,21 @@ export default function Editor({ id }: { id: string }) {
 
   return (
     <div className="editor-root">
+      {guest && (
+        <div className="guest-draft-notice no-print" role="status">
+          <span className="guest-draft-notice-copy">
+            <b>{guestUsed ? 'Guest mode · Sign up before your next PDF export' : 'Guest mode · Your first PDF download is free'}</b>
+            <span>
+              This draft is temporary in this browser session and is not saved to your ResumeMakery account or cloud.
+              {guestUsed ? ' Create a free account to keep this resume and continue downloading.' : ' Sign up anytime to save it permanently.'}
+            </span>
+          </span>
+          <button className="btn small" type="button" onClick={() => { saveGuestDraft(currentGuestDraft()); markGuestAuthPending(); navigate('/signup'); }}>
+            Sign up to save
+          </button>
+        </div>
+      )}
+
       {importInfo && (
         <div className="notice no-print" style={{ marginBottom: 14, display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
           <span>
@@ -269,17 +345,19 @@ export default function Editor({ id }: { id: string }) {
           </div>
         </div>
         <div className="row editor-head-actions">
-          <button className="btn" onClick={() => navigate('/')}>← Dashboard</button>
-          <button
-            className="btn"
-            title="Download this resume as JSON — portable backup, re-upload it any time (Upload & Edit)"
-            onClick={() => downloadResumeJson(r)}
-          >
-            ⤓ JSON
-          </button>
+          <button className="btn" onClick={() => navigate('/')}>{guest ? '← Home' : '← Dashboard'}</button>
+          {!guest && (
+            <button
+              className="btn"
+              title="Download this resume as JSON — portable backup, re-upload it any time (Upload & Edit)"
+              onClick={() => downloadResumeJson(r)}
+            >
+              ⤓ JSON
+            </button>
+          )}
           <button
             className="btn primary"
-            title="Download PDF — free, unlimited, no watermark"
+            title={guest ? 'First PDF export is free without an account; future exports require free sign-up' : 'Download PDF — free, unlimited, no watermark'}
             onClick={handleDownload}
             disabled={downloadingPdf}
           >
