@@ -1,0 +1,346 @@
+/* ResumeMakery navigation hierarchy refresh
+   Goal: make the next action obvious, keep the 7-step journey visible,
+   and move scoring/ATS guidance below the content flow. */
+
+/* ---------------- Dashboard: navigation first ---------------- */
+.main > div:has(> .stats) > .page-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  margin-bottom: 14px;
+}
+
+.main > div:has(> .stats) > .page-head > .row {
+  position: relative;
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  padding: 38px 12px 12px;
+  border: 1px solid #b9cdea;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #f5f9ff 0%, #edf5ff 100%);
+  box-shadow: 0 8px 24px rgba(15, 33, 72, .07);
+}
+
+.main > div:has(> .stats) > .page-head > .row::before {
+  content: "Start here · choose how you want to build";
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  color: var(--navy-900, #0f2148);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .01em;
+}
+
+/* Put the most common path first: New → Fresher → Upload → Sample. */
+.main > div:has(> .stats) > .page-head > .row > :nth-child(4) { order: 1; }
+.main > div:has(> .stats) > .page-head > .row > :nth-child(2) { order: 2; }
+.main > div:has(> .stats) > .page-head > .row > :nth-child(1) { order: 3; }
+.main > div:has(> .stats) > .page-head > .row > :nth-child(3) { order: 4; }
+
+.main > div:has(> .stats) > .page-head > .row .btn {
+  min-height: 44px;
+  width: 100%;
+  justify-content: center;
+  white-space: normal;
+  line-height: 1.25;
+}
+
+/* Sample is useful, but should not compete with the real creation paths. */
+.main > div:has(> .stats) > .page-head > .row > :nth-child(3) {
+  background: rgba(255, 255, 255, .68);
+  color: var(--navy-700, #27446f);
+}
+
+/* Avoid showing the same four choices twice when the dashboard is empty. */
+.main > div:has(> .stats) .empty-sample > div:first-child > .row {
+  display: none !important;
+}
+
+/* Progress cards are useful, but secondary to the creation navigation. */
+.main > div:has(> .stats) > .stats {
+  margin-top: 4px;
+}
+
+/* ---------------- Editor: 7-step navigation first ---------------- */
+.editor-root > .stepper {
+  position: relative;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 6px;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: thin;
+  scroll-snap-type: x proximity;
+  padding: 39px 10px 12px !important;
+  border: 1px solid #b9cdea;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #f6faff 0%, #eef5ff 100%);
+  box-shadow: 0 8px 24px rgba(15, 33, 72, .07);
+}
+
+.editor-root > .stepper::before {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  color: var(--navy-900, #0f2148);
+  font-size: 12px;
+  font-weight: 850;
+  letter-spacing: .01em;
+  white-space: nowrap;
+}
+
+.editor-root:has(.step-pill:nth-child(1).current) > .stepper::before { content: "Resume builder · Step 1 of 7"; }
+.editor-root:has(.step-pill:nth-child(2).current) > .stepper::before { content: "Resume builder · Step 2 of 7"; }
+.editor-root:has(.step-pill:nth-child(3).current) > .stepper::before { content: "Resume builder · Step 3 of 7"; }
+.editor-root:has(.step-pill:nth-child(4).current) > .stepper::before { content: "Resume builder · Step 4 of 7"; }
+.editor-root:has(.step-pill:nth-child(5).current) > .stepper::before { content: "Resume builder · Step 5 of 7"; }
+.editor-root:has(.step-pill:nth-child(6).current) > .stepper::before { content: "Resume builder · Step 6 of 7"; }
+.editor-root:has(.step-pill:nth-child(7).current) > .stepper::before { content: "Resume builder · Step 7 of 7"; }
+
+.editor-root > .stepper > .step-pill {
+  flex: 1 0 104px;
+  min-width: 104px;
+  min-height: 48px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+  padding: 8px 9px;
+  border: 1px solid #cfdbeb;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .84);
+  color: var(--navy-700, #27446f);
+  scroll-snap-align: start;
+  text-align: left;
+}
+
+.editor-root > .stepper > .step-pill:hover {
+  border-color: #9eb8dd;
+  background: #fff;
+}
+
+.editor-root > .stepper > .step-pill.current {
+  border-color: var(--navy-700, #27446f);
+  background: var(--navy-900, #0f2148);
+  color: #fff;
+  box-shadow: 0 5px 14px rgba(15, 33, 72, .16);
+}
+
+.editor-root > .stepper > .step-pill.done {
+  border-color: #b7d9cb;
+  background: #f2fbf7;
+  color: #176b4c;
+}
+
+/* Replace the tiny dot with an explicit X/7 marker. */
+.editor-root > .stepper > .step-pill .dot {
+  display: none;
+}
+
+.editor-root > .stepper > .step-pill::before {
+  min-width: 30px;
+  padding: 4px 5px;
+  border-radius: 7px;
+  background: #e7effa;
+  color: var(--navy-900, #0f2148);
+  font-size: 10.5px;
+  font-weight: 900;
+  line-height: 1;
+  text-align: center;
+}
+
+.editor-root > .stepper > .step-pill.current::before {
+  background: rgba(255, 255, 255, .18);
+  color: #fff;
+}
+
+.editor-root > .stepper > .step-pill.done::before {
+  background: #dff4eb;
+  color: #176b4c;
+}
+
+.editor-root > .stepper > .step-pill:nth-child(1)::before { content: "1/7"; }
+.editor-root > .stepper > .step-pill:nth-child(2)::before { content: "2/7"; }
+.editor-root > .stepper > .step-pill:nth-child(3)::before { content: "3/7"; }
+.editor-root > .stepper > .step-pill:nth-child(4)::before { content: "4/7"; }
+.editor-root > .stepper > .step-pill:nth-child(5)::before { content: "5/7"; }
+.editor-root > .stepper > .step-pill:nth-child(6)::before { content: "6/7"; }
+.editor-root > .stepper > .step-pill:nth-child(7)::before { content: "7/7"; }
+
+/* Hide the old anonymous flex spacer; keep the progress bar as a small footer. */
+.editor-root > .stepper > div:not(.progress) {
+  display: none !important;
+}
+
+.editor-root > .stepper > .progress {
+  flex: 0 0 86px !important;
+  width: 86px !important;
+  min-width: 86px;
+  align-self: center !important;
+  margin-left: 4px;
+}
+
+/* Form content comes first. ATS/score now live below the Next/Back controls. */
+.editor-root .editor-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.editor-root .editor-form > h3 { order: 1; }
+.editor-root .editor-form > .hint { order: 2; }
+.editor-root .editor-form > .step-body { order: 3; }
+.editor-root .editor-form > .step-foot { order: 4; }
+.editor-root .editor-form > .ats-check { order: 5; }
+.editor-root .editor-form > .score-card { order: 6; }
+
+/* Make ATS + Resume score feel like one optional, light-blue bordered box. */
+.editor-root .editor-form > .ats-check {
+  position: relative;
+  margin: 18px 0 0 !important;
+  padding-top: 39px;
+  border: 1px solid #bfd1ea !important;
+  border-bottom: 0 !important;
+  border-radius: 12px 12px 0 0 !important;
+  background: #f4f8ff !important;
+  box-shadow: none !important;
+}
+
+.editor-root .editor-form > .ats-check::before {
+  content: "Optional checks · review after your main resume content";
+  position: absolute;
+  top: 11px;
+  left: 13px;
+  right: 13px;
+  color: var(--navy-800, #18365e);
+  font-size: 11.5px;
+  font-weight: 850;
+  line-height: 1.3;
+}
+
+.editor-root .editor-form > .score-card {
+  margin: 0 !important;
+  border: 1px solid #bfd1ea !important;
+  border-top: 1px dashed #bfd1ea !important;
+  border-radius: 0 0 12px 12px !important;
+  background: #f4f8ff !important;
+  box-shadow: none !important;
+}
+
+/* Bottom navigation must always explain both direction and journey position. */
+.editor-root .step-foot {
+  margin-top: 16px;
+  padding-top: 13px;
+  border-top: 1px solid var(--silver-200, #d9e0e8);
+}
+
+.editor-root .step-foot .btn.primary {
+  min-height: 42px;
+  font-size: 0 !important;
+}
+
+.editor-root .step-foot .btn.primary::after {
+  font-size: 13px;
+  font-weight: 850;
+  line-height: 1.2;
+  white-space: normal;
+}
+
+.editor-root:has(.step-pill:nth-child(1).current) .step-foot .btn.primary::after { content: "Next · Step 2/7 · Summary →"; }
+.editor-root:has(.step-pill:nth-child(2).current) .step-foot .btn.primary::after { content: "Next · Step 3/7 · Education →"; }
+.editor-root:has(.step-pill:nth-child(3).current) .step-foot .btn.primary::after { content: "Next · Step 4/7 · Experience →"; }
+.editor-root:has(.step-pill:nth-child(4).current) .step-foot .btn.primary::after { content: "Next · Step 5/7 · Skills →"; }
+.editor-root:has(.step-pill:nth-child(5).current) .step-foot .btn.primary::after { content: "Next · Step 6/7 · Extras →"; }
+.editor-root:has(.step-pill:nth-child(6).current) .step-foot .btn.primary::after { content: "Next · Step 7/7 · Design →"; }
+.editor-root:has(.step-pill:nth-child(7).current) .step-foot .btn.primary::after { content: "Step 7/7 · Finish & download PDF"; }
+
+/* Mobile: keep the hierarchy clear without turning the page into a wall of controls. */
+@media (max-width: 760px) {
+  .main > div:has(> .stats) > .page-head > .row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 37px 9px 9px;
+    gap: 7px;
+  }
+
+  .main > div:has(> .stats) > .page-head > .row::before {
+    left: 10px;
+    top: 9px;
+    font-size: 11.5px;
+  }
+
+  .main > div:has(> .stats) > .page-head > .row .btn {
+    min-height: 46px;
+    padding-inline: 9px;
+    font-size: 12px;
+  }
+
+  .editor-root > .stepper {
+    margin-bottom: 10px !important;
+    padding: 37px 8px 9px !important;
+    gap: 5px;
+    border-radius: 12px;
+  }
+
+  .editor-root > .stepper::before {
+    top: 9px;
+    left: 10px;
+    font-size: 11.5px;
+  }
+
+  .editor-root > .stepper > .step-pill {
+    flex-basis: 96px;
+    min-width: 96px;
+    min-height: 44px;
+    padding: 7px 8px;
+    gap: 6px;
+    font-size: 11.5px;
+  }
+
+  .editor-root > .stepper > .progress {
+    flex-basis: 58px !important;
+    width: 58px !important;
+    min-width: 58px;
+  }
+
+  .editor-root .step-foot {
+    gap: 7px;
+    align-items: stretch;
+  }
+
+  .editor-root .step-foot > .btn,
+  .editor-root .step-foot > .row,
+  .editor-root .step-foot > .row > .btn {
+    min-height: 44px;
+  }
+
+  .editor-root .step-foot > .row {
+    flex: 1 1 auto !important;
+  }
+
+  .editor-root .step-foot > .row > .btn {
+    width: 100%;
+  }
+
+  .editor-root .editor-form > .ats-check::before {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 430px) {
+  .main > div:has(> .stats) > .page-head > .row {
+    grid-template-columns: 1fr;
+  }
+
+  .editor-root .step-foot {
+    display: grid;
+    grid-template-columns: minmax(88px, .38fr) minmax(0, 1fr);
+  }
+
+  .editor-root .step-foot > .row {
+    min-width: 0;
+  }
+}
