@@ -55,12 +55,20 @@ function syncGuestFirstCopy(html) {
       'Yes. Building, templates, ATS tools and PDF downloads are free. Your first resume and first PDF need no account; a free account is required only to save your work and continue downloading after that. There is no paid plan, trial, credit card or watermark.',
     ],
     [
+      'Yes. Every template, the ATS match score, upload &amp; edit, and unlimited PDF downloads are free. There is no paid plan, no trial, no credit card and no watermark — the product has no billing at all.',
+      'Yes. Building, templates, ATS tools and PDF downloads are free. Your first resume and first PDF need no account; a free account is required only to save your work and continue downloading after that. There is no paid plan, trial, credit card or watermark.',
+    ],
+    [
       'Unlimited. Duplicate a resume and tailor one version per job application — something most builders restrict to a single resume even on paid plans.',
       'Unlimited with a free account. You can also build your first resume as a guest before signing up, then save it to your account and create job-specific versions later.',
     ],
     [
       'No. The PDF you download is the final file: no watermark, no “made with” link, no hidden paywall pages. It is even saved under your resume’s own name.',
       'No. The PDF you download is the final file: no watermark, no “made with” link and no hidden payment page. Your first guest PDF is available without an account, and future downloads only require a free account.',
+    ],
+    [
+      "No. The PDF you download is the final file: no watermark, no made-with link, no hidden paywall pages. It is even saved under your resume's own name.",
+      'No. The PDF you download is the final file: no watermark, no made-with link and no hidden payment page. Your first guest PDF is available without an account, and future downloads only require a free account.',
     ],
     [
       'In your browser by default, and optionally in your own cloud database when you sign in. Parsing, OCR and ATS scoring all run on your device — we never sell or share your data.',
