@@ -44,10 +44,10 @@
     { "source": "/guides/fresher-resume-guide", "destination": "/guides/fresher-resume-guide/index.html" },
     { "source": "/about", "destination": "/about/index.html" },
     { "source": "/faq", "destination": "/faq/index.html" },
-    { "source": "/privacy", "destination": "/privacy/index.html" },
+    { "source": "/privacy", "destination": "/legal/privacy.html" },
     { "source": "/terms", "destination": "/terms/index.html" },
     { "source": "/contact", "destination": "/contact/index.html" },
-    { "source": "/cookies", "destination": "/cookies/index.html" },
+    { "source": "/cookies", "destination": "/legal/cookies.html" },
     { "source": "/disclaimer", "destination": "/disclaimer/index.html" },
     { "source": "/eula", "destination": "/eula/index.html" },
     { "source": "/(.*)", "destination": "/index.html" }
