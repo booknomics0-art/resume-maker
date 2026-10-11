@@ -53,7 +53,16 @@ const adGuard = mustContain('src/lib/adPlacement.ts', [
 ]);
 if (adGuard.includes("'/editor/")) throw new Error('Editor routes must never be ad-eligible.');
 
+mustContain('public/ads.txt', [
+  'google.com, pub-3415243304589225, DIRECT, f08c47fec0942fa0',
+]);
+mustContain('scripts/install-adsense-publisher.mjs', [
+  'ca-pub-3415243304589225',
+  'pagead2.googlesyndication.com/pagead/js/adsbygoogle.js',
+  'google-adsense-account',
+]);
+
 if ((sitemap.match(/<loc>/g) || []).length < 22) throw new Error('Expected expanded public sitemap.');
 if (!vercel.includes('/job-description-resume-match')) throw new Error('Missing dedicated SEO rewrite.');
 
-console.log('✓ AdSense readiness: editorial depth, legal disclosure, sitemap and ad-placement boundary verified');
+console.log('✓ AdSense readiness: editorial depth, legal disclosure, publisher ID, ads.txt and ad-placement boundary verified');
