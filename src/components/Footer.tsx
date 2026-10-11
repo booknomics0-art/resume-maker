@@ -11,35 +11,40 @@ export default function Footer() {
             </div>
           </div>
           <p>
-            Build a clean, professional resume in under 10 minutes.
-            Ten career fields, 50 hand-tuned templates, one honest document
-            you can stand behind in an interview. Upload & edit existing resumes,
-            unlimited PDF downloads — 100% free, no watermark.
+            Build a clean, professional resume with 50 hand-tuned templates,
+            ATS guidance and an honest application workflow. Your first guest
+            resume and first PDF need no sign-up; a free account saves your work
+            and keeps future downloads available. No watermark or paid plan.
           </p>
         </div>
 
         <div className="footer-col">
           <h4>Product</h4>
-          <a href="/">Dashboard</a>
+          <a href="/">Home</a>
           <a href="/editor/new">Create a resume</a>
           <a href="/import">📤 Upload & Edit Resume</a>
           <a href="/cover-letter">✉ Cover Letter Builder</a>
-          <a href="/faq">FAQ</a>
+          <a href="/ats-resume-checker">ATS Resume Checker</a>
         </div>
 
         <div className="footer-col">
-          <h4>Company</h4>
+          <h4>Resume Guides</h4>
+          <a href="/guides">All guides</a>
+          <a href="/guides/resume-format-india">Resume format for India</a>
+          <a href="/guides/resume-summary-examples">Resume summary examples</a>
+          <a href="/guides/resume-skills-guide">Skills for a resume</a>
+          <a href="/guides/fresher-resume-guide">Fresher resume guide</a>
+        </div>
+
+        <div className="footer-col">
+          <h4>Company & Legal</h4>
           <a href="/about">About us</a>
           <a href="/contact">Contact</a>
-        </div>
-
-        <div className="footer-col">
-          <h4>Legal — Detailed</h4>
+          <a href="/faq">FAQ</a>
           <a href="/privacy">Privacy Policy</a>
           <a href="/terms">Terms of Service</a>
-          <a href="/disclaimer">Disclaimer</a>
           <a href="/cookies">Cookie Policy</a>
-          <a href="/eula">EULA</a>
+          <a href="/disclaimer">Disclaimer</a>
         </div>
       </div>
 

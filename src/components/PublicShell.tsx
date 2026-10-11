@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { navigate } from '../lib/navigation';
+import Footer from './Footer';
 
 export default function PublicShell({ children, onStart }: { children: ReactNode; onStart: (target?: string) => void }) {
   return (
@@ -14,6 +15,7 @@ export default function PublicShell({ children, onStart }: { children: ReactNode
             <a href="/resume-templates" onClick={(e)=>{e.preventDefault();navigate('/resume-templates');}}>Templates</a>
             <a href="/ats-resume-checker" onClick={(e)=>{e.preventDefault();navigate('/ats-resume-checker');}}>ATS Checker</a>
             <a href="/resume-for-freshers" onClick={(e)=>{e.preventDefault();navigate('/resume-for-freshers');}}>Freshers</a>
+            <a href="/guides">Guides</a>
           </nav>
           <div className="land-top-actions">
             <a className="btn small" href="/login" onClick={(e)=>{e.preventDefault();navigate('/login');}}>Sign in</a>
@@ -22,6 +24,7 @@ export default function PublicShell({ children, onStart }: { children: ReactNode
         </div>
       </header>
       <main className="public-shell-main">{children}</main>
+      <Footer />
     </div>
   );
 }
