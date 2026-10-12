@@ -5,38 +5,20 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#0a1630" />
-    <meta name="description" content="ResumeMakery — Advanced resume maker: upload existing PDF/DOCX, edit with high-tech editor, 100% free, unlimited downloads, no watermark. 50 professional templates, cloud-saved resumes." />
+    <meta name="description" content="Free ATS resume builder for India. Create or import a resume, check job-description match, use 50 templates and download clean PDFs with no watermark." />
     <meta name="keywords" content="resume maker, CV builder, upload resume, edit resume, free resume, ATS resume, India resume builder" />
     <meta name="author" content="ResumeMakery" />
     <meta name="robots" content="index, follow" />
 
-    <!-- Google Search Console ownership verification. The CONTENT value below
-         is the meta tag Google issued for this property — once a deploy ships
-         this exact tag, Search Console recognises the URL prefix as verified. -->
+    <!-- Google Search Console ownership verification. -->
     <meta name="google-site-verification" content="yPMnBk4bsrRgVBZC6SrNPXsBvnJRL9yhpVUH7KBGteY" />
-    <!-- Production URL — used as the canonical home of this build. -->
     <link rel="canonical" href="https://www.resumemakery.com/" />
-    
-    <!-- NOTE: X-Frame-Options, X-Content-Type-Options, X-XSS-Protection,
-         Referrer-Policy and Permissions-Policy only take effect as real HTTP
-         headers — browsers ignore them inside <meta> (and warn in the console).
-         They are set for every response in netlify.toml / vercel.json.
-         The CSP below IS one of the few policies that works from a <meta> tag,
-         so it stays here (dev servers send no headers of their own). -->
 
-    <!-- Content Security Policy — strict.
-         The OCR engine (worker + wasm core + English model) is served from our
-         own origin under /ocr/, precisely so it keeps working under this policy.
-         'wasm-unsafe-eval' is required because WebAssembly compilation is
-         CSP-gated too. Google Analytics, Microsoft Clarity and Ahrefs Analytics
-         are explicitly allow-listed; Google sign-in uses a top-level OAuth
-         redirect through Supabase and does not load Google's JavaScript SDK. -->
+    <!-- Security policy. Analytics and auth endpoints used by the app are allow-listed. -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://www.googletagmanager.com https://*.clarity.ms https://c.bing.com https://analytics.ahrefs.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https:; connect-src 'self' blob: https://*.supabase.co wss://*.supabase.co https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com https://*.clarity.ms https://c.bing.com https://analytics.ahrefs.com; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'" />
-    
-    <!-- Open Graph for social sharing — uses the live production domain so
-         link previews work for the URL actually deployed. -->
+
     <meta property="og:title" content="ResumeMakery — Free Professional Resume Builder | 50 Templates" />
-    <meta property="og:description" content="Advanced resume maker: upload PDF/DOCX, edit with high-tech editor, 100% free, unlimited downloads. 50 professional templates." />
+    <meta property="og:description" content="Build or import a resume, check ATS job match, use 50 templates and download clean PDFs free with no watermark." />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="ResumeMakery" />
     <meta property="og:url" content="https://www.resumemakery.com/" />
@@ -44,57 +26,67 @@
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="ResumeMakery — Free Resume Builder | 50 Templates | No Watermark" />
-    <meta name="twitter:description" content="Upload your old resume or build one in 10 minutes. 50 templates, free ATS score, unlimited PDFs. ₹0 forever." />
+    <meta name="twitter:title" content="ResumeMakery — Free ATS Resume Builder" />
+    <meta name="twitter:description" content="Create or import a resume, check ATS job match, use 50 templates and download clean PDFs free." />
     <meta name="twitter:image" content="https://www.resumemakery.com/og-image.jpg" />
 
-    <title>ResumeMakery — Free Resume Builder | 50 Templates | Upload & Edit</title>
+    <title>Free ATS Resume Builder India | ResumeMakery</title>
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
-
-    <!-- PWA: installable app (service worker registers in production only) -->
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="apple-touch-icon" href="/icon.svg" />
     <meta name="mobile-web-app-capable" content="yes" />
 
-    <!-- Structured data for rich results. Keep offers/price in sync with the
-         truth (₹0 — there is no billing in the product). The FAQPage entry
-         mirrors the 8 questions rendered in Landing.tsx — edit both together. -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "SoftwareApplication",
-      "name": "ResumeMakery",
-      "applicationCategory": "BusinessApplication",
-      "operatingSystem": "Web",
-      "url": "https://www.resumemakery.com/",
-      "description": "Free online resume builder: upload and edit an existing resume (PDF, DOCX, photo OCR) or build one in 7 guided steps. 50 professional templates, free ATS match score, unlimited clean PDF downloads, no watermark.",
-      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "INR" },
-      "featureList": [
-        "Upload and edit existing resumes (PDF, DOCX, TXT, photo OCR) on-device",
-        "Free ATS keyword match score against any job description",
-        "50 professional templates across 20 layout families and 10 career fields",
-        "Unlimited resumes and unlimited watermark-free PDF downloads",
-        "Cloud sync across devices with your own database"
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://www.resumemakery.com/#organization",
+          "name": "ResumeMakery",
+          "url": "https://www.resumemakery.com/",
+          "logo": "https://www.resumemakery.com/icon.svg"
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://www.resumemakery.com/#website",
+          "url": "https://www.resumemakery.com/",
+          "name": "ResumeMakery",
+          "publisher": { "@id": "https://www.resumemakery.com/#organization" },
+          "inLanguage": "en-IN"
+        },
+        {
+          "@type": "SoftwareApplication",
+          "name": "ResumeMakery",
+          "applicationCategory": "BusinessApplication",
+          "operatingSystem": "Web",
+          "url": "https://www.resumemakery.com/",
+          "description": "Free online ATS resume builder for India with resume import, job-description matching, 50 professional templates and clean PDF downloads with no watermark.",
+          "offers": { "@type": "Offer", "price": "0", "priceCurrency": "INR" },
+          "featureList": [
+            "Upload and edit existing resumes (PDF, DOCX, TXT, photo OCR)",
+            "ATS keyword and job-description match checking",
+            "50 professional resume templates",
+            "Watermark-free PDF downloads"
+          ]
+        }
       ]
     }
     </script>
+
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "FAQPage",
       "mainEntity": [
-        { "@type": "Question", "name": "Is ResumeMakery really 100% free?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Every template, the ATS match score, upload & edit, and unlimited PDF downloads are free. There is no paid plan, no trial, no credit card and no watermark — the product has no billing at all." } },
-        { "@type": "Question", "name": "Can I edit my existing resume?", "acceptedAnswer": { "@type": "Answer", "text": "Yes — upload a PDF, DOCX, TXT or JSON file, or even a photo of a printed resume. Text is extracted on your device (scanned pages are read by an offline OCR engine) and lands straight into editable fields with a live preview. Nothing is uploaded to any server." } },
-        { "@type": "Question", "name": "Will my resume pass ATS screening?", "acceptedAnswer": { "@type": "Answer", "text": "ResumeMakery templates are built on clean structures that applicant tracking systems parse reliably. You also get a free ATS check: paste any job description and see which keywords your resume already covers and which are missing." } },
-        { "@type": "Question", "name": "How many resumes can I create?", "acceptedAnswer": { "@type": "Answer", "text": "Unlimited. Duplicate a resume and tailor one version per job application — something most builders restrict to a single resume even on paid plans." } },
-        { "@type": "Question", "name": "Do the free downloads have a watermark or branding?", "acceptedAnswer": { "@type": "Answer", "text": "No. The PDF you download is the final file: no watermark, no made-with link, no hidden paywall pages. It is even saved under your resume's own name." } },
-        { "@type": "Question", "name": "How many pages can my resume be?", "acceptedAnswer": { "@type": "Answer", "text": "One page to three or more — nothing caps your length. The live preview shows page-break guides, and the printed PDF keeps every entry intact across pages." } },
-        { "@type": "Question", "name": "Where is my data stored?", "acceptedAnswer": { "@type": "Answer", "text": "In your browser by default, and optionally in your own cloud database when you sign in. Parsing, OCR and ATS scoring all run on your device — we never sell or share your data." } },
-        { "@type": "Question", "name": "Do I need an account to try it?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Sign in or create a free account to build or import your resume. Resume building and downloads are completely free." } }
+        { "@type": "Question", "name": "Is ResumeMakery really 100% free?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Resume creation, templates, ATS tools and PDF downloads are free. There is no paid plan or watermark." } },
+        { "@type": "Question", "name": "Can I edit my existing resume?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. You can import a PDF, DOCX, TXT file or resume photo, review the extracted content and continue editing it." } },
+        { "@type": "Question", "name": "Will my resume pass ATS screening?", "acceptedAnswer": { "@type": "Answer", "text": "ResumeMakery provides deterministic ATS and job-description matching guidance, but no tool can guarantee an employer-specific ATS result or interview." } },
+        { "@type": "Question", "name": "Do I need an account to try it?", "acceptedAnswer": { "@type": "Answer", "text": "No. You can build your first resume and download the first PDF as a guest. A free account is used to save work and continue downloading later." } }
       ]
     }
     </script>
-  
+
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-LLFYR4DHWX"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -106,7 +98,6 @@
       window.addEventListener('craftcv:navigate', resumemakeryPageView);
     </script>
 
-    <!-- Microsoft Clarity analytics -->
     <script type="text/javascript">
       (function(c,l,a,r,i,t,y){
           c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
@@ -115,95 +106,77 @@
       })(window, document, "clarity", "script", "ytz52g5i30");
     </script>
 
-    <!-- Ahrefs Web Analytics -->
     <script src="https://analytics.ahrefs.com/analytics.js" data-key="eDH6FiF4YuSJxn8QC9TWxA" async></script>
-</head>
+  </head>
   <body>
-    <!-- Static, crawler-readable storefront content. Real visitors get the
-         React landing page; this block is removed from the DOM once the app
-         mounts (see src/main.tsx). If JS never runs, this still tells the
-         whole story. Keep the FAQ text in sync with Landing.tsx. -->
+    <!-- Crawler-readable fallback. React removes this after the app mounts. -->
     <div id="seo-content" style="font-family: 'Segoe UI', system-ui, sans-serif; color: #1c2434; max-width: 880px; margin: 0 auto; padding: 32px 20px;">
-      <p style="font-weight: 700; color: #0f2148; letter-spacing: 0.4px;">RESUMEMAKERY — 100% FREE · NO WATERMARK · MADE FOR INDIA</p>
-      <h1>Free ATS Resume Builder — Create, Edit & Download Your Resume</h1>
+      <p style="font-weight: 700; color: #0f2148; letter-spacing: 0.4px;">RESUMEMAKERY — FREE ATS RESUME WORKSPACE · MADE FOR INDIA</p>
+      <h1>Free ATS Resume Builder for India</h1>
       <p>
-        ResumeMakery is a free professional resume builder. Build a recruiter-ready resume in about
-        10 minutes, or upload your existing resume — PDF, DOCX, TXT or even a photo of a printed
-        page — and edit it with a live A4 preview. Unlimited resumes, unlimited watermark-free PDF
-        downloads, no credit card, no paid plan.
-      </p>
-      <h2>What you get free</h2>
-      <ul>
-        <li><b>Upload & edit an existing resume</b> — PDF, DOCX, TXT, JSON and photos, read on your device with an offline OCR engine for scans. Nothing is uploaded to any server.</li>
-        <li><b>Free ATS match score</b> — paste a job description and instantly see which keywords your resume covers and which are missing.</li>
-        <li><b>50 professional templates</b> across 20 layout families, tuned for 10 career fields — IT, Data, Sales, Healthcare, Teaching, Design, Leadership, Fresher and more. All unlocked.</li>
-        <li><b>Unlimited resumes</b> — duplicate and tailor one version per job application.</li>
-        <li><b>Clean PDF export</b> — 1 to 3+ A4 pages, no watermark, no branding, saved under your own resume's name.</li>
-      </ul>
-      <h2>Frequently asked questions</h2>
-      <h3>Is ResumeMakery really 100% free?</h3>
-      <p>Yes. Every template, the ATS match score, upload &amp; edit, and unlimited PDF downloads are free. There is no paid plan, no trial, no credit card and no watermark — the product has no billing at all.</p>
-      <h3>Can I edit my existing resume?</h3>
-      <p>Yes — upload a PDF, DOCX, TXT or JSON file, or even a photo of a printed resume. Text is extracted on your device and lands straight into editable fields with a live preview. Nothing is uploaded to any server.</p>
-      <h3>Will my resume pass ATS screening?</h3>
-      <p>ResumeMakery templates are built on clean structures that applicant tracking systems parse reliably, and the free ATS check shows which keywords from a job description are covered or missing.</p>
-      <h3>How many resumes can I create?</h3>
-      <p>Unlimited. Duplicate a resume and tailor one version per job application.</p>
-      <h3>Do the free downloads have a watermark or branding?</h3>
-      <p>No. The PDF you download is the final file: no watermark, no made-with link, no hidden paywall pages.</p>
-      <h3>Do I need an account to try it?</h3>
-      <p>Yes. Sign in or create a free account to build or import your resume. Resume building and downloads are completely free.</p>
-
-      <h2>Privacy at a glance (full policy inside the app)</h2>
-      <p>
-        <b>ResumeMakery is a free resume builder.</b> We collect only what is needed to run the service:
-        account data (name, email, optional avatar — from email sign-up or Google Sign-In),
-        resume content you type or import (parsed on your device), and minimal request
-        metadata (browser, country). We never sell or rent your data, never train AI models
-        on your resume content, and never send marketing email without your opt-in.
-      </p>
-      <ul>
-        <li><b>Account data:</b> name, email, salted password hash (email sign-up) or Google profile (name, email, avatar, opaque account ID).</li>
-        <li><b>Resume content:</b> everything you type, optional photo, template choice, layout settings, cover-letter content.</li>
-        <li><b>Files you upload for import:</b> PDF / DOCX / image — processed entirely in your browser; the file itself is not uploaded.</li>
-        <li><b>Usage data:</b> sign-in timestamps, security events, aggregate feature usage, and privacy-focused session analytics through Microsoft Clarity.</li>
-        <li><b>Storage:</b> in your browser (localStorage) and in our Supabase-hosted PostgreSQL database (encrypted at rest, row-level security). Static hosting by Vercel.</li>
-        <li><b>Sharing:</b> only with sub-processors required to run the service (Supabase, Google for OAuth, Vercel for hosting, Cloudflare for the OCR engine assets, Microsoft Clarity for usage analytics, your own AI endpoint if you enable AI rewrite). Never with recruiters, advertisers, or data brokers.</li>
-        <li><b>Retention:</b> until you delete your data. Account deletion removes everything within 30 days; backups roll off within 30 days; security logs kept for 90 days.</li>
-        <li><b>Your rights:</b> access, correction, deletion, export (JSON download from Settings), withdraw consent, nominate, grievance redressal — email privacy@resumemakery.com.</li>
-        <li><b>Children:</b> service is intended for users aged 16+.</li>
-        <li><b>Compliance:</b> IT Act 2000, SPDI Rules 2011, Digital Personal Data Protection Act 2023 (India). International users: GDPR / UK-GDPR / CCPA rights honoured.</li>
-        <li><b>Security:</b> TLS 1.2+ everywhere, AES-256 at rest, per-user password salts, login rate limiting, CSP headers, RLS on every database table.</li>
-      </ul>
-      <p>
-        <b>Google Sign-In specifics.</b> ResumeMakery uses Google OAuth 2.0 with PKCE through Supabase.
-        The only scopes requested are <code>openid email profile</code>. We receive from Google:
-        your email, full name, profile picture URL (optional), and an opaque Google account ID.
-        We do <b>not</b> request or receive contacts, calendar, Gmail, Drive, location, or any
-        other Google data. We do <b>not</b> send any data to Google from your account, and we
-        do <b>not</b> use Google user data for advertising. Google's handling of the data it
-        shares with ResumeMakery is governed by the
-        <a href="https://policies.google.com/privacy" target="_blank" rel="noreferrer">Google Privacy Policy</a>
-        and the <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noreferrer">Google API Services User Data Policy</a>
-        (including Limited Use requirements). The OAuth callback URL is your-project.supabase.co/auth/v1/callback and is set in Google Cloud Console exactly.
-      </p>
-      <p>
-        Full policy (longer, legally complete version): <a href="https://www.resumemakery.com/privacy">www.resumemakery.com/#/privacy</a>.
-        Read it inside the app at <b>Settings → Privacy Policy</b> or <b>Footer → Privacy</b>.
-        Questions: <a href="mailto:privacy@resumemakery.com">privacy@resumemakery.com</a>.
+        ResumeMakery helps students, freshers and professionals create or import a resume, compare it with a real job description, improve relevant evidence, switch between 50 professional templates and download a clean PDF with no watermark.
       </p>
 
-      <p><i>ResumeMakery needs JavaScript for the editor — enable it to start building.</i></p>
+      <nav aria-label="ResumeMakery public pages">
+        <h2>Resume tools and guides</h2>
+        <ul>
+          <li><a href="/resume-builder">Free ATS Resume Builder</a></li>
+          <li><a href="/ats-resume-checker">ATS Resume Checker</a></li>
+          <li><a href="/job-description-resume-match">Resume vs Job Description Match</a></li>
+          <li><a href="/ats-keyword-checker">ATS Keyword Checker</a></li>
+          <li><a href="/resume-score-checker">Resume Score Checker</a></li>
+          <li><a href="/resume-editor">Edit an Existing Resume</a></li>
+          <li><a href="/resume-templates">Free Resume Templates</a></li>
+          <li><a href="/resume-for-freshers">Resume for Freshers</a></li>
+          <li><a href="/guides">Resume Guides</a></li>
+          <li><a href="/guides/resume-format-india">Resume Format for India</a></li>
+          <li><a href="/guides/resume-summary-examples">Resume Summary Examples</a></li>
+          <li><a href="/guides/resume-skills-guide">Resume Skills Guide</a></li>
+          <li><a href="/guides/fresher-resume-guide">Fresher Resume Guide</a></li>
+        </ul>
+      </nav>
+
+      <section>
+        <h2>What you can do free</h2>
+        <ul>
+          <li><b>Build or import a resume:</b> start from scratch or import PDF, DOCX, TXT and supported resume images.</li>
+          <li><b>Check job relevance:</b> compare your resume with the actual job description and review covered and missing terms.</li>
+          <li><b>Improve evidence:</b> strengthen truthful projects, achievements and work bullets instead of keyword stuffing.</li>
+          <li><b>Choose a professional layout:</b> switch between 50 templates without retyping the resume.</li>
+          <li><b>Export cleanly:</b> download a professional PDF without a ResumeMakery watermark.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Frequently asked questions</h2>
+        <h3>Is ResumeMakery really free?</h3>
+        <p>Yes. The current product has no paid plan. Resume creation, templates, ATS tools and PDF downloads are free.</p>
+        <h3>Can I edit my existing resume?</h3>
+        <p>Yes. Import a supported PDF, DOCX, TXT file or resume image, review the extracted content and continue editing it in structured fields.</p>
+        <h3>Does an ATS score guarantee an interview?</h3>
+        <p>No. ResumeMakery provides practical, deterministic guidance. Employers use different systems and human judgment, so no score can guarantee an interview or hiring outcome.</p>
+        <h3>Do I need an account to start?</h3>
+        <p>No. You can build your first resume and download the first PDF as a guest. A free account is used to save your work and continue later.</p>
+      </section>
+
+      <section>
+        <h2>About and policies</h2>
+        <p>
+          Learn more on the <a href="/about">About</a>, <a href="/faq">FAQ</a>, <a href="/privacy">Privacy Policy</a>, <a href="/terms">Terms</a> and <a href="/contact">Contact</a> pages.
+        </p>
+      </section>
+
+      <p><i>JavaScript is required for the interactive resume editor.</i></p>
     </div>
+
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    
-    <!-- No inline scripts except module — CSP compliant -->
+
     <noscript>
       <div style="padding: 20px; text-align: center; font-family: system-ui; background: #0a1630; color: #fff; min-height: 100vh; display: grid; place-items: center;">
         <div>
           <h1>ResumeMakery requires JavaScript</h1>
-          <p>Please enable JavaScript to use the advanced resume builder.</p>
+          <p>Please enable JavaScript to use the resume editor. The public resume guides and tool pages remain available through their direct URLs.</p>
         </div>
       </div>
     </noscript>
