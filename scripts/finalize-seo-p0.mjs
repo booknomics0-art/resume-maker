@@ -112,6 +112,39 @@ function removeNoscriptH1(html) {
   );
 }
 
+function alignStructuredMetadata(html, route, values) {
+  const url = `${ORIGIN}${route === '/' ? '/' : route}`;
+  return html.replace(/<script\s+type=["']application\/ld\+json["']>([\s\S]*?)<\/script>/gi, (full, raw) => {
+    try {
+      const data = JSON.parse(raw.trim());
+      const nodes = Array.isArray(data?.['@graph']) ? data['@graph'] : [data];
+      let changed = false;
+      for (const node of nodes) {
+        if (!node || typeof node !== 'object') continue;
+        const types = Array.isArray(node['@type']) ? node['@type'] : [node['@type']];
+        const id = String(node['@id'] || '');
+        const nodeUrl = String(node.url || '');
+        const mainEntityId = String(node.mainEntityOfPage?.['@id'] || '');
+        const belongsToRoute = nodeUrl === url || id.startsWith(`${url}#`) || mainEntityId === url;
+        if (!belongsToRoute) continue;
+        if (types.includes('WebPage')) {
+          node.name = values.title;
+          node.description = values.description;
+          changed = true;
+        }
+        if (types.includes('Article')) {
+          node.headline = values.title;
+          node.description = values.description;
+          changed = true;
+        }
+      }
+      return changed ? `<script type="application/ld+json">${JSON.stringify(data)}</script>` : full;
+    } catch {
+      return full;
+    }
+  });
+}
+
 function addWebPageSchema(html, route, type = 'WebPage') {
   if (/application\/ld\+json/i.test(html)) return html;
   const url = `${ORIGIN}${route === '/' ? '/' : route}`;
@@ -174,6 +207,7 @@ for (const [route, values] of Object.entries(metadata)) {
   html = setMetaName(html, 'twitter:description', values.description);
   html = setMetaProperty(html, 'og:title', values.title);
   html = setMetaProperty(html, 'og:description', values.description);
+  html = alignStructuredMetadata(html, route, values);
   fs.writeFileSync(file, html);
 }
 
@@ -200,6 +234,9 @@ for (const route of growthRoutes) {
   if (!title || title.length > 60) failures.push(`${route}: title length ${title.length}`);
   if (/noindex/i.test(html.match(/<meta\s+name=["']robots["']\s+content=["']([^"']+)["']/i)?.[1] || '')) failures.push(`${route}: noindex present`);
   if (canonical !== expectedCanonical) failures.push(`${route}: canonical ${canonical || 'missing'}`);
+  if (metadata[route] && !html.includes(`\"name\":\"${metadata[route].title.replace(/"/g, '\\"')}\"`) && !html.includes(`\"headline\":\"${metadata[route].title.replace(/"/g, '\\"')}\"`)) {
+    failures.push(`${route}: final title missing from structured data`);
+  }
 }
 
 if (failures.length) {
@@ -207,4 +244,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log(`[finalize-seo-p0] ✅ ${growthRoutes.length} growth pages guarded · ${Object.keys(metadata).length} metadata sets · ${duplicateHeadingFixes} duplicate-noscript H1 fixes`);
+console.log(`[finalize-seo-p0] ✅ ${growthRoutes.length} growth pages guarded · ${Object.keys(metadata).length} metadata sets · ${duplicateHeadingFixes} duplicate-noscript H1 fixes · structured metadata aligned`);
