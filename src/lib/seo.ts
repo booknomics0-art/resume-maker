@@ -2,21 +2,21 @@ const ORIGIN='https://www.resumemakery.com';
 const PUBLIC: Record<string,{title:string;description:string}> = {
   '/':{title:'Free ATS Resume Builder India | 50 Templates | ResumeMakery',description:'Build, import, edit and ATS-check your resume free. 50 professional templates, clean PDF downloads, no watermark, built for Indian freshers and professionals.'},
   '/resume-builder':{title:'Free ATS Resume Builder for India | ResumeMakery',description:'Create an ATS-friendly resume free with 50 templates, live preview, existing-resume import and clean PDF downloads with no watermark.'},
-  '/ats-resume-checker':{title:'Free ATS Resume Checker 2.0 — Job Match + Resume Score | ResumeMakery',description:'Check job-description match and resume readiness separately, then get prioritized Issue → Why → Fix guidance while you edit.'},
+  '/ats-resume-checker':{title:'Free ATS Resume Checker & Job Match | ResumeMakery',description:'Check job-description match and resume readiness separately, then get prioritized Issue → Why → Fix guidance while you edit.'},
   '/job-description-resume-match':{title:'Resume vs Job Description Match Checker | ResumeMakery',description:'Compare your resume with a real job description, see covered and missing role terms, identify evidence gaps and re-check while editing.'},
-  '/ats-keyword-checker':{title:'Free ATS Keyword Checker — Find Missing Resume Keywords | ResumeMakery',description:'Extract relevant job-description terms, see covered and missing resume keywords, and identify matched skills that still need evidence.'},
+  '/ats-keyword-checker':{title:'Free ATS Keyword Checker for Resumes | ResumeMakery',description:'Extract relevant job-description terms, see covered and missing resume keywords, and identify matched skills that still need evidence.'},
   '/resume-score-checker':{title:'Free Resume Score Checker — Resume Readiness | ResumeMakery',description:'Check contact completeness, summary quality, evidence bullets, measurable results, action verbs and readability separately from job match.'},
   '/resume-editor':{title:'Edit Existing Resume Online — PDF & DOCX | ResumeMakery',description:'Upload a PDF, DOCX, TXT or resume photo, extract the content into editable fields, improve it and export a clean professional PDF.'},
   '/resume-templates':{title:'50 Free ATS-Friendly Resume Templates | ResumeMakery',description:'Browse 50 unlocked professional and fresher resume templates. Switch layouts without retyping and download clean PDFs with no watermark.'},
-  '/resume-for-freshers':{title:'Free Resume Maker for Freshers & Students India | ResumeMakery',description:'Create a focused fresher resume with education, projects, internships and skills, then compare it with real job descriptions before applying.'},
-  '/about':{title:'About ResumeMakery',description:'Learn why ResumeMakery exists and how the free resume builder is designed for job seekers.'},
+  '/resume-for-freshers':{title:'Free Resume Maker for Freshers India | ResumeMakery',description:'Create a focused fresher resume with education, projects, internships and skills, then compare it with real job descriptions before applying.'},
+  '/about':{title:'About ResumeMakery | Free ATS Resume Builder',description:'Learn why ResumeMakery exists, how the free ATS resume builder works, and the principles behind its templates, import, matching and PDF tools.'},
   '/faq':{title:'ResumeMakery FAQ — Resume Builder, ATS & Downloads',description:'Answers about ResumeMakery templates, resume imports, ATS matching, privacy and clean PDF downloads.'},
-  '/privacy':{title:'Privacy Policy | ResumeMakery',description:'How ResumeMakery handles account data, resume content, imports, analytics and user privacy.'},
-  '/terms':{title:'Terms of Service | ResumeMakery',description:'Terms for using the ResumeMakery free resume builder.'},
-  '/contact':{title:'Contact ResumeMakery',description:'Contact ResumeMakery about the resume builder, privacy or product support.'},
-  '/cookies':{title:'Cookie Policy | ResumeMakery',description:'Cookie and analytics information for ResumeMakery.'},
-  '/disclaimer':{title:'Disclaimer | ResumeMakery',description:'Important limitations and disclaimers for ResumeMakery and ATS guidance.'},
-  '/eula':{title:'EULA | ResumeMakery',description:'End-user licence terms for ResumeMakery.'}
+  '/privacy':{title:'ResumeMakery Privacy Policy | Data & Resume Privacy',description:'How ResumeMakery handles account data, resume content, imports, analytics, storage, retention and user privacy controls.'},
+  '/terms':{title:'Terms of Service | ResumeMakery',description:'Terms for using ResumeMakery, including account use, resume tools, imports, ATS guidance, PDF exports and responsible use of the service.'},
+  '/contact':{title:'Contact ResumeMakery | Product & Privacy Support',description:'Contact ResumeMakery for resume-builder support, technical issues, privacy questions, account concerns or feedback about the product.'},
+  '/cookies':{title:'ResumeMakery Cookie Policy | Analytics & Storage',description:'How ResumeMakery uses essential browser storage, authentication data and aggregate analytics, including the controls available to users.'},
+  '/disclaimer':{title:'ATS & Resume Disclaimer | ResumeMakery',description:'Important limits of ResumeMakery ATS scores, resume guidance, imports and exports, including why no tool can guarantee interviews or hiring outcomes.'},
+  '/eula':{title:'ResumeMakery End-User Licence Agreement',description:'End-user licence terms covering permitted access to ResumeMakery software, resume-building features, ATS tools, imports and PDF exports.'}
 };
 function meta(name:string,value:string,property=false){const selector=property?`meta[property="${name}"]`:`meta[name="${name}"]`;let el=document.head.querySelector(selector) as HTMLMetaElement|null;if(!el){el=document.createElement('meta');property?el.setAttribute('property',name):el.setAttribute('name',name);document.head.appendChild(el)}el.content=value}
 export function applySeo(path:string){
