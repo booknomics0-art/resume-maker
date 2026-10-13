@@ -124,7 +124,8 @@ function alignStructuredMetadata(html, route, values) {
         const types = Array.isArray(node['@type']) ? node['@type'] : [node['@type']];
         const id = String(node['@id'] || '');
         const nodeUrl = String(node.url || '');
-        const mainEntityId = String(node.mainEntityOfPage?.['@id'] || '');
+        const mainEntity = node.mainEntityOfPage;
+        const mainEntityId = typeof mainEntity === 'string' ? mainEntity : String(mainEntity?.['@id'] || '');
         const belongsToRoute = nodeUrl === url || id.startsWith(`${url}#`) || mainEntityId === url;
         if (!belongsToRoute) continue;
         if (types.includes('WebPage')) {
